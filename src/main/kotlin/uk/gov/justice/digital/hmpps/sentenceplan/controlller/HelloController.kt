@@ -15,4 +15,9 @@ class HelloController() {
   fun getHello(@PathVariable name: String) = run {
     "Hello $name"
   }
+
+  @GetMapping("/error")
+  fun getError(): Nothing = run {
+    throw RuntimeException("Replicating 5xx")
+  }
 }

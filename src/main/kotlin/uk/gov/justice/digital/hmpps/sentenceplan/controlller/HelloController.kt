@@ -16,7 +16,7 @@ class HelloController() {
   fun getHello(@PathVariable name: String) = run {
     val randomNumber = Math.random() * 10
     if (randomNumber > 3) {
-      "{\"test\": \"Hello $name\"}"
+      "{\"message\": \"Hello $name\"}"
     } else {
       throw RuntimeException("Replicating 5xx")
     }

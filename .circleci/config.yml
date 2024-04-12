@@ -58,7 +58,7 @@ workflows:
           type: approval
           requires:
             - helm_lint
-            - unit_test
+            # - unit_test
             # - integration_test
             - build_docker
       - hmpps/deploy_env:

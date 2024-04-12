@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.hmppssentenceplan.health
+package uk.gov.justice.digital.hmpps.sentenceplan.health
 
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.actuate.info.Info

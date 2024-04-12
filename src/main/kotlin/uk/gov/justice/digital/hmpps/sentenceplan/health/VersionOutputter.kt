@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.hmppssentenceplan.health
+package uk.gov.justice.digital.hmpps.sentenceplan.health
 
 import org.slf4j.LoggerFactory
 import org.springframework.boot.context.event.ApplicationReadyEvent

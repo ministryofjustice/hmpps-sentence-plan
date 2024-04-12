@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.hmppssentenceplan
+package uk.gov.justice.digital.hmpps.sentenceplan
 
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication

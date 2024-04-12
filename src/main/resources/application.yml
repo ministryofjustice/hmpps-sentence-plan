@@ -7,11 +7,25 @@ spring:
     name: hmpps-sentence-plan
   codec:
     max-in-memory-size: 10MB
-
+  datasource:
+    url: jdbc:postgresql://${db.endpoint}/${db.name}
+    username: ${db.username}
+    password: ${db.password}
+  jpa:
+    show-sql: true
+  flyway:
+    enabled: true
+    validate-on-migrate: true
   jackson:
     date-format: "yyyy-MM-dd HH:mm:ss"
     serialization:
       WRITE_DATES_AS_TIMESTAMPS: false
+
+db:
+  name: sentence-plan
+  endpoint: localhost:5432
+  username: postgres
+  password: postgres
 
 server:
   port: 8080

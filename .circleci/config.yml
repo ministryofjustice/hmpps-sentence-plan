@@ -7,6 +7,19 @@ version: 2.1
 orbs:
   hmpps: ministryofjustice/hmpps@8
 
+_db_docker_config: &db_docker_config
+  - image: cimg/openjdk:17.0
+    environment:
+      DB_ENDPOINT: localhost:5432
+      DB_NAME: sentence-plan-ci
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+  - image: cimg/postgres:14.7
+    environment:
+      POSTGRES_DB: sentence-plan-ci
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+
 parameters:
   alerts-slack-channel:
     type: string
@@ -20,6 +33,7 @@ jobs:
     executor:
       name: hmpps/java
       tag: "21.0"
+    docker: *db_docker_config
     steps:
       - checkout
       - restore_cache:

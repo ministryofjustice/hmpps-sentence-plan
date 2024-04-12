@@ -13,11 +13,11 @@ class HelloController() {
 
   @GetMapping("/{name}")
   fun getHello(@PathVariable name: String) = run {
-    "Hello $name"
-  }
-
-  @GetMapping("/error")
-  fun getError(): Nothing = run {
-    throw RuntimeException("Replicating 5xx")
+    val randomNumber = Math.random() * 10
+    if (randomNumber > 3) {
+      "Hello $name"
+    } else {
+      throw RuntimeException("Replicating 5xx")
+    }
   }
 }

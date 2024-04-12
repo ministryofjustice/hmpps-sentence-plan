@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.hmppssentenceplan.config
+package uk.gov.justice.digital.hmpps.sentenceplan.config
 
 import jakarta.validation.ValidationException
 import org.slf4j.LoggerFactory

@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.hmppssentenceplan.health
+package uk.gov.justice.digital.hmpps.sentenceplan.health
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test

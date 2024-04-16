@@ -1,1 +1,0 @@
-alter table objective add column motivation varchar null;

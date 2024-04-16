@@ -8,12 +8,14 @@ spring:
   codec:
     max-in-memory-size: 10MB
   datasource:
-    url: jdbc:postgresql://${db.endpoint}/${db.name}
+    url: jdbc:postgresql://${db.endpoint}/${db.name}?currentSchema=${database.schema.name:sentence-plan}&user=${db.username:root}&password=${db.password:dev}&stringtype=unspecified
     username: ${db.username}
     password: ${db.password}
   jpa:
     show-sql: true
   flyway:
+    schemas: sentence-plan
+    locations: classpath:/db/migration
     enabled: true
     validate-on-migrate: true
   jackson:

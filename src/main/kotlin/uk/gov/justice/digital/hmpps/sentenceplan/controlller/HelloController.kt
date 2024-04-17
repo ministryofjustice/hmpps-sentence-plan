@@ -18,9 +18,9 @@ class HelloController(val areasRepository: AreasRepository) {
   fun getHello(@PathVariable name: String): String {
     val randomNumber = Math.random() * 10
     val mapper = jacksonObjectMapper()
-    val area = mapper.writeValueAsString(areasRepository.findById(1).get())
+//    val area = mapper.writeValueAsString(areasRepository.findById(1).get())
     if (randomNumber > 3) {
-      return area
+      return "{\"message\": \"Hello $name\"}"
     } else {
       throw RuntimeException("Replicating 5xx")
     }

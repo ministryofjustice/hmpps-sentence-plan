@@ -1,13 +1,13 @@
 package uk.gov.justice.digital.hmpps.sentenceplan.controlller
 
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import org.springframework.http.MediaType
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
-import uk.gov.justice.digital.hmpps.sentenceplan.service.ReferenceDataService
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.RefData
+import uk.gov.justice.digital.hmpps.sentenceplan.service.ReferenceDataService
 
 @RestController
 @RequestMapping("/question-reference-data")

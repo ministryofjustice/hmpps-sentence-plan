@@ -7,11 +7,9 @@ import java.util.Optional
 
 @Service
 class ReferenceDataService(
-  private val referenceDataRepository: ReferenceDataRepository
+  private val referenceDataRepository: ReferenceDataRepository,
 ) {
-
   fun getQuestionReferenceData(id: Int): Optional<RefDataEntity> {
-   return referenceDataRepository.findById(id)
+    return referenceDataRepository.findById(id)
   }
-
 }

@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RestController
 // @PreAuthorize("hasRole('ROLE_SENTENCE_PLAN_RW')")
 @RestController
 @RequestMapping("/hello")
-class HelloController {
+class HelloController() {
 
   @GetMapping("/{name}", produces = arrayOf(MediaType.APPLICATION_JSON_VALUE))
   fun getHello(@PathVariable name: String): String {

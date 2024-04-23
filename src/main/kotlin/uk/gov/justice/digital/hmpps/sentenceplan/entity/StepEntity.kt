@@ -7,6 +7,8 @@ import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Table
 import org.springframework.data.jpa.repository.JpaRepository
+import java.time.Instant
+import java.time.format.DateTimeFormatter
 import java.util.Optional
 import java.util.UUID
 
@@ -32,6 +34,9 @@ class StepEntity(
 
   @Column(name = "status")
   val status: String,
+
+  @Column(name = "creation_date")
+  val creationDate: String = DateTimeFormatter.ISO_INSTANT.format(Instant.now()),
 
 )
 

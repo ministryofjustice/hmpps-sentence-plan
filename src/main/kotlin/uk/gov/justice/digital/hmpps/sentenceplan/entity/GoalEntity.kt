@@ -7,6 +7,8 @@ import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Table
 import org.springframework.data.jpa.repository.JpaRepository
+import java.time.Instant
+import java.time.format.DateTimeFormatter
 import java.util.*
 
 @Entity(name = "Goal")
@@ -34,6 +36,9 @@ class GoalEntity(
 
   @Column(name = "agreement_note")
   val agreementNote: String,
+
+  @Column(name = "creation_date")
+  val creationDate: String = DateTimeFormatter.ISO_INSTANT.format(Instant.now()),
 
 )
 

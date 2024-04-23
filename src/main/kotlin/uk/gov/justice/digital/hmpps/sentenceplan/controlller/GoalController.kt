@@ -28,9 +28,8 @@ class GoalController(private val service: GoalService) {
   @ResponseStatus(HttpStatus.CREATED)
   fun createNewStep(
     @PathVariable goalId: UUID,
-    @RequestBody step: StepEntity,
-  ): StepEntity {
-    step.relatedGoalId = goalId
-    return service.createNewStep(step)
+    @RequestBody steps: List<StepEntity>,
+  ): List<StepEntity> {
+    return service.createNewStep(steps, goalId)
   }
 }

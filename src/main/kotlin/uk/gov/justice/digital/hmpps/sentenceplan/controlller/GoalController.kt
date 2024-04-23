@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.service.GoalService
+import java.util.UUID
 
 @RestController
 @RequestMapping("/goals")
@@ -26,7 +27,7 @@ class GoalController(private val service: GoalService) {
   @PostMapping("/{goalId}/steps")
   @ResponseStatus(HttpStatus.CREATED)
   fun createNewStep(
-    @PathVariable goalId: Int,
+    @PathVariable goalId: UUID,
     @RequestBody step: StepEntity,
   ): StepEntity {
     step.relatedGoalId = goalId

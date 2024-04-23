@@ -1,33 +1,40 @@
 package uk.gov.justice.digital.hmpps.sentenceplan.entity
 
-import com.google.gson.annotations.SerializedName
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
+import jakarta.persistence.GeneratedValue
+import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Table
 import org.springframework.data.jpa.repository.JpaRepository
-import java.util.*
+import java.util.Optional
+import java.util.UUID
 
 @Entity(name = "Step")
 @Table(name = "step")
 class StepEntity(
   @Id
-  @SerializedName("id") val id: Int,
+  @Column(name = "id")
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  val id: Long? = null,
+
+  @Column(name = "uuid")
+  val uuid: UUID = UUID.randomUUID(),
 
   @Column(name = "related_goal_id")
-  @SerializedName("related_goal_id") var relatedGoalId: Int,
+  var relatedGoalId: UUID? = null,
 
   @Column(name = "description")
-  @SerializedName("description") val description: String,
+  val description: String,
 
   @Column(name = "actor")
-  @SerializedName("actor") val actor: String,
+  val actor: String,
 
   @Column(name = "status")
-  @SerializedName("status") val status: String,
+  val status: String,
 
 )
 
-interface StepRepository : JpaRepository<StepEntity, Int> {
-  override fun findById(id: Int): Optional<StepEntity>
+interface StepRepository : JpaRepository<StepEntity, UUID> {
+  override fun findById(uuid: UUID): Optional<StepEntity>
 }

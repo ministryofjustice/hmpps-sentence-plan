@@ -1,18 +1,21 @@
 create table if not exists goal
 (
-    id                  uuid            PRIMARY KEY,
-    title               varchar(128)    not null,
-    area_of_need        varchar(128)    not null,
-    target_date         timestamp       not null,
-    is_agreed           boolean         not null,
-    agreement_note      varchar(256)    not null
+    id                  serial          PRIMARY KEY,
+    uuid                uuid            NOT NULL UNIQUE,
+    title               varchar(128)    NOT NULL,
+    area_of_need        varchar(128)    NOT NULL,
+    target_date         timestamp       NOT NULL,
+    is_agreed           boolean         NOT NULL,
+    agreement_note      varchar(256)    NOT NULL
 );
 
 create table if not exists step
 (
-    id                  uuid            PRIMARY KEY,
-    related_goal_id     int             not null,
-    description         varchar(256)    not null,
-    actor               varchar(256)    not null,
-    status              varchar(256)    not null
+    id                  serial          PRIMARY KEY,
+    uuid                uuid            NOT NULL UNIQUE,
+    related_goal_id     uuid            NOT NULL,
+    description         varchar(256)    NOT NULL,
+    actor               varchar(256)    NOT NULL,
+    status              varchar(256)    NOT NULL,
+    FOREIGN KEY (related_goal_id) REFERENCES goal (uuid)
 );

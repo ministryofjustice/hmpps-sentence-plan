@@ -1,5 +1,5 @@
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "5.15.3"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "5.15.6"
   kotlin("plugin.spring") version "1.9.23"
   kotlin("jvm") version "1.9.22"
   kotlin("plugin.jpa") version "1.9.22"
@@ -17,7 +17,7 @@ dependencies {
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.4.0")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
   implementation("org.flywaydb:flyway-core")
-
+  implementation("com.vladmihalcea:hibernate-types-60:2.21.1")
   runtimeOnly("org.postgresql:postgresql")
 }
 

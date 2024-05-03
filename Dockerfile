@@ -20,10 +20,8 @@ RUN apt-get update && \
 ENV TZ=Europe/London
 RUN ln -snf "/usr/share/zoneinfo/$TZ" /etc/localtime && echo "$TZ" > /etc/timezone
 
-
-
-RUN adduser -D nonroot -u 1001
-
+RUN addgroup --gid 2000 --system appgroup && \
+    adduser --uid 2000 --system appuser --gid 2000
 
 WORKDIR /app
 COPY --from=builder --chown=appuser:appgroup /app/build/libs/hmpps-sentence-plan*.jar /app/app.jar
@@ -31,6 +29,6 @@ COPY --from=builder --chown=appuser:appgroup /app/build/libs/applicationinsights
 COPY --from=builder --chown=appuser:appgroup /app/applicationinsights.json /app
 COPY --from=builder --chown=appuser:appgroup /app/applicationinsights.dev.json /app
 
-USER 1001
+USER 2000
 
 ENTRYPOINT ["java", "-XX:+AlwaysActAsServerClassMachine", "-javaagent:/app/agent.jar", "-jar", "/app/app.jar"]

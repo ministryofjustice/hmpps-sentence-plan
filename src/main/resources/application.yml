@@ -31,6 +31,13 @@ spring:
         provider:
           hmpps-auth-service:
             token-uri: ${hmpps-auth.base-url}/auth/oauth/token
+        registration:
+          arns-api:
+            provider: hmpps-auth-service
+            client-authentication-method: client_secret_basic
+            authorization-grant-type: client_credentials
+            client-id: ${arns-api.client-id}
+            client-secret: ${arns-api.client-secret}
 
 db:
   name: sentence-plan

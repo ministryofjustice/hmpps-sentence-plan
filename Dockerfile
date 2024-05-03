@@ -3,8 +3,6 @@ FROM --platform=$BUILDPLATFORM eclipse-temurin:21-jre-jammy AS builder
 ARG BUILD_NUMBER
 ENV BUILD_NUMBER ${BUILD_NUMBER:-1_0_0}
 
-RUN adduser -D nonroot -u 1001
-
 WORKDIR /app
 ADD . .
 RUN ./gradlew --no-daemon assemble
@@ -22,8 +20,12 @@ RUN apt-get update && \
 ENV TZ=Europe/London
 RUN ln -snf "/usr/share/zoneinfo/$TZ" /etc/localtime && echo "$TZ" > /etc/timezone
 
+
+
 RUN addgroup --gid 2000 --system appgroup && \
     adduser --uid 2000 --system appuser --gid 2000
+
+RUN adduser -D nonroot -u 1001
 
 WORKDIR /app
 COPY --from=builder --chown=appuser:appgroup /app/build/libs/hmpps-sentence-plan*.jar /app/app.jar

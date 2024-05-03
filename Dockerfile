@@ -1,11 +1,17 @@
 FROM --platform=$BUILDPLATFORM eclipse-temurin:21-jre-jammy AS builder
 
+RUN adduser -D nonroot -u 1001
+USER 1001
+
 ARG BUILD_NUMBER
 ENV BUILD_NUMBER ${BUILD_NUMBER:-1_0_0}
 
 WORKDIR /app
 ADD . .
 RUN ./gradlew --no-daemon assemble
+
+RUN apt install tzdata
+RUN ln -fs /usr/share/zoneinfo/UTC /etc/localtime
 
 FROM eclipse-temurin:21-jre-jammy
 LABEL maintainer="HMPPS Digital Studio <info@digital.justice.gov.uk>"

@@ -22,9 +22,8 @@ RUN ln -snf "/usr/share/zoneinfo/$TZ" /etc/localtime && echo "$TZ" > /etc/timezo
 
 
 
-RUN addgroup --gid 2000 --system appgroup && \
-    adduser --uid 2000 --system appuser --gid 2000 \
-    adduser -D nonroot -u 1001
+RUN adduser -D nonroot -u 1001
+
 
 WORKDIR /app
 COPY --from=builder --chown=appuser:appgroup /app/build/libs/hmpps-sentence-plan*.jar /app/app.jar

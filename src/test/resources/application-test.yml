@@ -10,3 +10,6 @@ hmpps-auth:
 
 arns-api:
   base-url: http://localhost:5555
+
+delius-api:
+  base-url:

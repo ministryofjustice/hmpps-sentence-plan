@@ -6,7 +6,7 @@ import uk.gov.justice.digital.hmpps.sentenceplan.data.RiskAssessment
 
 class StubData {
   companion object {
-    fun getRoshInfoByCrn(crn: String): RiskAssessment {
+    fun getRiskScoreInfoByCrn(crn: String): RiskAssessment {
       val jsonString = """{
           "riskToSelf": {
             "suicide": {

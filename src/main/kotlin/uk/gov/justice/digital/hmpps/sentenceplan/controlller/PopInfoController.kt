@@ -18,6 +18,6 @@ class PopInfoController(
     @RequestBody body: CRNLinkedRequest,
   ): RiskResponse? {
     val crn = body.crn
-    return arnsApiService.getRoshInfoByCrn(crn)
+    return arnsApiService.getRiskScoreInfoByCrn(crn)
   }
 }

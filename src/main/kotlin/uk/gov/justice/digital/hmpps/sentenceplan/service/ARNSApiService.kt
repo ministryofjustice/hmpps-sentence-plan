@@ -18,14 +18,14 @@ class ARNSApiService(
   val arnsRestClient: ARNSRestClient,
   @Value("\${use-stub}") private val useStub: Boolean,
 ) {
-  fun getRoshInfoByCrn(crn: String): RiskResponse {
+  fun getRiskScoreInfoByCrn(crn: String): RiskResponse {
     val riskAssessment: RiskAssessment =
       if (useStub) {
         log.info("Calling Stub")
-        StubData.getRoshInfoByCrn(crn)
+        StubData.getRiskScoreInfoByCrn(crn)
       } else {
         log.info("Calling ARNSRestClient")
-        arnsRestClient.getRoshInfoByCrn(crn) ?: throw ResponseStatusException(HttpStatus.NOT_FOUND)
+        arnsRestClient.getRiskScoreInfoByCrn(crn) ?: throw ResponseStatusException(HttpStatus.NOT_FOUND)
       }
     val riskInCommunityMap = LinkedHashMap<String, ScoreEnum>()
     val riskInCustodyMap = LinkedHashMap<String, ScoreEnum>()

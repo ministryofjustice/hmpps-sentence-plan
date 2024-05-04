@@ -14,5 +14,5 @@ import uk.gov.justice.digital.hmpps.sentenceplan.data.RiskAssessment
 interface ARNSRestClient {
 
   @GetMapping("/risks/crn/{crn}")
-  fun getRoshInfoByCrn(@PathVariable("crn") crn: String): RiskAssessment?
+  fun getRiskScoreInfoByCrn(@PathVariable("crn") crn: String): RiskAssessment?
 }

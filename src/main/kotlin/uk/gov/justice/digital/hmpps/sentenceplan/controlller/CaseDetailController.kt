@@ -10,7 +10,7 @@ import uk.gov.justice.digital.hmpps.sentenceplan.service.CaseDetailService
 @RestController
 class CaseDetailController(private val caseDetailService: CaseDetailService) {
 
-  @GetMapping("/name/{crn}")
+  @GetMapping("/case-detail/name/{crn}")
   fun getName(
     @Parameter(description = "CRN", required = true, example = "D1974X")
     @PathVariable

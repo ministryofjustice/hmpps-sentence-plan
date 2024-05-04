@@ -3,6 +3,7 @@ plugins {
   kotlin("plugin.spring") version "1.9.23"
   kotlin("jvm") version "1.9.22"
   kotlin("plugin.jpa") version "1.9.22"
+  id("org.openapi.generator") version "5.4.0"
   id("org.jlleitschuh.gradle.ktlint") version "12.1.0"
   id("com.google.cloud.tools.jib") version "3.4.1"
   jacoco

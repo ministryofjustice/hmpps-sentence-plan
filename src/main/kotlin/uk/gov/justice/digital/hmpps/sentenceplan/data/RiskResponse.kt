@@ -1,10 +1,8 @@
 package uk.gov.justice.digital.hmpps.sentenceplan.data
 
-import java.time.LocalDateTime
-
 data class RiskResponse(
   val overallRisk: ScoreEnum,
-  val assessedOn: LocalDateTime,
+  val assessedOn: String,
   val riskInCommunity: RiskInCommunityResponse,
   val riskInCustody: RiskInCustodyResponse,
 )

@@ -1,12 +1,10 @@
 package uk.gov.justice.digital.hmpps.sentenceplan.data
 
-import java.time.LocalDateTime
-
 data class RiskAssessment(
   val riskToSelf: RiskToSelf,
   val otherRisks: OtherRisks,
   val summary: Summary,
-  val assessedOn: LocalDateTime,
+  val assessedOn: String,
 ) {
   data class RiskToSelf(
     val suicide: RiskDetail,

@@ -21,3 +21,8 @@ data class Name(
   var middleName: String? = null,
   var surname: String? = null,
 )
+
+data class NameResponse(
+  val forename: String?,
+  val surname: String?,
+)

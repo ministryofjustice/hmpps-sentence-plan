@@ -30,28 +30,28 @@ class ARNSApiService(
     val riskInCommunityMap = LinkedHashMap<String, ScoreEnum>()
     val riskInCustodyMap = LinkedHashMap<String, ScoreEnum>()
 
-    riskAssessment.summary.riskInCommunity["HIGH"]?.forEach { risk -> riskInCommunityMap[risk] = ScoreEnum.HIGH }
-    riskAssessment.summary.riskInCommunity["VERY_HIGH"]?.forEach { risk -> riskInCommunityMap[risk] = ScoreEnum.VERY_HIGH }
-    riskAssessment.summary.riskInCommunity["LOW"]?.forEach { risk -> riskInCommunityMap[risk] = ScoreEnum.LOW }
-    riskAssessment.summary.riskInCommunity["MEDIUM"]?.forEach { risk -> riskInCommunityMap[risk] = ScoreEnum.MEDIUM }
+    riskAssessment.summary.riskInCommunity[SCORE_VERY_HIGH]?.forEach { risk -> riskInCommunityMap[risk] = ScoreEnum.VERY_HIGH }
+    riskAssessment.summary.riskInCommunity[SCORE_HIGH]?.forEach { risk -> riskInCommunityMap[risk] = ScoreEnum.HIGH }
+    riskAssessment.summary.riskInCommunity[SCORE_MEDIUM]?.forEach { risk -> riskInCommunityMap[risk] = ScoreEnum.MEDIUM }
+    riskAssessment.summary.riskInCommunity[SCORE_LOW]?.forEach { risk -> riskInCommunityMap[risk] = ScoreEnum.LOW }
 
-    riskAssessment.summary.riskInCustody["HIGH"]?.forEach { risk -> riskInCustodyMap[risk] = ScoreEnum.HIGH }
-    riskAssessment.summary.riskInCustody["VERY_HIGH"]?.forEach { risk -> riskInCustodyMap[risk] = ScoreEnum.VERY_HIGH }
-    riskAssessment.summary.riskInCustody["LOW"]?.forEach { risk -> riskInCustodyMap[risk] = ScoreEnum.LOW }
-    riskAssessment.summary.riskInCustody["MEDIUM"]?.forEach { risk -> riskInCustodyMap[risk] = ScoreEnum.MEDIUM }
+    riskAssessment.summary.riskInCustody[SCORE_HIGH]?.forEach { risk -> riskInCustodyMap[risk] = ScoreEnum.HIGH }
+    riskAssessment.summary.riskInCustody[SCORE_VERY_HIGH]?.forEach { risk -> riskInCustodyMap[risk] = ScoreEnum.VERY_HIGH }
+    riskAssessment.summary.riskInCustody[SCORE_MEDIUM]?.forEach { risk -> riskInCustodyMap[risk] = ScoreEnum.MEDIUM }
+    riskAssessment.summary.riskInCustody[SCORE_LOW]?.forEach { risk -> riskInCustodyMap[risk] = ScoreEnum.LOW }
 
     val riskCommunity = RiskInCommunityResponse(
-      riskInCommunityMap["Public"] ?: ScoreEnum.LOW,
-      riskInCommunityMap["Children"] ?: ScoreEnum.LOW,
-      riskInCommunityMap["Know adult"] ?: ScoreEnum.LOW,
-      riskInCommunityMap["Staff"] ?: ScoreEnum.LOW,
+      riskInCommunityMap[COMMUNITY_PUBLIC] ?: ScoreEnum.LOW,
+      riskInCommunityMap[COMMUNITY_CHILDREN] ?: ScoreEnum.LOW,
+      riskInCommunityMap[COMMUNITY_KNOW_ADULT] ?: ScoreEnum.LOW,
+      riskInCommunityMap[COMMUNITY_STAFF] ?: ScoreEnum.LOW,
     )
     val riskCustody = RiskInCustodyResponse(
-      riskInCustodyMap["Public"] ?: ScoreEnum.LOW,
-      riskInCustodyMap["Children"] ?: ScoreEnum.LOW,
-      riskInCustodyMap["Know adult"] ?: ScoreEnum.LOW,
-      riskInCustodyMap["Staff"] ?: ScoreEnum.LOW,
-      riskInCustodyMap["Prisoners"] ?: ScoreEnum.LOW,
+      riskInCustodyMap[COMMUNITY_PUBLIC] ?: ScoreEnum.LOW,
+      riskInCustodyMap[COMMUNITY_CHILDREN] ?: ScoreEnum.LOW,
+      riskInCustodyMap[COMMUNITY_KNOW_ADULT] ?: ScoreEnum.LOW,
+      riskInCustodyMap[COMMUNITY_STAFF] ?: ScoreEnum.LOW,
+      riskInCustodyMap[COMMUNITY_PRISONERS] ?: ScoreEnum.LOW,
     )
 
     return RiskResponse(
@@ -63,5 +63,14 @@ class ARNSApiService(
   }
   private companion object {
     private val log = LoggerFactory.getLogger(this::class.java)
+    private const val SCORE_HIGH = "HIGH"
+    private const val SCORE_LOW = "LOW"
+    private const val SCORE_MEDIUM = "MEDIUM"
+    private const val SCORE_VERY_HIGH = "VERY_HIGH"
+    private const val COMMUNITY_PUBLIC = "Public"
+    private const val COMMUNITY_CHILDREN = "Children"
+    private const val COMMUNITY_KNOW_ADULT = "Know adult"
+    private const val COMMUNITY_STAFF = "Staff"
+    private const val COMMUNITY_PRISONERS = "Prisoners"
   }
 }

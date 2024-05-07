@@ -23,9 +23,11 @@ class SecurityConfiguration {
             "/ping",
             "/swagger-ui.html",
             "/swagger-ui/**",
+            "/v3/api-docs/**",
             "/hello/**",
+            "/question-reference-data",
           ).permitAll()
-          .anyRequest().hasAuthority("ROLE_VIEW_PRISONER_DATA")
+          .anyRequest().hasAuthority("ROLE_RISK_INTEGRATIONS_RO")
       }
       .oauth2ResourceServer().jwt().jwtAuthenticationConverter(AuthAwareTokenConverter())
 

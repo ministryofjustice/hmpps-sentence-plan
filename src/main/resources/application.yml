@@ -22,6 +22,22 @@ spring:
     date-format: "yyyy-MM-dd HH:mm:ss"
     serialization:
       WRITE_DATES_AS_TIMESTAMPS: false
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${hmpps-auth.issuer-base-url:${hmpps-auth.base-url}}/auth/issuer
+      client:
+        provider:
+          hmpps-auth-service:
+            token-uri: ${hmpps-auth.base-url}/auth/oauth/token
+        registration:
+          arns-api:
+            provider: hmpps-auth-service
+            client-authentication-method: client_secret_basic
+            authorization-grant-type: client_credentials
+            client-id: ${arns-api.client-id}
+            client-secret: ${arns-api.client-secret}
 
 db:
   name: sentence-plan
@@ -60,3 +76,12 @@ management:
     info:
       cache:
         time-to-live: 2000ms
+
+  cloud.openfeign.client.config:
+    default:
+      logger-level: basic
+      connect-timeout: 5000
+      read-timeout: 5000
+      default-request-headers:
+        Accept: application/json
+        Content-Type: application/json

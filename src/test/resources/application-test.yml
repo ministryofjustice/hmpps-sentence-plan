@@ -4,3 +4,9 @@ server:
 management.endpoint:
   health.cache.time-to-live: 0
   info.cache.time-to-live: 0
+
+hmpps-auth:
+  base-url: http://localhost:8090
+
+arns-api:
+  base-url: http://localhost:5555

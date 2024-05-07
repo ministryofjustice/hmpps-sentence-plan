@@ -27,3 +27,4 @@ securityContext:
     type: RuntimeDefault
   capabilities:
     drop: [ "ALL" ]
+

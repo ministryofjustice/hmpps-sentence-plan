@@ -44,6 +44,7 @@ spring:
             authorization-grant-type: client_credentials
             client-id: ${arns-api.client-id}
             client-secret: ${arns-api.client-secret}
+
 db:
   name: sentence-plan
   endpoint: localhost:5432
@@ -90,3 +91,4 @@ management:
       default-request-headers:
         Accept: application/json
         Content-Type: application/json
+

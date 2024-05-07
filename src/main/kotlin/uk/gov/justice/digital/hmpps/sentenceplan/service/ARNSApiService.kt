@@ -69,7 +69,7 @@ class ARNSApiService(
     private const val SCORE_VERY_HIGH = "VERY_HIGH"
     private const val COMMUNITY_PUBLIC = "Public"
     private const val COMMUNITY_CHILDREN = "Children"
-    private const val COMMUNITY_KNOW_ADULT = "Know adult"
+    private const val COMMUNITY_KNOW_ADULT = "Known Adult"
     private const val COMMUNITY_STAFF = "Staff"
     private const val COMMUNITY_PRISONERS = "Prisoners"
   }

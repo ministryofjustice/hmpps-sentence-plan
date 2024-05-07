@@ -1,6 +1,6 @@
 package uk.gov.justice.digital.hmpps.sentenceplan.data
 
-data class RiskResponse(
+data class RiskAssessmentResponse(
   val overallRisk: ScoreEnum,
   val assessedOn: String,
   val riskInCommunity: RiskInCommunityResponse,

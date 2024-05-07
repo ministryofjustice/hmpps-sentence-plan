@@ -5,7 +5,7 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.sentenceplan.data.CRNLinkedRequest
-import uk.gov.justice.digital.hmpps.sentenceplan.data.RiskResponse
+import uk.gov.justice.digital.hmpps.sentenceplan.data.RiskAssessmentResponse
 import uk.gov.justice.digital.hmpps.sentenceplan.service.ARNSApiService
 
 @RestController
@@ -16,7 +16,7 @@ class PopInfoController(
   @PostMapping("/scores/risk")
   fun getRiskScore(
     @RequestBody body: CRNLinkedRequest,
-  ): RiskResponse? {
+  ): RiskAssessmentResponse? {
     val crn = body.crn
     return arnsApiService.getRiskScoreInfoByCrn(crn)
   }

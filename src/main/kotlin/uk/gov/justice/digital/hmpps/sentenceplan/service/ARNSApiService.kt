@@ -7,9 +7,9 @@ import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
 import uk.gov.justice.digital.hmpps.sentenceplan.client.ARNSRestClient
 import uk.gov.justice.digital.hmpps.sentenceplan.data.RiskAssessment
+import uk.gov.justice.digital.hmpps.sentenceplan.data.RiskAssessmentResponse
 import uk.gov.justice.digital.hmpps.sentenceplan.data.RiskInCommunityResponse
 import uk.gov.justice.digital.hmpps.sentenceplan.data.RiskInCustodyResponse
-import uk.gov.justice.digital.hmpps.sentenceplan.data.RiskResponse
 import uk.gov.justice.digital.hmpps.sentenceplan.data.ScoreEnum
 import uk.gov.justice.digital.hmpps.sentenceplan.stub.StubData
 
@@ -18,7 +18,7 @@ class ARNSApiService(
   val arnsRestClient: ARNSRestClient,
   @Value("\${use-stub}") private val useStub: Boolean,
 ) {
-  fun getRiskScoreInfoByCrn(crn: String): RiskResponse {
+  fun getRiskScoreInfoByCrn(crn: String): RiskAssessmentResponse {
     val riskAssessment: RiskAssessment =
       if (useStub) {
         log.info("Calling Stub")
@@ -54,7 +54,7 @@ class ARNSApiService(
       riskInCustodyMap[COMMUNITY_PRISONERS] ?: ScoreEnum.LOW,
     )
 
-    return RiskResponse(
+    return RiskAssessmentResponse(
       ScoreEnum.valueOf(riskAssessment.summary.overallRiskLevel),
       riskAssessment.assessedOn,
       riskCommunity,

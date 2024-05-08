@@ -6,6 +6,9 @@ import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
 import uk.gov.justice.digital.hmpps.sentenceplan.client.ARNSRestClient
+import uk.gov.justice.digital.hmpps.sentenceplan.client.DeliusRestClient
+import uk.gov.justice.digital.hmpps.sentenceplan.data.CaseDetail
+import uk.gov.justice.digital.hmpps.sentenceplan.data.PopInfoResponse
 import uk.gov.justice.digital.hmpps.sentenceplan.data.RiskAssessment
 import uk.gov.justice.digital.hmpps.sentenceplan.data.RiskAssessmentResponse
 import uk.gov.justice.digital.hmpps.sentenceplan.data.RiskInCommunityResponse
@@ -15,9 +18,32 @@ import uk.gov.justice.digital.hmpps.sentenceplan.stub.StubData
 
 @Service
 class ARNSApiService(
-  val arnsRestClient: ARNSRestClient,
+  private val arnsRestClient: ARNSRestClient,
+  private val deliusRestClient: DeliusRestClient,
   @Value("\${use-stub}") private val useStub: Boolean,
 ) {
+
+  fun getPopInfo(crn: String): PopInfoResponse {
+    val caseDetail: CaseDetail =
+      if (useStub) {
+        log.info("Calling Stub")
+        StubData.getCaseDetail(crn) ?: throw ResponseStatusException(HttpStatus.NOT_FOUND)
+      } else {
+        log.info("Calling DeliusRestClient")
+        deliusRestClient.getCaseDetail(crn) ?: throw ResponseStatusException(HttpStatus.NOT_FOUND)
+      }
+    return PopInfoResponse(
+      "",
+      caseDetail.name?.forename,
+      caseDetail.name?.surname,
+      "",
+      caseDetail.dateOfBirth,
+      caseDetail.crn,
+      "",
+      mapOf<String, Any>(),
+    )
+  }
+
   fun getRiskScoreInfoByCrn(crn: String): RiskAssessmentResponse {
     val riskAssessment: RiskAssessment =
       if (useStub) {

@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.sentenceplan.data.CRNLinkedRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.data.PopInfoResponse
 import uk.gov.justice.digital.hmpps.sentenceplan.data.RiskAssessmentResponse
-import uk.gov.justice.digital.hmpps.sentenceplan.service.ARNSApiService
+import uk.gov.justice.digital.hmpps.sentenceplan.services.ARNSApiService
 
 @RestController
 @RequestMapping("/info/pop")

@@ -81,13 +81,13 @@ class StubData {
     fun getCaseDetail(crn: String): CaseDetail {
       val jsonString = """{
        "name": {
-        "forename": "abc",
-        "middleName": "xyz",
-        "surname": "pqr"
+        "forename": "Joan",
+        "middleName": "",
+        "surname": "Scott"
        },
-       "crn": "crn",
+       "crn": "12345678",
        "tier": "tier",
-       "dateOfBirth": "03-1-2000",
+       "dateOfBirth": "01/01/1997",
        "nomisId": "some_id",
        "region": "region",
        "keyWorker" : {

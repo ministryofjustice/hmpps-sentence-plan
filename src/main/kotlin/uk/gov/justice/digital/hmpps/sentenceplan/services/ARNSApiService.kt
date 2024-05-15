@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.sentenceplan.service
+package uk.gov.justice.digital.hmpps.sentenceplan.services
 
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -32,14 +32,15 @@ class ARNSApiService(
         log.info("Calling DeliusRestClient")
         deliusRestClient.getCaseDetail(crn) ?: throw ResponseStatusException(HttpStatus.NOT_FOUND)
       }
+    // TODO sort source of below hard coded values
     return PopInfoResponse(
-      "",
+      "Miss",
       caseDetail.name?.forename,
       caseDetail.name?.surname,
-      "",
+      "Gender.female",
       caseDetail.dateOfBirth,
       caseDetail.crn,
-      "",
+      "ABC123XYZ",
       mapOf<String, Any>(),
     )
   }

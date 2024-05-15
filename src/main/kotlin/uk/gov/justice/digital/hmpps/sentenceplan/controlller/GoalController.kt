@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepEntity
-import uk.gov.justice.digital.hmpps.sentenceplan.service.GoalService
+import uk.gov.justice.digital.hmpps.sentenceplan.services.GoalService
 import java.util.UUID
 
 @RestController

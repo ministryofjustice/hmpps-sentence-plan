@@ -12,7 +12,6 @@ class GoalControllerTest : IntegrationTestBase() {
 
   val currentTime = LocalDateTime.now().toString()
 
-//  val goalId = UUID.randomUUID()
   private val goalRequestBody = GoalEntity(
     title = "abc",
     areaOfNeed = "xzv",
@@ -21,15 +20,6 @@ class GoalControllerTest : IntegrationTestBase() {
     creationDate = currentTime,
     targetDate = currentTime,
   )
-
-//  private val stepRequestBody = StepEntity(
-//    description = "desc",
-//    actor = "actor",
-//    status = "status",
-//    creationDate = currentTime,
-//  )
-
-//  private val stepsList = listOf(stepRequestBody)
 
   @Test
   fun `create goal should return created`() {
@@ -59,16 +49,6 @@ class GoalControllerTest : IntegrationTestBase() {
       .exchange()
       .expectStatus().isForbidden
   }
-
-//  @Test
-//  fun `create steps should return created`() {
-//    webTestClient.post().uri("/goals/1/steps")
-//      .header("Content-Type", "application/json")
-//      .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
-//      .bodyValue(stepsList)
-//      .exchange()
-//      .expectStatus().isCreated
-//  }
 
   @Test
   fun `create steps should return unauthorized when no auth token`() {

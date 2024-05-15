@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.sentenceplan.service
+package uk.gov.justice.digital.hmpps.sentenceplan.services
 
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.RefDataEntity

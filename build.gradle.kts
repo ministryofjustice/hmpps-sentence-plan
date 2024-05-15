@@ -31,6 +31,9 @@ dependencies {
   implementation("org.flywaydb:flyway-core")
   implementation("com.vladmihalcea:hibernate-types-60:2.21.1")
   runtimeOnly("org.postgresql:postgresql")
+  testImplementation("com.ninja-squad:springmockk:4.0.2")
+  testImplementation("io.jsonwebtoken:jjwt-impl:0.12.3")
+  testImplementation("io.jsonwebtoken:jjwt-jackson:0.12.3")
 }
 
 kotlin {

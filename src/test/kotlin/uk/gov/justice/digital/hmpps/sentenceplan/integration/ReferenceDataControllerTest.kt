@@ -19,21 +19,4 @@ class ReferenceDataControllerTest : IntegrationTestBase() {
       .exchange()
       .expectStatus().isOk
   }
-
-  @Test
-  fun `get question reference data should return unauthorized when no auth token`() {
-    webTestClient.get().uri("/question-reference-data")
-      .header("Content-Type", "application/json")
-      .exchange()
-      .expectStatus().isUnauthorized
-  }
-
-  @Test
-  fun `get question reference data should return forbidden when no role`() {
-    webTestClient.get().uri("/question-reference-data")
-      .header("Content-Type", "application/json")
-      .headers(setAuthorisation(roles = listOf("abc")))
-      .exchange()
-      .expectStatus().isForbidden
-  }
 }

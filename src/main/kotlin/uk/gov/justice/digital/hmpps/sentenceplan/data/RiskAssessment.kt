@@ -14,11 +14,11 @@ data class RiskAssessment(
     val vulnerability: RiskDetail,
   ) {
     data class RiskDetail(
-      val risk: String,
-      val previous: String,
-      val previousConcernsText: String,
-      val current: String,
-      val currentConcernsText: String,
+      var risk: String? = null,
+      var previous: String? = null,
+      var previousConcernsText: String? = null,
+      var current: String? = null,
+      var currentConcernsText: String? = null,
     )
   }
 

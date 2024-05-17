@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.sentenceplan.data.RefData
-import uk.gov.justice.digital.hmpps.sentenceplan.service.ReferenceDataService
+import uk.gov.justice.digital.hmpps.sentenceplan.services.ReferenceDataService
 
 @RestController
 @RequestMapping("/question-reference-data")

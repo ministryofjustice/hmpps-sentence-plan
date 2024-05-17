@@ -22,7 +22,13 @@ data class Name(
   var surname: String? = null,
 )
 
-data class NameResponse(
-  val forename: String?,
-  val surname: String?,
+data class PopInfoResponse(
+  var title: String? = null,
+  var firstName: String? = null,
+  var lastName: String? = null,
+  var gender: String? = null,
+  var doB: String? = null,
+  var crn: String? = null,
+  var prc: String? = null,
+  var courtOrderRequirements: Map<String, Any>? = null,
 )

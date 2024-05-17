@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.sentenceplan.service
+package uk.gov.justice.digital.hmpps.sentenceplan.services
 
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -6,6 +6,9 @@ import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
 import uk.gov.justice.digital.hmpps.sentenceplan.client.ARNSRestClient
+import uk.gov.justice.digital.hmpps.sentenceplan.client.DeliusRestClient
+import uk.gov.justice.digital.hmpps.sentenceplan.data.CaseDetail
+import uk.gov.justice.digital.hmpps.sentenceplan.data.PopInfoResponse
 import uk.gov.justice.digital.hmpps.sentenceplan.data.RiskAssessment
 import uk.gov.justice.digital.hmpps.sentenceplan.data.RiskAssessmentResponse
 import uk.gov.justice.digital.hmpps.sentenceplan.data.RiskInCommunityResponse
@@ -15,9 +18,33 @@ import uk.gov.justice.digital.hmpps.sentenceplan.stub.StubData
 
 @Service
 class ARNSApiService(
-  val arnsRestClient: ARNSRestClient,
+  private val arnsRestClient: ARNSRestClient,
+  private val deliusRestClient: DeliusRestClient,
   @Value("\${use-stub}") private val useStub: Boolean,
 ) {
+
+  fun getPopInfo(crn: String): PopInfoResponse {
+    val caseDetail: CaseDetail =
+      if (useStub) {
+        log.info("Calling Stub")
+        StubData.getCaseDetail(crn) ?: throw ResponseStatusException(HttpStatus.NOT_FOUND)
+      } else {
+        log.info("Calling DeliusRestClient")
+        deliusRestClient.getCaseDetail(crn) ?: throw ResponseStatusException(HttpStatus.NOT_FOUND)
+      }
+    // TODO sort source of below hard coded values
+    return PopInfoResponse(
+      "Miss",
+      caseDetail.name?.forename,
+      caseDetail.name?.surname,
+      "Gender.female",
+      caseDetail.dateOfBirth,
+      caseDetail.crn,
+      "ABC123XYZ",
+      mapOf<String, Any>(),
+    )
+  }
+
   fun getRiskScoreInfoByCrn(crn: String): RiskAssessmentResponse {
     val riskAssessment: RiskAssessment =
       if (useStub) {
@@ -69,7 +96,7 @@ class ARNSApiService(
     private const val SCORE_VERY_HIGH = "VERY_HIGH"
     private const val COMMUNITY_PUBLIC = "Public"
     private const val COMMUNITY_CHILDREN = "Children"
-    private const val COMMUNITY_KNOW_ADULT = "Know adult"
+    private const val COMMUNITY_KNOW_ADULT = "Known Adult"
     private const val COMMUNITY_STAFF = "Staff"
     private const val COMMUNITY_PRISONERS = "Prisoners"
   }

@@ -1,0 +1,549 @@
+openapi: 3.0.1
+info:
+  title: Sentence Plan Draft API
+  description: Draft API spec for the Sentence Plan project
+  version: 0.0.4
+servers:
+  - url: http://sentence-plan-api-dev.hmpps.service.justice.gov.uk
+tags:
+  - name: Goals
+    description: Operations related to managing goals
+  - name: Goals by Area
+    description: Operations related to managing goals by specific area of need
+  - name: Goal Steps
+    description: Operations related to managing steps within goals
+  - name: Reference Data
+    description: Operations related to retrieving question reference data
+  - name: Info and Metadata
+    description: Operations related to retrieving info and metadata about a PoP
+
+paths:
+  /goals:
+    get:
+      tags:
+        - Goals
+      summary: Get all goals
+      description: Retrieves a list of all goals.
+      responses:
+        '200':
+          description: A list of goals
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Goal'
+    post:
+      tags:
+        - Goals
+      summary: Create a new goal
+      description: Creates a new goal with the specified details.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewGoal'
+      responses:
+        '201':
+          description: Goal created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Goal'
+  /goals/by-area/{need-area}:
+    get:
+      tags:
+        - Goals by Area
+      summary: Get goals by area
+      description: Retrieves all goals for a specific area of need.
+      parameters:
+        - in: path
+          name: need-area
+          schema:
+            type: string
+          required: true
+          description: The area of need to filter goals by
+      responses:
+        '200':
+          description: A list of goals filtered by the specified area
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Goal'
+  /goals/{goal-id}:
+    get:
+      tags:
+        - Goals
+      summary: Get a goal by ID
+      description: Retrieves details of a specific goal by its ID.
+      parameters:
+        - in: path
+          name: goal-id
+          schema:
+            type: string
+          required: true
+          description: The unique identifier of the goal
+      responses:
+        '200':
+          description: Details of the goal
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Goal'
+    patch:
+      tags:
+        - Goals
+      summary: Edit a goal
+      description: Updates specified fields of an existing goal.
+      parameters:
+        - in: path
+          name: goal-id
+          schema:
+            type: string
+          required: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                description:
+                  type: string
+      responses:
+        '200':
+          description: Goal updated successfully
+    delete:
+      tags:
+        - Goals
+      summary: Delete a goal
+      description: Deletes a specific goal by its ID.
+      parameters:
+        - in: path
+          name: goal-id
+          schema:
+            type: string
+          required: true
+      responses:
+        '204':
+          description: Goal deleted successfully
+  /goals/order:
+    post:
+      tags:
+        - Goals
+      summary: Update the order of a goal collection
+      description: Retrieves details of a specific goal by its ID.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewGoalCollectionOrder'
+      responses:
+        '200':
+          description: Details of the goal
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Goal'
+  /goals/{goal-id}/steps:
+    get:
+      tags:
+        - Goal Steps
+      summary: Get all steps for a goal
+      description: Retrieves all steps associated with a specific goal.
+      parameters:
+        - in: path
+          name: goal-id
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: A list of steps for the goal
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Step'
+    post:
+      tags:
+        - Goal Steps
+      summary: Create new steps for a goal
+      description: Adds new steps to a specific goal.
+      parameters:
+        - in: path
+          name: goal-id
+          schema:
+            type: string
+          required: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewStep'
+      responses:
+        '201':
+          description: Steps created successfully
+  /goals/{goal-id}/steps/{step-id}:
+    get:
+      tags:
+        - Goal Steps
+      summary: Get a specific step of a goal
+      description: Retrieves a specific step by its ID for a given goal.
+      parameters:
+        - in: path
+          name: goal-id
+          schema:
+            type: string
+          required: true
+        - in: path
+          name: step-id
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: Details of the specific step
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Step'
+    delete:
+      tags:
+        - Goal Steps
+      summary: Delete a specific step of a goal
+      description: Deletes a specific step by its ID for a given goal.
+      parameters:
+        - in: path
+          name: goal-id
+          schema:
+            type: string
+          required: true
+        - in: path
+          name: step-id
+          schema:
+            type: string
+          required: true
+      responses:
+        '204':
+          description: Step deleted successfully
+  /question-reference-data:
+    get:
+      tags:
+        - Reference Data
+      summary: Get latest reference data
+      description: Retrieves an object containing the latest question reference data
+      responses:
+        '200':
+          description: Question reference data
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RefData'
+  /question-reference-data/{version}:
+    get:
+      tags:
+        - Reference Data
+      summary: Get specific version of reference data
+      description: Retrieves an object containing a specific version of the question reference data
+      parameters:
+        - in: path
+          name: version
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: Question reference data
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RefData'
+  /info/pop/:
+    post:
+      tags:
+        - Info and Metadata
+      summary: Get info about a PoP
+      description: Get info about a PoP
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PoPInfo'
+      responses:
+        '200':
+          description: Metadata about a PoP, i.e. CRN, PNC, DoB, Full Name, etc.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Person'
+  /info/pop/scores/risk:
+    post:
+      tags:
+        - Info and Metadata
+      summary: Get RoSH/risk scores for a PoP
+      description: Get the RoSH/Risk scores a PoP
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PoPInfo'
+      responses:
+        '200':
+          description: The RoSH/Risk assessment scores for the provided PoP's CRN
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RiskAssessment'
+  /info/pop/scores/san:
+    post:
+      tags:
+        - Info and Metadata
+      summary: Get strength-and-need assesment scores for a PoP
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PoPInfo'
+      responses:
+        '200':
+          description: The RoSH/Risk assessment scores for the provided PoP's CRN
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SanAssessment'
+
+
+components:
+  schemas:
+    AreaOfNeed:
+      type: string
+      enum:
+        - Accomadation
+        - Drugs
+        - Health and Wellbeing
+    Step:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier for the step
+        description:
+          type: string
+          description: A description of the step
+        actor:
+          type: string
+          description: Who needs to complete this step
+        status:
+          type: string
+          description: Current status of the step
+          enum:
+            - Pending
+            - InProgress
+            - Completed
+        relatedGoalId:
+          type: string
+          format: uuid
+    NewStep:
+      type: object
+      required:
+        - id
+        - description
+        - status
+        - actor
+      properties:
+        description:
+          type: string
+          description: A description of the step
+        actor:
+          type: string
+          description: Who needs to complete this step
+        status:
+          type: string
+          description: Current status of the step
+          enum:
+            - Pending
+            - InProgress
+            - Completed
+    Goal:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier for the goal
+        title:
+          type: string
+          description: Title of the goal
+        areaOfNeed:
+          $ref: '#/components/schemas/AreaOfNeed'
+        creationDate:
+          type: string
+          format: date-time
+          description: Date and time the goal was created
+        targetDate:
+          type: string
+          format: date-time
+          description: Target date by which the goal is expected to be achieved
+        completedDate:
+          type: string
+          format: date-time
+          description: Date and time the goal was completed
+        order:
+          type: integer
+          description: The order of the goal
+        steps:
+          type: array
+          items:
+            $ref: '#/components/schemas/Step'
+          description: List of steps involved in achieving the goal
+    NewGoal:
+      type: object
+      required:
+        - title
+        - areaOfNeed
+        - targetDate
+        - order
+      properties:
+        title:
+          type: string
+          description: Title of the goal
+        areaOfNeed:
+          $ref: '#/components/schemas/AreaOfNeed'
+        targetDate:
+          type: string
+          format: date-time
+          description: Target date by which the goal is expected to be achieved
+        order:
+          type: integer
+          description: The order of the goal
+    NewGoalCollectionOrder:
+      type: array
+      items:
+        type: object
+        properties:
+          goalId:
+            type: string
+            description: The ID of the goal to be updated
+          order:
+            type: integer
+            description: The new order value for the goal
+        required:
+          - goalId
+          - order
+    PoPInfo:
+      type: object
+      required:
+        - crn
+      properties:
+        crn:
+          type: string
+          description: CRN of PoP
+    RiskLevel:
+      type: string
+      enum:
+        - LOW
+        - MEDIUM
+        - HIGH
+        - VERY_HIGH
+    RiskAssessment:
+      type: object
+      properties:
+        overallRisk:
+          $ref: '#/components/schemas/RiskLevel'
+        assessedOn:
+          type: string
+          format: date-time
+        riskInCommunity:
+          type: object
+          properties:
+            Public:
+              $ref: '#/components/schemas/RiskLevel'
+            Children:
+              $ref: '#/components/schemas/RiskLevel'
+            KnownAdult:
+              $ref: '#/components/schemas/RiskLevel'
+            Staff:
+              $ref: '#/components/schemas/RiskLevel'
+        riskInCustody:
+          type: object
+          properties:
+            Public:
+              $ref: '#/components/schemas/RiskLevel'
+            Children:
+              $ref: '#/components/schemas/RiskLevel'
+            KnownAdult:
+              $ref: '#/components/schemas/RiskLevel'
+            Staff:
+              $ref: '#/components/schemas/RiskLevel'
+            Prisoners:
+              $ref: '#/components/schemas/RiskLevel'
+      required:
+        - overallRisk
+        - assessedOn
+        - riskInCommunity
+        - riskInCustody
+    Person:
+      type: object
+      properties:
+        title:
+          type: string
+          example: 'Miss'
+        firstName:
+          type: string
+          example: 'Joan'
+        lastName:
+          type: string
+          example: 'Scott'
+        gender:
+          type: string
+          enum:
+            - female
+            - male
+            - other
+        DoB:
+          type: string
+          format: date
+          example: '1997-01-01'
+        CRN:
+          type: string
+          example: '12345678'
+        PRC:
+          type: string
+          example: 'ABC123XYZ'
+        courtOrderRequirements:
+          $ref: '#/components/schemas/CourtOrderRequirements'
+      required:
+        - title
+        - firstName
+        - lastName
+        - gender
+        - DoB
+        - CRN
+        - PRC
+    CourtOrderRequirements:
+      type: object
+      description: 'Details specific to the court order requirements. PLACEHOLDER'
+
+    SanAssessment:
+      type: object
+      description: 'The scores of a PoP`s SAN assessment. PLACEHOLDER'
+
+    RefData:
+      type: object

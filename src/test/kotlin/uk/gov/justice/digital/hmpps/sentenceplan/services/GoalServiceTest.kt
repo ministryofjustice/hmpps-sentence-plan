@@ -31,6 +31,7 @@ class GoalServiceTest {
       areaOfNeed = "area",
       targetDate = currentTime,
       isAgreed = true,
+      goalOrder = 1,
     )
     every { goalRepository.save(any()) } returns goalEntity
     val goal = goalService.createNewGoal(goalEntity)

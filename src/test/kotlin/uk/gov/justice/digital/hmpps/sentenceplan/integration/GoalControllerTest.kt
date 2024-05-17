@@ -19,6 +19,7 @@ class GoalControllerTest : IntegrationTestBase() {
     agreementNote = "note",
     creationDate = currentTime,
     targetDate = currentTime,
+    goalOrder = 1,
   )
 
   @Test

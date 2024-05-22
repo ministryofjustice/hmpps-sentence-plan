@@ -42,4 +42,5 @@ class StepEntity(
 
 interface StepRepository : JpaRepository<StepEntity, UUID> {
   override fun findById(uuid: UUID): Optional<StepEntity>
+  fun findAllByRelatedGoalId(relatedGoalId: UUID): Optional<List<StepEntity>>
 }

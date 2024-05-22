@@ -17,8 +17,6 @@ class GoalControllerTest : IntegrationTestBase() {
   private val goalRequestBody = GoalEntity(
     title = "abc",
     areaOfNeed = "xzv",
-    isAgreed = true,
-    agreementNote = "note",
     creationDate = currentTime,
     targetDate = currentTime,
     goalOrder = 1,

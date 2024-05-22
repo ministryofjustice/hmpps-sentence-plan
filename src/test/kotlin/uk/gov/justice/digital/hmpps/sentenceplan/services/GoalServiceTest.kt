@@ -24,12 +24,10 @@ class GoalServiceTest {
   private val goalService = GoalService(goalRepository, stepRepository)
   val uuid = UUID.randomUUID()
   val goalEntity = GoalEntity(
-    agreementNote = "note",
     id = 123L,
     title = "title",
     areaOfNeed = "area",
     targetDate = currentTime,
-    isAgreed = true,
     goalOrder = 1,
   )
   val stepEntity = StepEntity(
@@ -48,9 +46,7 @@ class GoalServiceTest {
     assertThat(goal.uuid).isNotNull()
     assertThat(goal.id).isEqualTo(123)
     assertThat(goal.title).isEqualTo("title")
-    assertThat(goal.agreementNote).isEqualTo("note")
     assertThat(goal.targetDate).isEqualTo(currentTime)
-    assertThat(goal.isAgreed).isEqualTo(true)
   }
 
   @Test

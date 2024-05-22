@@ -34,12 +34,6 @@ class GoalEntity(
   @Column(name = "target_date")
   val targetDate: String,
 
-  @Column(name = "is_agreed")
-  val isAgreed: Boolean,
-
-  @Column(name = "agreement_note")
-  val agreementNote: String,
-
   @Column(name = "creation_date")
   val creationDate: String = DateTimeFormatter.ISO_INSTANT.format(Instant.now()),
 

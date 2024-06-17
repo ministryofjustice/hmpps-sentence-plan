@@ -2,7 +2,7 @@ openapi: 3.0.1
 info:
   title: Sentence Plan Draft API
   description: Draft API spec for the Sentence Plan project
-  version: 0.0.4
+  version: 0.0.5
 servers:
   - url: http://sentence-plan-api-dev.hmpps.service.justice.gov.uk
 tags:
@@ -16,7 +16,6 @@ tags:
     description: Operations related to retrieving question reference data
   - name: Info and Metadata
     description: Operations related to retrieving info and metadata about a PoP
-
 paths:
   /goals:
     get:
@@ -216,6 +215,35 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Step'
+    patch:
+      tags:
+        - Goal Steps
+      summary: Update properties of a step
+      description: Update a step
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewStep'
+      parameters:
+        - in: path
+          name: goal-id
+          schema:
+            type: string
+          required: true
+        - in: path
+          name: step-id
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: Details of the specific step
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Step'
     delete:
       tags:
         - Goal Steps
@@ -327,8 +355,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SanAssessment'
-
-
 components:
   schemas:
     AreaOfNeed:
@@ -504,13 +530,13 @@ components:
       properties:
         title:
           type: string
-          example: 'Miss'
+          example: Miss
         firstName:
           type: string
-          example: 'Joan'
+          example: Joan
         lastName:
           type: string
-          example: 'Scott'
+          example: Scott
         gender:
           type: string
           enum:
@@ -526,7 +552,7 @@ components:
           example: '12345678'
         PRC:
           type: string
-          example: 'ABC123XYZ'
+          example: ABC123XYZ
         courtOrderRequirements:
           $ref: '#/components/schemas/CourtOrderRequirements'
       required:
@@ -539,11 +565,9 @@ components:
         - PRC
     CourtOrderRequirements:
       type: object
-      description: 'Details specific to the court order requirements. PLACEHOLDER'
-
+      description: Details specific to the court order requirements. PLACEHOLDER
     SanAssessment:
       type: object
-      description: 'The scores of a PoP`s SAN assessment. PLACEHOLDER'
-
+      description: The scores of a PoP`s SAN assessment. PLACEHOLDER
     RefData:
       type: object

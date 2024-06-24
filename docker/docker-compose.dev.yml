@@ -1,0 +1,44 @@
+services:
+  postgres:
+    ports:
+      - "5432:5432"
+
+  hmpps-auth:
+    ports:
+      - "9090:9090"
+
+  hmpps-auth-proxy:
+    ports:
+      - "9091:9091"
+
+  api:
+    image: quay.io/hmpps/hmpps-sentence-plan:local
+    build:
+      target: development
+    command: gradle --parallel --build-cache --configuration-cache bootRun
+    ports:
+      - "5005:5005"
+    volumes:
+      - code:/app
+      - gradle:/home/gradle/.gradle
+    tmpfs:
+      - /app/build
+
+volumes:
+  code:
+  gradle:
+
+x-mutagen:
+  sync:
+    defaults:
+      mode: 'two-way-resolved'
+      ignore:
+        paths:
+          - '.idea'
+          - 'docker'
+    code:
+      alpha: '../'
+      beta: 'volume://code'
+    gradle:
+      alpha: '~/.gradle'
+      beta: 'volume://gradle'

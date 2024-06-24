@@ -1,0 +1,21 @@
+{
+  "name": {
+    "forename": "{{ random 'Name.firstName' }}",
+    "middleName": "",
+    "surname": "{{ random 'Name.lastName' }}"
+  },
+  "crn": "{{request.path.[1]}}",
+  "tier": "{{pickRandom '1A' '2B'}}",
+  "dateOfBirth": "{{date now format='dd/MM/yyyy'}}",
+  "nomisId": "{{randomValue length=8 type='ALPHANUMERIC'}}",
+  "region": "{{pickRandom 'north' 'south'}}",
+  "keyWorker": {
+    "name": {
+      "forename": "{{ random 'Name.firstName' }}",
+      "middleName": "",
+      "surname": "{{ random 'Name.lastName' }}"
+    },
+    "unallocated": "{{pickRandom 'true' 'false'}}"
+  },
+  "inCustody": "{{pickRandom 'true' 'false'}}"
+}

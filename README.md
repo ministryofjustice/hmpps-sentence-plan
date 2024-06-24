@@ -1,49 +1,41 @@
-# hmpps-sentence-plan
+# HMPPS Sentence Plan API
 [![repo standards badge](https://img.shields.io/badge/dynamic/json?color=blue&style=flat&logo=github&label=MoJ%20Compliant&query=%24.result&url=https%3A%2F%2Foperations-engineering-reports.cloud-platform.service.justice.gov.uk%2Fapi%2Fv1%2Fcompliant_public_repositories%2Fhmpps-sentence-plan)](https://operations-engineering-reports.cloud-platform.service.justice.gov.uk/public-github-repositories.html#hmpps-sentence-plan "Link to report")
 [![CircleCI](https://circleci.com/gh/ministryofjustice/hmpps-sentence-plan/tree/main.svg?style=svg)](https://circleci.com/gh/ministryofjustice/hmpps-sentence-plan)
 [![Docker Repository on Quay](https://quay.io/repository/hmpps/hmpps-sentence-plan/status "Docker Repository on Quay")](https://quay.io/repository/hmpps/hmpps-sentence-plan)
 [![API docs](https://img.shields.io/badge/API_docs_-view-85EA2D.svg?logo=swagger)](https://hmpps-sentence-plan-dev.hmpps.service.justice.gov.uk/webjars/swagger-ui/index.html?configUrl=/v3/api-docs)
 
-This is a skeleton project from which to create new kotlin projects from.
+This is the backend / API for the Sentence Plan project.
 
-# Instructions
+## Prerequisites
+- Docker
+- Node.js
+- Homebrew
 
-If this is a HMPPS project then the project will be created as part of bootstrapping - 
-see https://github.com/ministryofjustice/dps-project-bootstrap.
+## Running the application
+This service and all of its dependencies are run in Docker containers.
 
-## Creating a CloudPlatform namespace
+Before starting, run `make install_requirements`. 
 
-When deploying to a new namespace, you may wish to use this template kotlin project namespace as the basis for your new namespace:
+**Note: Every command can be printed using `make`**
 
-<https://github.com/ministryofjustice/cloud-platform-environments/tree/main/namespaces/live.cloud-platform.service.justice.gov.uk/hmpps-sentence-plan>
+### Production
+1. To start a production version of the application, run `make up`
+    - The service will start on http://localhost:8080
+    - To check the health status, go to http://localhost:8080/health
+2. To update all containers, run `make down update up`
 
-Copy this folder, update all the existing namespace references, and submit a PR to the CloudPlatform team. Further instructions from the CloudPlatform team can be found here: <https://user-guide.cloud-platform.service.justice.gov.uk/#cloud-platform-user-guide>
+### Development
+1. To start a development version of the application, run `make dev-up`
+    - The service will start on http://localhost:8080
+    - A debugger session will be accessible on http://localhost:5005
+    - To check the health status, go to http://localhost:8080/health
+2. To enable live-reload, run `make watch`, the API will now restart each time you change the code.
 
-## Renaming from Hmpps Sentence Plan - github Actions
+You can connect to the remote debugger session on http://localhost:5005 like so
+[![API docs](https://github.com/ministryofjustice/hmpps-strengths-based-needs-assessments-api/blob/main/.readme/debugger.png?raw=true)]()
 
-Once the new repository is deployed. Navigate to the repository in github, and select the `Actions` tab.
-Click the link to `Enable Actions on this repository`.
+### Testing
+The test suite can be ran using `make test`
 
-Find the Action workflow named: `rename-project-create-pr` and click `Run workflow`.  This workflow will
-execute the `rename-project.bash` and create Pull Request for you to review.  Review the PR and merge.
-
-Note: ideally this workflow would run automatically however due to a recent change github Actions are not
-enabled by default on newly created repos. There is no way to enable Actions other then to click the button in the UI.
-If this situation changes we will update this project so that the workflow is triggered during the bootstrap project.
-Further reading: <https://github.community/t/workflow-isnt-enabled-in-repos-generated-from-template/136421>
-
-## Manually renaming from Hmpps Sentence Plan
-
-Run the `rename-project.bash` and create a PR.
-
-The `rename-project.bash` script takes a single argument - the name of the project and calculates from it:
-* The main class name (project name converted to pascal case) 
-* The project description (class name with spaces between the words)
-* The main package name (project name with hyphens removed)
-
-It then performs a search and replace and directory renames so the project is ready to be used.
-
-## Filling in the `productId`
-
-To allow easy identification of an application, the product Id of the overall product should be set in `values.yaml`. 
-The Service Catalogue contains a list of these IDs and is currently in development here https://developer-portal.hmpps.service.justice.gov.uk/products
+### Linting
+Linting can be ran using `make lint` and `make lint-fix`

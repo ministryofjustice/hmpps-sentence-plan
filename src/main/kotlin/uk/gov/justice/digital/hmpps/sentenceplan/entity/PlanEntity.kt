@@ -32,12 +32,14 @@ class PlanEntity(
   val creationDate: String = DateTimeFormatter.ISO_INSTANT.format(Instant.now()),
 
   @Column(name = "updated_date")
-  val updatedDate: String = DateTimeFormatter.ISO_INSTANT.format(Instant.now())
-
-  )
+  val updatedDate: String = DateTimeFormatter.ISO_INSTANT.format(Instant.now()),
+)
 
 enum class PlanStatus {
-  INCOMPLETE, COMPLETE, LOCKED, SIGNED
+  INCOMPLETE,
+  COMPLETE,
+  LOCKED,
+  SIGNED,
 }
 
 @Converter(autoApply = true)

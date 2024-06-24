@@ -25,7 +25,7 @@ class GoalControllerTest : IntegrationTestBase() {
     creationDate = currentTime,
     targetDate = currentTime,
     goalOrder = 1,
-    planUuid = UUID.randomUUID()
+    planUuid = UUID.randomUUID(),
   )
 
   private val goalOrder = GoalOrder(
@@ -41,7 +41,7 @@ class GoalControllerTest : IntegrationTestBase() {
     areaOfNeed = "area",
     targetDate = currentTime,
     goalOrder = 1,
-    planUuid = UUID.randomUUID()
+    planUuid = UUID.randomUUID(),
   )
 
   @Test

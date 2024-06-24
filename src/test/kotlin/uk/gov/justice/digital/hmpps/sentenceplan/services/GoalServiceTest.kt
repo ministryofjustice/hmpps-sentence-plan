@@ -29,7 +29,7 @@ class GoalServiceTest {
     areaOfNeed = "area",
     targetDate = currentTime,
     goalOrder = 1,
-    planUuid = UUID.randomUUID()
+    planUuid = UUID.randomUUID(),
   )
   val stepEntity = StepEntity(
     description = "description",

@@ -1,15 +1,20 @@
 package uk.gov.justice.digital.hmpps.sentenceplan.integration
 
+import io.mockk.every
+import io.mockk.mockk
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient
+import org.springframework.test.web.reactive.server.WebTestClient
+import uk.gov.justice.digital.hmpps.sentenceplan.controlller.GoalController
 import uk.gov.justice.digital.hmpps.sentenceplan.data.GoalOrder
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalEntity
+import uk.gov.justice.digital.hmpps.sentenceplan.services.GoalService
 import java.time.LocalDateTime
 import java.util.UUID
 
 @AutoConfigureWebTestClient(timeout = "360000000")
-@DisplayName("Goal Tests")
+@DisplayName("Goal Controller Tests")
 class GoalControllerTest : IntegrationTestBase() {
 
   val currentTime = LocalDateTime.now().toString()
@@ -20,6 +25,7 @@ class GoalControllerTest : IntegrationTestBase() {
     creationDate = currentTime,
     targetDate = currentTime,
     goalOrder = 1,
+    planUuid = UUID.randomUUID()
   )
 
   private val goalOrder = GoalOrder(
@@ -29,8 +35,20 @@ class GoalControllerTest : IntegrationTestBase() {
 
   private val goalOrderList = listOf(goalOrder)
 
+  val goalEntity = GoalEntity(
+    id = 123L,
+    title = "title",
+    areaOfNeed = "area",
+    targetDate = currentTime,
+    goalOrder = 1,
+    planUuid = UUID.randomUUID()
+  )
+
   @Test
   fun `create goal should return created`() {
+    val mockGoalService: GoalService = mockk()
+    webTestClient = WebTestClient.bindToController(GoalController(mockGoalService)).build()
+    every { mockGoalService.createNewGoal(any()) } returns goalEntity
     webTestClient.post().uri("/goals")
       .header("Content-Type", "application/json")
       .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))

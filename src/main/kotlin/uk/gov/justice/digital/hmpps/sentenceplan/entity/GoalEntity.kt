@@ -40,6 +40,8 @@ class GoalEntity(
   @Column(name = "goal_order")
   val goalOrder: Int,
 
+  @Column(name = "plan_uuid")
+  val planUuid: UUID,
 )
 
 interface GoalRepository : JpaRepository<GoalEntity, UUID> {

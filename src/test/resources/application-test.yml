@@ -13,5 +13,3 @@ arns-api:
 
 delius-api:
   base-url: http://localhost:5555
-
-use-stub: true

@@ -44,13 +44,9 @@ enum class PlanStatus {
 
 @Converter(autoApply = true)
 class PlanStatusConverter : AttributeConverter<PlanStatus, String> {
-  override fun convertToDatabaseColumn(status: PlanStatus): String {
-    return status.name
-  }
+  override fun convertToDatabaseColumn(status: PlanStatus): String = status.name
 
-  override fun convertToEntityAttribute(status: String): PlanStatus {
-    return PlanStatus.valueOf(status.uppercase())
-  }
+  override fun convertToEntityAttribute(status: String): PlanStatus = PlanStatus.valueOf(status.uppercase())
 }
 
 interface PlanRepository : JpaRepository<PlanEntity, UUID> {

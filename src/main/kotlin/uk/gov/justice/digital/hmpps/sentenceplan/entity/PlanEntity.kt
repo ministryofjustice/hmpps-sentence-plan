@@ -11,7 +11,6 @@ import jakarta.persistence.Table
 import org.springframework.data.jpa.repository.JpaRepository
 import java.time.Instant
 import java.time.format.DateTimeFormatter
-import java.util.Optional
 import java.util.UUID
 
 @Entity(name = "Plan")
@@ -49,6 +48,4 @@ class PlanStatusConverter : AttributeConverter<PlanStatus, String> {
   override fun convertToEntityAttribute(status: String): PlanStatus = PlanStatus.valueOf(status.uppercase())
 }
 
-interface PlanRepository : JpaRepository<PlanEntity, UUID> {
-  override fun findById(uuid: UUID): Optional<PlanEntity>
-}
+interface PlanRepository : JpaRepository<PlanEntity, Long>

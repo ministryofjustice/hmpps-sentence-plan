@@ -111,7 +111,7 @@ class GoalControllerTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `get goals should return created`() {
+  fun `get goals should return OK`() {
     webTestClient.get().uri("/goals")
       .header("Content-Type", "application/json")
       .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
@@ -137,7 +137,7 @@ class GoalControllerTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `get goal steps should return created`() {
+  fun `get goal steps should return OK`() {
     webTestClient.get().uri("/goals/e6fb513d-3800-4c35-bb3a-5f9bdc9759dd/steps")
       .header("Content-Type", "application/json")
       .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))

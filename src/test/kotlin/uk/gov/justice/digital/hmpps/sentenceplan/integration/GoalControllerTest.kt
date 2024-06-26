@@ -22,10 +22,9 @@ class GoalControllerTest : IntegrationTestBase() {
   lateinit var planRepository: PlanRepository
 
   var goalRequestBody: GoalEntity? = null
-  var goalEntity: GoalEntity? = null
 
   private val goalOrder = GoalOrder(
-    goalId = UUID.randomUUID(),
+    goalUuid = UUID.randomUUID(),
     goalOrder = 1,
   )
 
@@ -41,15 +40,6 @@ class GoalControllerTest : IntegrationTestBase() {
       title = "abc",
       areaOfNeed = "xzv",
       creationDate = currentTime,
-      targetDate = currentTime,
-      goalOrder = 1,
-      planUuid = plan.uuid,
-    )
-
-    goalEntity = GoalEntity(
-      id = 123L,
-      title = "title",
-      areaOfNeed = "area",
       targetDate = currentTime,
       goalOrder = 1,
       planUuid = plan.uuid,

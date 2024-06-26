@@ -4,6 +4,6 @@ import com.google.gson.annotations.SerializedName
 import java.util.UUID
 
 data class GoalOrder(
-  @SerializedName("goalId") var goalId: UUID,
+  @SerializedName("goalUuid") var goalUuid: UUID,
   @SerializedName("galOrder") var goalOrder: Int? = null,
 )

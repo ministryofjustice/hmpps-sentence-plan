@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.sentenceplan.entity
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.GeneratedValue
@@ -18,13 +19,14 @@ class StepEntity(
   @Id
   @Column(name = "id")
   @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @JsonIgnore
   val id: Long? = null,
 
   @Column(name = "uuid")
   val uuid: UUID = UUID.randomUUID(),
 
-  @Column(name = "related_goal_id")
-  var relatedGoalId: UUID? = null,
+  @Column(name = "related_goal_uuid")
+  var relatedGoalUuid: UUID? = null,
 
   @Column(name = "description")
   val description: String,
@@ -40,7 +42,7 @@ class StepEntity(
 
 )
 
-interface StepRepository : JpaRepository<StepEntity, UUID> {
-  override fun findById(uuid: UUID): Optional<StepEntity>
-  fun findAllByRelatedGoalId(relatedGoalId: UUID): Optional<List<StepEntity>>
+interface StepRepository : JpaRepository<StepEntity, Long> {
+  fun findByUuid(uuid: UUID): Optional<StepEntity>
+  fun findAllByRelatedGoalUuid(relatedGoalUuid: UUID): Optional<List<StepEntity>>
 }

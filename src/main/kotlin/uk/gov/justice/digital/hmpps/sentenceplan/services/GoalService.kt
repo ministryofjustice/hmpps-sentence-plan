@@ -20,14 +20,14 @@ class GoalService(
   @Transactional
   fun createNewStep(steps: List<StepEntity>, goalUuid: UUID): List<StepEntity> {
     for (step in steps) {
-      step.relatedGoalId = goalUuid
+      step.relatedGoalUuid = goalUuid
     }
     return stepRepository.saveAll(steps)
   }
 
   fun getAllGoals(): List<GoalEntity> = goalRepository.findAll()
 
-  fun getAllGoalSteps(goalUuid: UUID): List<StepEntity> = stepRepository.findAllByRelatedGoalId(goalUuid).get()
+  fun getAllGoalSteps(goalUuid: UUID): List<StepEntity> = stepRepository.findAllByRelatedGoalUuid(goalUuid).get()
 
   @Transactional
   fun updateGoalsOrder(goalsOrder: List<GoalOrder>) {

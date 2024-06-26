@@ -46,7 +46,7 @@ class GoalEntity(
   val planUuid: UUID,
 )
 
-interface GoalRepository : JpaRepository<GoalEntity, UUID> {
+interface GoalRepository : JpaRepository<GoalEntity, Long> {
   fun findByUuid(uuid: UUID): Optional<GoalEntity>
 
   @Modifying

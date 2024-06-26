@@ -16,7 +16,7 @@ import java.util.Optional
 import java.util.UUID
 
 @ExtendWith(MockKExtension::class)
-@DisplayName("Gaol Service Tests")
+@DisplayName("Goal Service Tests")
 class GoalServiceTest {
   private val stepRepository: StepRepository = mockk()
   private val goalRepository: GoalRepository = mockk()
@@ -29,6 +29,7 @@ class GoalServiceTest {
     areaOfNeed = "area",
     targetDate = currentTime,
     goalOrder = 1,
+    planUuid = UUID.randomUUID(),
   )
   val stepEntity = StepEntity(
     description = "description",

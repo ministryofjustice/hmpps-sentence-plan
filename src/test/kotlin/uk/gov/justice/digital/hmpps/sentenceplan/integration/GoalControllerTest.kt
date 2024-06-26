@@ -1,26 +1,28 @@
 package uk.gov.justice.digital.hmpps.sentenceplan.integration
 
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient
 import uk.gov.justice.digital.hmpps.sentenceplan.data.GoalOrder
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalEntity
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntity
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
 import java.time.LocalDateTime
 import java.util.UUID
 
 @AutoConfigureWebTestClient(timeout = "360000000")
-@DisplayName("Goal Tests")
+@DisplayName("Goal Controller Tests")
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class GoalControllerTest : IntegrationTestBase() {
 
-  val currentTime = LocalDateTime.now().toString()
+  @Autowired
+  lateinit var planRepository: PlanRepository
 
-  private val goalRequestBody = GoalEntity(
-    title = "abc",
-    areaOfNeed = "xzv",
-    creationDate = currentTime,
-    targetDate = currentTime,
-    goalOrder = 1,
-  )
+  var goalRequestBody: GoalEntity? = null
+  var goalEntity: GoalEntity? = null
 
   private val goalOrder = GoalOrder(
     goalId = UUID.randomUUID(),
@@ -29,10 +31,34 @@ class GoalControllerTest : IntegrationTestBase() {
 
   private val goalOrderList = listOf(goalOrder)
 
+  val currentTime = LocalDateTime.now().toString()
+
+  @BeforeAll
+  fun setup() {
+    val plan: PlanEntity = planRepository.findAll().first()
+
+    goalRequestBody = GoalEntity(
+      title = "abc",
+      areaOfNeed = "xzv",
+      creationDate = currentTime,
+      targetDate = currentTime,
+      goalOrder = 1,
+      planUuid = plan.uuid,
+    )
+
+    goalEntity = GoalEntity(
+      id = 123L,
+      title = "title",
+      areaOfNeed = "area",
+      targetDate = currentTime,
+      goalOrder = 1,
+      planUuid = plan.uuid,
+    )
+  }
+
   @Test
   fun `create goal should return created`() {
-    webTestClient.post().uri("/goals")
-      .header("Content-Type", "application/json")
+    webTestClient.post().uri("/goals").header("Content-Type", "application/json")
       .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
       .bodyValue(goalRequestBody)
       .exchange()
@@ -85,7 +111,7 @@ class GoalControllerTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `get goals should return created`() {
+  fun `get goals should return OK`() {
     webTestClient.get().uri("/goals")
       .header("Content-Type", "application/json")
       .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
@@ -111,7 +137,7 @@ class GoalControllerTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `get goal steps should return created`() {
+  fun `get goal steps should return OK`() {
     webTestClient.get().uri("/goals/e6fb513d-3800-4c35-bb3a-5f9bdc9759dd/steps")
       .header("Content-Type", "application/json")
       .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))

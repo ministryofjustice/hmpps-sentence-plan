@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.sentenceplan.entity
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import jakarta.persistence.AttributeConverter
 import jakarta.persistence.Column
 import jakarta.persistence.Converter
@@ -11,7 +12,7 @@ import jakarta.persistence.Table
 import org.springframework.data.jpa.repository.JpaRepository
 import java.time.Instant
 import java.time.format.DateTimeFormatter
-import java.util.UUID
+import java.util.*
 
 @Entity(name = "Plan")
 @Table(name = "plan")
@@ -19,6 +20,7 @@ class PlanEntity(
   @Id
   @Column(name = "id")
   @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @JsonIgnore
   val id: Long? = null,
 
   @Column(name = "uuid")
@@ -48,4 +50,6 @@ class PlanStatusConverter : AttributeConverter<PlanStatus, String> {
   override fun convertToEntityAttribute(status: String): PlanStatus = PlanStatus.valueOf(status.uppercase())
 }
 
-interface PlanRepository : JpaRepository<PlanEntity, Long>
+interface PlanRepository : JpaRepository<PlanEntity, Long> {
+  fun findByUuid(uuid: UUID): Optional<PlanEntity>
+}

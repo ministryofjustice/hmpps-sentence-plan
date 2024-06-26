@@ -10,6 +10,8 @@ import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Table
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Query
+import org.springframework.data.repository.query.Param
 import java.time.Instant
 import java.time.format.DateTimeFormatter
 import java.util.*
@@ -51,5 +53,9 @@ class PlanStatusConverter : AttributeConverter<PlanStatus, String> {
 }
 
 interface PlanRepository : JpaRepository<PlanEntity, Long> {
-  fun findByUuid(uuid: UUID): Optional<PlanEntity>
+  @Query("SELECT p FROM Plan p WHERE p.uuid = :uuid")
+  fun findByUuid(@Param("uuid") uuid: UUID): PlanEntity?
+
+  @Query("select p.* from plan p inner join oasys_pk_to_plan o on p.uuid = o.plan_uuid and o.oasys_assessment_pk = :oasysAssessmentPk", nativeQuery = true)
+  fun findByOasysAssessmentPk(@Param("oasysAssessmentPk") oasysAssessmentPk: String): PlanEntity?
 }

@@ -136,6 +136,16 @@ class GoalControllerTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `get goal steps for UUID which doesn't exist should return not found`() {
+    val randomUuid = UUID.randomUUID()
+    webTestClient.get().uri("/goals/$randomUuid/steps")
+      .header("Content-Type", "application/json")
+      .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+      .exchange()
+      .expectStatus().isNotFound
+  }
+
+  @Test
   fun `get goal steps should return unauthorized when no auth token`() {
     webTestClient.get().uri("/goals/e6fb513d-3800-4c35-bb3a-5f9bdc9759dd/steps")
       .header("Content-Type", "application/json")

@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.sentenceplan.entity
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.GeneratedValue
@@ -20,6 +21,7 @@ class GoalEntity(
   @Id
   @Column(name = "id")
   @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @JsonIgnore
   val id: Long? = null,
 
   @Column(name = "uuid")
@@ -45,7 +47,7 @@ class GoalEntity(
 )
 
 interface GoalRepository : JpaRepository<GoalEntity, UUID> {
-  override fun findById(uuid: UUID): Optional<GoalEntity>
+  fun findByUuid(uuid: UUID): Optional<GoalEntity>
 
   @Modifying
   @Query("update Goal g set g.goalOrder = ?1 where g.uuid = ?2")

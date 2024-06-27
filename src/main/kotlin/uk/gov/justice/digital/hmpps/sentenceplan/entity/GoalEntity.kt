@@ -46,6 +46,8 @@ class GoalEntity(
 )
 
 interface GoalRepository : JpaRepository<GoalEntity, Long> {
+  fun findByUuid(uuid: UUID): GoalEntity?
+
   @Modifying
   @Query("update Goal g set g.goalOrder = ?1 where g.uuid = ?2")
   fun updateGoalOrder(goalOrder: Int, uuid: UUID)

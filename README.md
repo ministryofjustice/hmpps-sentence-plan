@@ -4,19 +4,19 @@
 [![Docker Repository on Quay](https://quay.io/repository/hmpps/hmpps-sentence-plan/status "Docker Repository on Quay")](https://quay.io/repository/hmpps/hmpps-sentence-plan)
 [![API docs](https://img.shields.io/badge/API_docs_-view-85EA2D.svg?logo=swagger)](https://hmpps-sentence-plan-dev.hmpps.service.justice.gov.uk/webjars/swagger-ui/index.html?configUrl=/v3/api-docs)
 
-This is the backend / API for the Sentence Plan project.
+This is the backend/API for the Sentence Plan project, which aims to enhance the current 
+process of creating and managing sentence plans for individuals on probation or in prison.
 
 ## Prerequisites
 - Docker
-- Node.js
-- Homebrew
 
 ## Running the application
 This service and all of its dependencies are run in Docker containers.
 
-Before starting, run `make install_requirements`. 
+**Note:** Every command can be printed using `make`
 
-**Note: Every command can be printed using `make`**
+**Note:** An access token (for authenticating with the API) can be generated
+by performing an OAuth2 client_credentials grant flow to http://localhost:9091/auth/oauth/token
 
 ### Production
 1. To start a production version of the application, run `make up`

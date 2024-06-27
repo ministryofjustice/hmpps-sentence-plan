@@ -19,26 +19,5 @@ services:
     ports:
       - "5005:5005"
     volumes:
-      - code:/app
-      - gradle:/home/gradle/.gradle
-    tmpfs:
-      - /app/build
-
-volumes:
-  code:
-  gradle:
-
-x-mutagen:
-  sync:
-    defaults:
-      mode: 'two-way-resolved'
-      ignore:
-        paths:
-          - '.idea'
-          - 'docker'
-    code:
-      alpha: '../'
-      beta: 'volume://code'
-    gradle:
-      alpha: '~/.gradle'
-      beta: 'volume://gradle'
+      - ..:/app
+      - ~/.gradle:/home/gradle/.gradle

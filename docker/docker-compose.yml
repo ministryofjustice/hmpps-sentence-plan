@@ -47,3 +47,4 @@ services:
       HMPPS_AUTH_BASE_URL: http://hmpps-auth:9090
       ARNS_API_BASE_URL: http://wiremock:8080/arns-api
       DELIUS_API_BASE_URL: http://wiremock:8080/delius-api
+      USE_STUB: true

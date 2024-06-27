@@ -21,7 +21,7 @@ class GoalServiceTest {
   private val goalRepository: GoalRepository = mockk()
   private val currentTime = LocalDateTime.now().toString()
   private val goalService = GoalService(goalRepository, stepRepository)
-  val uuid = UUID.randomUUID()
+  private val uuid = UUID.randomUUID()
   val goalEntity = GoalEntity(
     id = 123L,
     title = "title",
@@ -40,19 +40,15 @@ class GoalServiceTest {
   )
 
   @Test
-  fun `create new goal`() {
-    every { goalRepository.save(any()) } returns goalEntity
-    val goal = goalService.createNewGoal(goalEntity)
-    assertThat(goal.uuid).isNotNull()
-    assertThat(goal.id).isEqualTo(123)
-    assertThat(goal.title).isEqualTo("title")
-    assertThat(goal.targetDate).isEqualTo(currentTime)
+  fun `add related goal UUID to list of steps`() {
+    val stepsList = goalService.addRelatedGoalUuidToSteps(uuid, listOf(stepEntity))
+    assertThat(stepsList.get(0).relatedGoalUuid).isEqualTo(uuid)
   }
 
   @Test
   fun `create new step`() {
     every { stepRepository.saveAll(any<List<StepEntity>>()) } returns listOf(stepEntity)
-    val stepsList = goalService.createNewStep(listOf(stepEntity), uuid)
+    val stepsList = goalService.createNewStep(uuid, listOf(stepEntity))
     assertThat(stepsList.get(0).status).isEqualTo("status")
     assertThat(stepsList.get(0).id).isEqualTo(123)
     assertThat(stepsList.get(0).relatedGoalUuid).isEqualTo(uuid)
@@ -60,6 +56,14 @@ class GoalServiceTest {
     assertThat(stepsList.get(0).description).isEqualTo("description")
     assertThat(stepsList.get(0).creationDate).isEqualTo(currentTime)
   }
+//
+//  @Test
+//  fun `get all goal steps`() {
+//    every { stepRepository.findAllByRelatedGoalUuid(uuid) } returns Optional.of(listOf(stepEntity))
+//    val stepList = goalService.getAllGoalSteps(uuid)
+//    assertThat(stepList.size).isEqualTo(1)
+//    assertThat(stepList[0]).isEqualTo(stepEntity)
+//  }
 
   @Test
   fun `get all goals`() {

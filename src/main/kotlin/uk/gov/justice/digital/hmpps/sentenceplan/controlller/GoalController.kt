@@ -32,7 +32,7 @@ class GoalController(private val service: GoalService) {
     @PathVariable goalUuid: UUID,
     @RequestBody steps: List<StepEntity>,
   ): List<StepEntity> {
-    return service.createNewStep(steps, goalUuid)
+    return service.createNewStep(goalUuid, steps)
   }
 
   @GetMapping

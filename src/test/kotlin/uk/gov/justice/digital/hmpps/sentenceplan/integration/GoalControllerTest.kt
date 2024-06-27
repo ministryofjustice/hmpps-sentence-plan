@@ -1,38 +1,56 @@
 package uk.gov.justice.digital.hmpps.sentenceplan.integration
 
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient
+import org.springframework.test.web.reactive.server.expectBodyList
 import uk.gov.justice.digital.hmpps.sentenceplan.data.GoalOrder
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalEntity
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntity
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepEntity
 import java.time.LocalDateTime
 import java.util.UUID
 
-@AutoConfigureWebTestClient(timeout = "360000000")
-@DisplayName("Goal Tests")
+@AutoConfigureWebTestClient(timeout = "5s")
+@DisplayName("Goal Controller Tests")
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class GoalControllerTest : IntegrationTestBase() {
 
-  val currentTime = LocalDateTime.now().toString()
+  @Autowired
+  lateinit var planRepository: PlanRepository
 
-  private val goalRequestBody = GoalEntity(
-    title = "abc",
-    areaOfNeed = "xzv",
-    creationDate = currentTime,
-    targetDate = currentTime,
-    goalOrder = 1,
-  )
+  var goalRequestBody: GoalEntity? = null
 
   private val goalOrder = GoalOrder(
-    goalId = UUID.randomUUID(),
+    goalUuid = UUID.randomUUID(),
     goalOrder = 1,
   )
 
   private val goalOrderList = listOf(goalOrder)
 
+  val currentTime = LocalDateTime.now().toString()
+
+  @BeforeAll
+  fun setup() {
+    val plan: PlanEntity = planRepository.findAll().first()
+
+    goalRequestBody = GoalEntity(
+      title = "abc",
+      areaOfNeed = "xzv",
+      creationDate = currentTime,
+      targetDate = currentTime,
+      goalOrder = 1,
+      planUuid = plan.uuid,
+    )
+  }
+
   @Test
   fun `create goal should return created`() {
-    webTestClient.post().uri("/goals")
-      .header("Content-Type", "application/json")
+    webTestClient.post().uri("/goals").header("Content-Type", "application/json")
       .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
       .bodyValue(goalRequestBody)
       .exchange()
@@ -85,7 +103,7 @@ class GoalControllerTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `get goals should return created`() {
+  fun `get goals should return OK`() {
     webTestClient.get().uri("/goals")
       .header("Content-Type", "application/json")
       .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
@@ -111,12 +129,23 @@ class GoalControllerTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `get goal steps should return created`() {
-    webTestClient.get().uri("/goals/e6fb513d-3800-4c35-bb3a-5f9bdc9759dd/steps")
+  fun `get goal steps should return OK and contain 1 step`() {
+    webTestClient.get().uri("/goals/31d7e986-4078-4f5c-af1d-115f9ba3722d/steps")
       .header("Content-Type", "application/json")
       .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
       .exchange()
       .expectStatus().isOk
+      .expectBodyList<StepEntity>().hasSize(1)
+  }
+
+  @Test
+  fun `get goal steps for UUID which doesn't exist should return OK and an empty list`() {
+    val randomUuid = UUID.randomUUID()
+    webTestClient.get().uri("/goals/$randomUuid/steps")
+      .header("Content-Type", "application/json")
+      .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+      .exchange()
+      .expectBodyList<StepEntity>().hasSize(0)
   }
 
   @Test

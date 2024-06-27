@@ -12,11 +12,10 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepRepository
 import java.time.LocalDateTime
-import java.util.Optional
 import java.util.UUID
 
 @ExtendWith(MockKExtension::class)
-@DisplayName("Gaol Service Tests")
+@DisplayName("Goal Service Tests")
 class GoalServiceTest {
   private val stepRepository: StepRepository = mockk()
   private val goalRepository: GoalRepository = mockk()
@@ -29,11 +28,12 @@ class GoalServiceTest {
     areaOfNeed = "area",
     targetDate = currentTime,
     goalOrder = 1,
+    planUuid = UUID.randomUUID(),
   )
   val stepEntity = StepEntity(
     description = "description",
     id = 123L,
-    relatedGoalId = uuid,
+    relatedGoalUuid = uuid,
     actor = "actor",
     status = "status",
     creationDate = currentTime,
@@ -55,7 +55,7 @@ class GoalServiceTest {
     val stepsList = goalService.createNewStep(listOf(stepEntity), uuid)
     assertThat(stepsList.get(0).status).isEqualTo("status")
     assertThat(stepsList.get(0).id).isEqualTo(123)
-    assertThat(stepsList.get(0).relatedGoalId).isEqualTo(uuid)
+    assertThat(stepsList.get(0).relatedGoalUuid).isEqualTo(uuid)
     assertThat(stepsList.get(0).actor).isEqualTo("actor")
     assertThat(stepsList.get(0).description).isEqualTo("description")
     assertThat(stepsList.get(0).creationDate).isEqualTo(currentTime)
@@ -71,9 +71,9 @@ class GoalServiceTest {
 
   @Test
   fun `get all goal steps`() {
-    every { stepRepository.findAllByRelatedGoalId(uuid) } returns Optional.of(listOf(stepEntity))
+    every { stepRepository.findByRelatedGoalUuid(uuid) } returns listOf(stepEntity)
     val stepList = goalService.getAllGoalSteps(uuid)
     assertThat(stepList.size).isEqualTo(1)
-    assertThat(stepList[0]).isEqualTo(stepEntity)
+    assertThat(stepList.get(0)).isEqualTo(stepEntity)
   }
 }

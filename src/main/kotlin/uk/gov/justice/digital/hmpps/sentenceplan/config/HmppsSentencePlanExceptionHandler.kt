@@ -2,7 +2,6 @@ package uk.gov.justice.digital.hmpps.sentenceplan.config
 
 import jakarta.validation.ValidationException
 import org.slf4j.LoggerFactory
-import org.springframework.dao.EmptyResultDataAccessException
 import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatus.BAD_REQUEST
 import org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR
@@ -24,17 +23,6 @@ class HmppsSentencePlanExceptionHandler {
         developerMessage = e.message,
       ),
     ).also { log.info("Validation exception: {}", e.message) }
-
-  @ExceptionHandler(EmptyResultDataAccessException::class)
-  fun handleEmptyResultDataAccessException(e: EmptyResultDataAccessException): ResponseEntity<ErrorResponse> = ResponseEntity
-    .status(NOT_FOUND)
-    .body(
-      ErrorResponse(
-        status = NOT_FOUND,
-        userMessage = "No object of that type was found: ${e.message}",
-        developerMessage = e.message,
-      ),
-    ).also { log.info("Database query return 0 results : {}", e.message) }
 
   @ExceptionHandler(NoResourceFoundException::class)
   fun handleNoResourceFoundException(e: NoResourceFoundException): ResponseEntity<ErrorResponse> = ResponseEntity

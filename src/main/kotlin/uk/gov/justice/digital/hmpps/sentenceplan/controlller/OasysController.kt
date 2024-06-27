@@ -1,14 +1,13 @@
 package uk.gov.justice.digital.hmpps.sentenceplan.controlller
 
-import org.springframework.dao.EmptyResultDataAccessException
+import org.springframework.http.HttpMethod
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.servlet.resource.NoResourceFoundException
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.services.PlanService
-
-private const val EXPECTED_RESULT_COUNT = 1
 
 @RestController
 @RequestMapping("/oasys")
@@ -18,6 +17,6 @@ class OasysController(private val service: PlanService) {
   fun getPlan(
     @PathVariable oasysAssessmentPk: String,
   ): PlanEntity {
-    return service.getPlanByOasysAssessmentPk(oasysAssessmentPk) ?: throw EmptyResultDataAccessException(EXPECTED_RESULT_COUNT)
+    return service.getPlanByOasysAssessmentPk(oasysAssessmentPk) ?: throw NoResourceFoundException(HttpMethod.GET, "No resource found for $oasysAssessmentPk")
   }
 }

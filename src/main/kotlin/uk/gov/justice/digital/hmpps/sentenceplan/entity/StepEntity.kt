@@ -44,5 +44,7 @@ class StepEntity(
 
 interface StepRepository : JpaRepository<StepEntity, Long> {
   fun findByUuid(uuid: UUID): Optional<StepEntity>
-  fun findAllByRelatedGoalUuid(relatedGoalUuid: UUID): Optional<List<StepEntity>>
+
+  // This query always returns a list, even if there is no Goal with this UUID
+  fun findByRelatedGoalUuid(relatedGoalUuid: UUID): List<StepEntity>
 }

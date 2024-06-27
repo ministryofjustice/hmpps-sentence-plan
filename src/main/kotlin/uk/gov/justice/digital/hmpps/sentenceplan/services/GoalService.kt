@@ -27,7 +27,7 @@ class GoalService(
 
   fun getAllGoals(): List<GoalEntity> = goalRepository.findAll()
 
-  fun getAllGoalSteps(goalUuid: UUID): List<StepEntity> = stepRepository.findAllByRelatedGoalUuid(goalUuid).get()
+  fun getAllGoalSteps(goalUuid: UUID): List<StepEntity> = stepRepository.findByRelatedGoalUuid(goalUuid)
 
   @Transactional
   fun updateGoalsOrder(goalsOrder: List<GoalOrder>) {

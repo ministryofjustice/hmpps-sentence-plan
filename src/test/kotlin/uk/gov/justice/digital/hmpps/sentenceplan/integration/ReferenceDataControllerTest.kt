@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient
 import uk.gov.justice.digital.hmpps.sentenceplan.data.CRNLinkedRequest
 
-@AutoConfigureWebTestClient(timeout = "360000000")
+@AutoConfigureWebTestClient(timeout = "5s")
 @DisplayName("Reference data Tests")
 class ReferenceDataControllerTest : IntegrationTestBase() {
 

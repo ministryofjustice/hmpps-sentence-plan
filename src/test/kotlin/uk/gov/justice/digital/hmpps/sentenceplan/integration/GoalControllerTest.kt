@@ -6,14 +6,16 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient
+import org.springframework.test.web.reactive.server.expectBodyList
 import uk.gov.justice.digital.hmpps.sentenceplan.data.GoalOrder
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepEntity
 import java.time.LocalDateTime
 import java.util.UUID
 
-@AutoConfigureWebTestClient(timeout = "360000000")
+@AutoConfigureWebTestClient(timeout = "5s")
 @DisplayName("Goal Controller Tests")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class GoalControllerTest : IntegrationTestBase() {
@@ -127,12 +129,23 @@ class GoalControllerTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `get goal steps should return OK`() {
-    webTestClient.get().uri("/goals/e6fb513d-3800-4c35-bb3a-5f9bdc9759dd/steps")
+  fun `get goal steps should return OK and contain 1 step`() {
+    webTestClient.get().uri("/goals/31d7e986-4078-4f5c-af1d-115f9ba3722d/steps")
       .header("Content-Type", "application/json")
       .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
       .exchange()
       .expectStatus().isOk
+      .expectBodyList<StepEntity>().hasSize(1)
+  }
+
+  @Test
+  fun `get goal steps for UUID which doesn't exist should return OK and an empty list`() {
+    val randomUuid = UUID.randomUUID()
+    webTestClient.get().uri("/goals/$randomUuid/steps")
+      .header("Content-Type", "application/json")
+      .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+      .exchange()
+      .expectBodyList<StepEntity>().hasSize(0)
   }
 
   @Test

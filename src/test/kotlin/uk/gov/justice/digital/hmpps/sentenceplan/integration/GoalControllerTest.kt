@@ -6,10 +6,12 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient
+import org.springframework.test.web.reactive.server.expectBodyList
 import uk.gov.justice.digital.hmpps.sentenceplan.data.GoalOrder
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepEntity
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -136,13 +138,13 @@ class GoalControllerTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `get goal steps for UUID which doesn't exist should return not found`() {
+  fun `get goal steps for UUID which doesn't exist should return OK and an empty list`() {
     val randomUuid = UUID.randomUUID()
     webTestClient.get().uri("/goals/$randomUuid/steps")
       .header("Content-Type", "application/json")
       .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
       .exchange()
-      .expectStatus().isNotFound
+      .expectBodyList<StepEntity>().hasSize(0)
   }
 
   @Test

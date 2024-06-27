@@ -8,6 +8,8 @@ import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Table
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Query
+import org.springframework.data.repository.query.Param
 import java.time.Instant
 import java.time.format.DateTimeFormatter
 import java.util.Optional
@@ -44,5 +46,8 @@ class StepEntity(
 
 interface StepRepository : JpaRepository<StepEntity, Long> {
   fun findByUuid(uuid: UUID): Optional<StepEntity>
-  fun findAllByRelatedGoalUuid(relatedGoalUuid: UUID): Optional<List<StepEntity>>
+
+  // This query always returns a list, even if there is no Goal with this UUID
+  @Query("select s from Step s where s.relatedGoalUuid = :relatedGoalUuid")
+  fun findAllByRelatedGoalUuid(@Param("relatedGoalUuid") relatedGoalUuid: UUID): List<StepEntity>
 }

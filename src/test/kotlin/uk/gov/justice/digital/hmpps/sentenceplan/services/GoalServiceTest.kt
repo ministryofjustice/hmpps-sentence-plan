@@ -12,7 +12,6 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepRepository
 import java.time.LocalDateTime
-import java.util.Optional
 import java.util.UUID
 
 @ExtendWith(MockKExtension::class)
@@ -72,9 +71,9 @@ class GoalServiceTest {
 
   @Test
   fun `get all goal steps`() {
-    every { stepRepository.findAllByRelatedGoalUuid(uuid) } returns Optional.of(listOf(stepEntity))
+    every { stepRepository.findAllByRelatedGoalUuid(uuid) } returns listOf(stepEntity)
     val stepList = goalService.getAllGoalSteps(uuid)
     assertThat(stepList.size).isEqualTo(1)
-    assertThat(stepList[0]).isEqualTo(stepEntity)
+    assertThat(stepList.get(0)).isEqualTo(stepEntity)
   }
 }

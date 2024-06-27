@@ -71,7 +71,7 @@ class GoalServiceTest {
 
   @Test
   fun `get all goal steps`() {
-    every { stepRepository.findAllByRelatedGoalUuid(uuid) } returns listOf(stepEntity)
+    every { stepRepository.findByRelatedGoalUuid(uuid) } returns listOf(stepEntity)
     val stepList = goalService.getAllGoalSteps(uuid)
     assertThat(stepList.size).isEqualTo(1)
     assertThat(stepList.get(0)).isEqualTo(stepEntity)

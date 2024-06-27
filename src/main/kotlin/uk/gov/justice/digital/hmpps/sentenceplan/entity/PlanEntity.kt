@@ -53,8 +53,7 @@ class PlanStatusConverter : AttributeConverter<PlanStatus, String> {
 }
 
 interface PlanRepository : JpaRepository<PlanEntity, Long> {
-  @Query("SELECT p FROM Plan p WHERE p.uuid = :uuid")
-  fun findByUuid(@Param("uuid") uuid: UUID): PlanEntity?
+  fun findByUuid(uuid: UUID): PlanEntity?
 
   @Query("select p.* from plan p inner join oasys_pk_to_plan o on p.uuid = o.plan_uuid and o.oasys_assessment_pk = :oasysAssessmentPk", nativeQuery = true)
   fun findByOasysAssessmentPk(@Param("oasysAssessmentPk") oasysAssessmentPk: String): PlanEntity?

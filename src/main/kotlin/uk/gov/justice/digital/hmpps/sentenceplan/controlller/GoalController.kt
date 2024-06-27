@@ -15,7 +15,7 @@ import uk.gov.justice.digital.hmpps.sentenceplan.services.GoalService
 import java.util.UUID
 
 @RestController
-@RequestMapping("/goals")
+@RequestMapping("/plans/{planUuid}/goals")
 class GoalController(private val service: GoalService) {
 
   @PostMapping

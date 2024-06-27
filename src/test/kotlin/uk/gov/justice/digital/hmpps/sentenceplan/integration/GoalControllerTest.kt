@@ -34,9 +34,11 @@ class GoalControllerTest : IntegrationTestBase() {
 
   val currentTime = LocalDateTime.now().toString()
 
+  private lateinit var plan: PlanEntity
+
   @BeforeAll
   fun setup() {
-    val plan: PlanEntity = planRepository.findAll().first()
+    plan = planRepository.findAll().first()
 
     goalRequestBody = GoalEntity(
       title = "abc",
@@ -50,7 +52,7 @@ class GoalControllerTest : IntegrationTestBase() {
 
   @Test
   fun `create goal should return created`() {
-    webTestClient.post().uri("/goals").header("Content-Type", "application/json")
+    webTestClient.post().uri("/plans/$plan.uuid/goals").header("Content-Type", "application/json")
       .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
       .bodyValue(goalRequestBody)
       .exchange()
@@ -59,7 +61,7 @@ class GoalControllerTest : IntegrationTestBase() {
 
   @Test
   fun `create goal should return unauthorized when no auth token`() {
-    webTestClient.post().uri("/goals")
+    webTestClient.post().uri("/plans/$plan.uuid/goals")
       .header("Content-Type", "application/json")
       .bodyValue(goalRequestBody)
       .exchange()
@@ -68,7 +70,7 @@ class GoalControllerTest : IntegrationTestBase() {
 
   @Test
   fun `create goal should return forbidden when no role`() {
-    webTestClient.post().uri("/goals")
+    webTestClient.post().uri("/plans/$plan.uuid/goals")
       .header("Content-Type", "application/json")
       .headers(setAuthorisation(roles = listOf("abc")))
       .bodyValue(goalRequestBody)
@@ -78,7 +80,7 @@ class GoalControllerTest : IntegrationTestBase() {
 
   @Test
   fun `create steps should return unauthorized when no auth token`() {
-    webTestClient.post().uri("/goals/1/steps")
+    webTestClient.post().uri("/plans/$plan.uuid/goals/1/steps")
       .header("Content-Type", "application/json")
       .exchange()
       .expectStatus().isUnauthorized
@@ -86,7 +88,7 @@ class GoalControllerTest : IntegrationTestBase() {
 
   @Test
   fun `create steps should return forbidden when no role`() {
-    webTestClient.post().uri("/goals/1/steps")
+    webTestClient.post().uri("/plans/$plan.uuid/goals/1/steps")
       .header("Content-Type", "application/json")
       .headers(setAuthorisation(roles = listOf("abc")))
       .exchange()
@@ -95,7 +97,7 @@ class GoalControllerTest : IntegrationTestBase() {
 
   @Test
   fun `get goals should return forbidden when no role`() {
-    webTestClient.get().uri("/goals")
+    webTestClient.get().uri("/plans/$plan.uuid/goals")
       .header("Content-Type", "application/json")
       .headers(setAuthorisation(roles = listOf("abc")))
       .exchange()
@@ -104,7 +106,7 @@ class GoalControllerTest : IntegrationTestBase() {
 
   @Test
   fun `get goals should return OK`() {
-    webTestClient.get().uri("/goals")
+    webTestClient.get().uri("/plans/$plan.uuid/goals")
       .header("Content-Type", "application/json")
       .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
       .exchange()
@@ -113,7 +115,7 @@ class GoalControllerTest : IntegrationTestBase() {
 
   @Test
   fun `get goals should return unauthorized when no auth token`() {
-    webTestClient.get().uri("/goals")
+    webTestClient.get().uri("/plans/$plan.uuid/goals")
       .header("Content-Type", "application/json")
       .exchange()
       .expectStatus().isUnauthorized
@@ -121,7 +123,7 @@ class GoalControllerTest : IntegrationTestBase() {
 
   @Test
   fun `get goal steps should return forbidden when no role`() {
-    webTestClient.get().uri("/goals/e6fb513d-3800-4c35-bb3a-5f9bdc9759dd/steps")
+    webTestClient.get().uri("/plans/$plan.uuid/goals/e6fb513d-3800-4c35-bb3a-5f9bdc9759dd/steps")
       .header("Content-Type", "application/json")
       .headers(setAuthorisation(roles = listOf("abc")))
       .exchange()
@@ -130,7 +132,7 @@ class GoalControllerTest : IntegrationTestBase() {
 
   @Test
   fun `get goal steps should return OK and contain 1 step`() {
-    webTestClient.get().uri("/goals/31d7e986-4078-4f5c-af1d-115f9ba3722d/steps")
+    webTestClient.get().uri("/plans/$plan.uuid/goals/31d7e986-4078-4f5c-af1d-115f9ba3722d/steps")
       .header("Content-Type", "application/json")
       .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
       .exchange()
@@ -141,7 +143,7 @@ class GoalControllerTest : IntegrationTestBase() {
   @Test
   fun `get goal steps for UUID which doesn't exist should return OK and an empty list`() {
     val randomUuid = UUID.randomUUID()
-    webTestClient.get().uri("/goals/$randomUuid/steps")
+    webTestClient.get().uri("/plans/$plan.uuid/goals/$randomUuid/steps")
       .header("Content-Type", "application/json")
       .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
       .exchange()
@@ -150,7 +152,7 @@ class GoalControllerTest : IntegrationTestBase() {
 
   @Test
   fun `get goal steps should return unauthorized when no auth token`() {
-    webTestClient.get().uri("/goals/e6fb513d-3800-4c35-bb3a-5f9bdc9759dd/steps")
+    webTestClient.get().uri("/plans/$plan.uuid/goals/e6fb513d-3800-4c35-bb3a-5f9bdc9759dd/steps")
       .header("Content-Type", "application/json")
       .exchange()
       .expectStatus().isUnauthorized
@@ -158,7 +160,7 @@ class GoalControllerTest : IntegrationTestBase() {
 
   @Test
   fun `update goals order should return created`() {
-    webTestClient.post().uri("/goals/order")
+    webTestClient.post().uri("/plans/$plan.uuid/goals/order")
       .header("Content-Type", "application/json")
       .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
       .bodyValue(goalOrderList)
@@ -168,7 +170,7 @@ class GoalControllerTest : IntegrationTestBase() {
 
   @Test
   fun `update goals order should return unauthorized when no auth token`() {
-    webTestClient.post().uri("/goals/order")
+    webTestClient.post().uri("/plans/$plan.uuid/goals/order")
       .header("Content-Type", "application/json")
       .bodyValue(goalOrderList)
       .exchange()
@@ -177,7 +179,7 @@ class GoalControllerTest : IntegrationTestBase() {
 
   @Test
   fun `update goals order should return forbidden when no role`() {
-    webTestClient.post().uri("/goals/order")
+    webTestClient.post().uri("/plans/$plan.uuid/goals/order")
       .header("Content-Type", "application/json")
       .headers(setAuthorisation(roles = listOf("abc")))
       .bodyValue(goalOrderList)

@@ -15,7 +15,7 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepEntity
 import java.time.LocalDateTime
 import java.util.UUID
 
-@AutoConfigureWebTestClient(timeout = "360000000")
+@AutoConfigureWebTestClient(timeout = "5s")
 @DisplayName("Goal Controller Tests")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class GoalControllerTest : IntegrationTestBase() {

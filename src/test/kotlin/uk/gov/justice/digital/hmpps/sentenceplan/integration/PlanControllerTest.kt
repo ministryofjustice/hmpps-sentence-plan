@@ -10,7 +10,7 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
 import java.util.*
 
-@AutoConfigureWebTestClient(timeout = "360000000")
+@AutoConfigureWebTestClient(timeout = "5s")
 @DisplayName("Plan Controller Tests")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class PlanControllerTest : IntegrationTestBase() {

@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient
 
-@AutoConfigureWebTestClient(timeout = "360000000")
+@AutoConfigureWebTestClient(timeout = "5s")
 @DisplayName("Oasys Controller Tests")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class OasysControllerTest : IntegrationTestBase() {

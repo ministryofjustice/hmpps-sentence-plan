@@ -19,7 +19,7 @@ services:
       APPLICATION_AUTHENTICATION_UI_ALLOWLIST: 0.0.0.0/0
       LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_SECURITY: DEBUG
 
-  hmpps-auth-proxy:
+  forward-proxy:
     image: nginx:latest
     depends_on:
       - hmpps-auth

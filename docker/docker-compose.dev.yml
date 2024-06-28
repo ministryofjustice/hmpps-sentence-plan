@@ -7,7 +7,7 @@ services:
     ports:
       - "9090:9090"
 
-  hmpps-auth-proxy:
+  forward-proxy:
     ports:
       - "9091:9091"
 

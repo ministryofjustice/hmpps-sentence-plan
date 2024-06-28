@@ -18,11 +18,16 @@ class GoalService(
   fun createNewGoal(goal: GoalEntity): GoalEntity = goalRepository.save(goal)
 
   @Transactional
-  fun createNewStep(steps: List<StepEntity>, goalUuid: UUID): List<StepEntity> {
-    for (step in steps) {
-      step.relatedGoalUuid = goalUuid
-    }
-    return stepRepository.saveAll(steps)
+  fun createNewStep(goalUuid: UUID, steps: List<StepEntity>): List<StepEntity> {
+    val stepsRelatedToGoal: List<StepEntity> = addRelatedGoalUuidToSteps(goalUuid, steps)
+    return stepRepository.saveAll(stepsRelatedToGoal)
+  }
+
+  internal fun addRelatedGoalUuidToSteps(
+    goalUuid: UUID,
+    steps: List<StepEntity>,
+  ): List<StepEntity> {
+    return steps.onEach { it -> it.relatedGoalUuid = goalUuid }
   }
 
   fun getAllGoals(): List<GoalEntity> = goalRepository.findAll()

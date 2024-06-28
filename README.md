@@ -16,7 +16,8 @@ This service and all of its dependencies are run in Docker containers.
 **Note:** Every command can be printed using `make`
 
 **Note:** An access token (for authenticating with the API) can be generated
-by performing an OAuth2 client_credentials grant flow to http://localhost:9091/auth/oauth/token
+by performing an OAuth2 client_credentials grant flow to http://localhost:9091/auth/oauth/token, using
+`sentence-plan-api-client` for both the client_id and client_secret
 
 ### Production
 1. To start a production version of the application, run `make up`

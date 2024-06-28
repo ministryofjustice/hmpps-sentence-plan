@@ -13,6 +13,10 @@ services:
     image: quay.io/hmpps/hmpps-auth:latest
     healthcheck:
       test: ["CMD", "curl", "-f", "http://hmpps-auth:9090/auth/health"]
+      interval: 5s
+      retries: 100
+    ports:
+      - "9090:9090"
     environment:
       SERVER_PORT: 9090
       SPRING_PROFILES_ACTIVE: dev
@@ -21,6 +25,8 @@ services:
 
   forward-proxy:
     image: nginx:latest
+    ports:
+      - "9091:9091"
     depends_on:
       - hmpps-auth
     volumes:
@@ -33,6 +39,7 @@ services:
     depends_on:
       - postgres
       - hmpps-auth
+      - forward-proxy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://api:8080/health/ping"]
       interval: 5s
@@ -43,7 +50,7 @@ services:
       SERVER_PORT: 8080
       DB_ENDPOINT: postgres:5432
       ARNS_API_CLIENT_ID: sentence-plan-api-client
-      ARNS_API_CLIENT_SECRET: clientsecret
+      ARNS_API_CLIENT_SECRET: sentence-plan-api-client
       HMPPS_AUTH_BASE_URL: http://hmpps-auth:9090
       ARNS_API_BASE_URL: http://wiremock:8080/arns-api
       DELIUS_API_BASE_URL: http://wiremock:8080/delius-api

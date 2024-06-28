@@ -22,8 +22,8 @@ build-api: ## Builds a production image of the API.
 	docker-compose build api
 
 dev-up: ## Starts/restarts the API in a development container. A remote debugger can be attached on port 5005.
-	docker-compose down api
-	docker compose ${DEV_COMPOSE_FILES} up -d
+	docker compose ${DEV_COMPOSE_FILES} down api
+	docker compose ${DEV_COMPOSE_FILES} up --wait --no-recreate api
 
 dev-build: ## Builds a development image of the API.
 	docker compose ${DEV_COMPOSE_FILES} build api
@@ -31,7 +31,7 @@ dev-build: ## Builds a development image of the API.
 dev-down: ## Stops and removes the API container.
 	docker compose down
 
-rebuild: ## Re-builds and live-reloads the API.
+rebuild: ## Re-builds and reloads the API.
 	docker compose ${DEV_COMPOSE_FILES} exec api gradle compileKotlin --parallel --build-cache --configuration-cache
 
 watch: ## Watches for file changes and live-reloads the API. To be used in conjunction with dev-up e.g. "make dev-up watch"

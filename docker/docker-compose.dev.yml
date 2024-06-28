@@ -1,16 +1,4 @@
 services:
-  postgres:
-    ports:
-      - "5432:5432"
-
-  hmpps-auth:
-    ports:
-      - "9090:9090"
-
-  forward-proxy:
-    ports:
-      - "9091:9091"
-
   api:
     image: quay.io/hmpps/hmpps-sentence-plan:local
     build:

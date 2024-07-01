@@ -6,7 +6,9 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient
+import org.springframework.test.web.reactive.server.expectBody
 import org.springframework.test.web.reactive.server.expectBodyList
+import uk.gov.justice.digital.hmpps.sentenceplan.config.ErrorResponse
 import uk.gov.justice.digital.hmpps.sentenceplan.data.GoalOrder
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntity
@@ -14,6 +16,8 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepEntity
 import java.time.LocalDateTime
 import java.util.UUID
+
+private const val TEST_DATA_GOAL_UUID = "31d7e986-4078-4f5c-af1d-115f9ba3722d"
 
 @AutoConfigureWebTestClient(timeout = "5s")
 @DisplayName("Goal Controller Tests")
@@ -23,7 +27,12 @@ class GoalControllerTest : IntegrationTestBase() {
   @Autowired
   lateinit var planRepository: PlanRepository
 
-  var goalRequestBody: GoalEntity? = null
+  private var goalRequestBody: GoalEntity = GoalEntity(
+    title = "abc",
+    areaOfNeed = "xzv",
+    targetDate = LocalDateTime.now().toString(),
+    goalOrder = 1,
+  )
 
   private val goalOrder = GoalOrder(
     goalUuid = UUID.randomUUID(),
@@ -32,20 +41,25 @@ class GoalControllerTest : IntegrationTestBase() {
 
   private val goalOrderList = listOf(goalOrder)
 
-  val currentTime = LocalDateTime.now().toString()
+  private val stepOne = StepEntity(
+    description = "Step description",
+    actor = "Step actor",
+    status = "incomplete",
+  )
+
+  private val stepTwo = StepEntity(
+    description = "Step description two",
+    actor = "Step actor two",
+    status = "incomplete",
+  )
+
+  private val stepList: List<StepEntity> = listOf(stepOne, stepTwo)
 
   private lateinit var plan: PlanEntity
 
   @BeforeAll
   fun setup() {
     plan = planRepository.findAll().first()
-
-    goalRequestBody = GoalEntity(
-      title = "abc",
-      areaOfNeed = "xzv",
-      targetDate = currentTime,
-      goalOrder = 1,
-    )
   }
 
   @Test
@@ -111,13 +125,34 @@ class GoalControllerTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `get goal steps should return OK and contain 1 step`() {
-    webTestClient.get().uri("/goals/31d7e986-4078-4f5c-af1d-115f9ba3722d/steps")
+  fun `get goal by UUID should return OK when goal exists`() {
+    webTestClient.get().uri("/goals/$TEST_DATA_GOAL_UUID")
       .header("Content-Type", "application/json")
       .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
       .exchange()
       .expectStatus().isOk
-      .expectBodyList<StepEntity>().hasSize(1)
+      .expectBody<GoalEntity>()
+  }
+
+  @Test
+  fun `get goal by UUID should return NOT FOUND when goal does not exist`() {
+    val randomUuid = UUID.randomUUID()
+    webTestClient.get().uri("/goals/$randomUuid")
+      .header("Content-Type", "application/json")
+      .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+      .exchange()
+      .expectStatus().isNotFound
+      .expectBody<ErrorResponse>()
+  }
+
+  @Test
+  fun `get goal steps should return OK and contain 1 step`() {
+    webTestClient.get().uri("/goals/$TEST_DATA_GOAL_UUID/steps")
+      .header("Content-Type", "application/json")
+      .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+      .exchange()
+      .expectStatus().isOk
+      .expectBodyList<StepEntity>()
   }
 
   @Test
@@ -127,6 +162,40 @@ class GoalControllerTest : IntegrationTestBase() {
       .header("Content-Type", "application/json")
       .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
       .exchange()
+      .expectBodyList<StepEntity>().hasSize(0)
+  }
+
+  @Test
+  fun `create goal steps should return OK`() {
+    webTestClient.post().uri("/goals/${TEST_DATA_GOAL_UUID}/steps")
+      .header("Content-Type", "application/json")
+      .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+      .bodyValue(stepList)
+      .exchange()
+      .expectStatus().isCreated
+      .expectBodyList<StepEntity>().hasSize(2)
+  }
+
+  @Test
+  fun `create goal steps should throw a DataIntegrityViolationException if the Goal GUID doesn't exist`() {
+    val randomUuid = UUID.randomUUID()
+    webTestClient.post().uri("/goals/$randomUuid/steps")
+      .header("Content-Type", "application/json")
+      .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+      .bodyValue(stepList)
+      .exchange()
+      .expectStatus().is5xxServerError
+      .expectBody<ErrorResponse>()
+  }
+
+  @Test
+  fun `create goal steps with no steps should return CREATED`() {
+    webTestClient.post().uri("/goals/${TEST_DATA_GOAL_UUID}/steps")
+      .header("Content-Type", "application/json")
+      .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+      .bodyValue(emptyList<StepEntity>())
+      .exchange()
+      .expectStatus().isCreated
       .expectBodyList<StepEntity>().hasSize(0)
   }
 

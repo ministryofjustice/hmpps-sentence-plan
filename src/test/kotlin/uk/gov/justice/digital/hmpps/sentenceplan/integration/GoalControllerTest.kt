@@ -43,10 +43,8 @@ class GoalControllerTest : IntegrationTestBase() {
     goalRequestBody = GoalEntity(
       title = "abc",
       areaOfNeed = "xzv",
-      creationDate = currentTime,
       targetDate = currentTime,
       goalOrder = 1,
-      planUuid = plan.uuid,
     )
   }
 
@@ -106,7 +104,7 @@ class GoalControllerTest : IntegrationTestBase() {
 
   @Test
   fun `get goals should return OK`() {
-    webTestClient.get().uri("/plans/$plan.uuid/goals")
+    webTestClient.get().uri("/goals")
       .header("Content-Type", "application/json")
       .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
       .exchange()
@@ -132,7 +130,7 @@ class GoalControllerTest : IntegrationTestBase() {
 
   @Test
   fun `get goal steps should return OK and contain 1 step`() {
-    webTestClient.get().uri("/plans/$plan.uuid/goals/31d7e986-4078-4f5c-af1d-115f9ba3722d/steps")
+    webTestClient.get().uri("/goals/31d7e986-4078-4f5c-af1d-115f9ba3722d/steps")
       .header("Content-Type", "application/json")
       .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
       .exchange()
@@ -143,7 +141,7 @@ class GoalControllerTest : IntegrationTestBase() {
   @Test
   fun `get goal steps for UUID which doesn't exist should return OK and an empty list`() {
     val randomUuid = UUID.randomUUID()
-    webTestClient.get().uri("/plans/$plan.uuid/goals/$randomUuid/steps")
+    webTestClient.get().uri("/goals/$randomUuid/steps")
       .header("Content-Type", "application/json")
       .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
       .exchange()
@@ -160,7 +158,7 @@ class GoalControllerTest : IntegrationTestBase() {
 
   @Test
   fun `update goals order should return created`() {
-    webTestClient.post().uri("/plans/$plan.uuid/goals/order")
+    webTestClient.post().uri("/goals/order")
       .header("Content-Type", "application/json")
       .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
       .bodyValue(goalOrderList)
@@ -170,7 +168,7 @@ class GoalControllerTest : IntegrationTestBase() {
 
   @Test
   fun `update goals order should return unauthorized when no auth token`() {
-    webTestClient.post().uri("/plans/$plan.uuid/goals/order")
+    webTestClient.post().uri("/goals/order")
       .header("Content-Type", "application/json")
       .bodyValue(goalOrderList)
       .exchange()

@@ -7,7 +7,7 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepRepository
-import java.util.UUID
+import java.util.*
 
 @Service
 class GoalService(
@@ -15,7 +15,7 @@ class GoalService(
   private val stepRepository: StepRepository,
 ) {
 
-  fun createNewGoal(goal: GoalEntity): GoalEntity = goalRepository.save(goal)
+  fun getGoalByUuid(goalUuid: UUID): GoalEntity? = goalRepository.findByUuid(goalUuid)
 
   @Transactional
   fun createNewStep(goalUuid: UUID, steps: List<StepEntity>): List<StepEntity> {

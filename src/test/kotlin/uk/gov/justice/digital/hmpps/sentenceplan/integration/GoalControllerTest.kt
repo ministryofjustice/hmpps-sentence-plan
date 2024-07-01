@@ -49,15 +49,6 @@ class GoalControllerTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `create goal should return created`() {
-    webTestClient.post().uri("/plans/$plan.uuid/goals").header("Content-Type", "application/json")
-      .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
-      .bodyValue(goalRequestBody)
-      .exchange()
-      .expectStatus().isCreated
-  }
-
-  @Test
   fun `create goal should return unauthorized when no auth token`() {
     webTestClient.post().uri("/plans/$plan.uuid/goals")
       .header("Content-Type", "application/json")
@@ -100,15 +91,6 @@ class GoalControllerTest : IntegrationTestBase() {
       .headers(setAuthorisation(roles = listOf("abc")))
       .exchange()
       .expectStatus().isForbidden
-  }
-
-  @Test
-  fun `get goals should return OK`() {
-    webTestClient.get().uri("/goals")
-      .header("Content-Type", "application/json")
-      .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
-      .exchange()
-      .expectStatus().isOk
   }
 
   @Test

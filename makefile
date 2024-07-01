@@ -51,7 +51,7 @@ clean: ## Stops and removes all project containers. Deletes local build/cache di
 	rm -rf .gradle build
 
 update: ## Downloads the latest versions of containers.
-	docker compose ${DEV_COMPOSE_FILES} pull
+	docker compose ${LOCAL_COMPOSE_FILES} pull
 
 save-logs: ## Saves docker container logs in a directory defined by OUTPUT_LOGS_DIR=
 	mkdir -p ${OUTPUT_LOGS_DIR}

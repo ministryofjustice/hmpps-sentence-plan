@@ -1,1 +1,1 @@
-insert into plan(uuid, status, creation_date, updated_date) values ('556db5c8-a1eb-4064-986b-0740d6a83c33', 'incomplete','2024-06-25 10:00:00', '2024-06-25 10:00:00')
+insert into plan(uuid, status, creation_date, updated_date) values ('556db5c8-a1eb-4064-986b-0740d6a83c33', 'INCOMPLETE','2024-06-25 10:00:00', '2024-06-25 10:00:00')

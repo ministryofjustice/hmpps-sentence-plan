@@ -1,10 +1,10 @@
 package uk.gov.justice.digital.hmpps.sentenceplan.entity
 
 import com.fasterxml.jackson.annotation.JsonIgnore
-import jakarta.persistence.AttributeConverter
 import jakarta.persistence.Column
-import jakarta.persistence.Converter
 import jakarta.persistence.Entity
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
@@ -29,6 +29,7 @@ class PlanEntity(
   val uuid: UUID = UUID.randomUUID(),
 
   @Column(name = "status")
+  @Enumerated(EnumType.STRING)
   val status: PlanStatus = PlanStatus.INCOMPLETE,
 
   @Column(name = "creation_date")
@@ -43,13 +44,6 @@ enum class PlanStatus {
   COMPLETE,
   LOCKED,
   SIGNED,
-}
-
-@Converter(autoApply = true)
-class PlanStatusConverter : AttributeConverter<PlanStatus, String> {
-  override fun convertToDatabaseColumn(status: PlanStatus): String = status.name
-
-  override fun convertToEntityAttribute(status: String): PlanStatus = PlanStatus.valueOf(status.uppercase())
 }
 
 interface PlanRepository : JpaRepository<PlanEntity, Long> {

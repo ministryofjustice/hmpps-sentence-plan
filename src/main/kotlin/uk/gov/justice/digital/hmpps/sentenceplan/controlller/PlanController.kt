@@ -23,6 +23,14 @@ class PlanController(
   private val goalService: GoalService,
 ) {
 
+  @PostMapping
+  @ResponseStatus(HttpStatus.CREATED)
+  fun createPlan(
+    @RequestBody oasysAssessmentPk: String,
+  ): PlanEntity {
+    return service.createPlan(oasysAssessmentPk)
+  }
+
   @GetMapping("/{planUuid}")
   @ResponseStatus(HttpStatus.OK)
   fun getPlan(

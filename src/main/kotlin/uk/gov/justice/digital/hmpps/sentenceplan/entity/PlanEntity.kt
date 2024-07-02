@@ -14,7 +14,7 @@ import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
 import java.time.Instant
 import java.time.format.DateTimeFormatter
-import java.util.*
+import java.util.UUID
 
 @Entity(name = "Plan")
 @Table(name = "plan")
@@ -29,7 +29,7 @@ class PlanEntity(
   val uuid: UUID = UUID.randomUUID(),
 
   @Column(name = "status")
-  val status: PlanStatus,
+  val status: PlanStatus = PlanStatus.INCOMPLETE,
 
   @Column(name = "creation_date")
   val creationDate: String = DateTimeFormatter.ISO_INSTANT.format(Instant.now()),
@@ -57,4 +57,7 @@ interface PlanRepository : JpaRepository<PlanEntity, Long> {
 
   @Query("select p.* from plan p inner join oasys_pk_to_plan o on p.uuid = o.plan_uuid and o.oasys_assessment_pk = :oasysAssessmentPk", nativeQuery = true)
   fun findByOasysAssessmentPk(@Param("oasysAssessmentPk") oasysAssessmentPk: String): PlanEntity?
+
+  @Query("insert into oasys_pk_to_plan(oasys_assessment_pk, plan_uuid) values (:oasysAssessmentPk, :planUuid)", nativeQuery = true)
+  fun createOasysAssessmentPk(@Param("oasysAssessmentPk") oasysAssessmentPk: String, @Param("planUuid") planUuid: UUID): Long
 }

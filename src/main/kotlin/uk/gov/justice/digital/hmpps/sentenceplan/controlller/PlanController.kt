@@ -12,12 +12,16 @@ import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.servlet.resource.NoResourceFoundException
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntity
+import uk.gov.justice.digital.hmpps.sentenceplan.services.GoalService
 import uk.gov.justice.digital.hmpps.sentenceplan.services.PlanService
-import java.util.*
+import java.util.UUID
 
 @RestController
 @RequestMapping("/plans")
-class PlanController(private val service: PlanService) {
+class PlanController(
+  private val service: PlanService,
+  private val goalService: GoalService,
+) {
 
   @GetMapping("/{planUuid}")
   @ResponseStatus(HttpStatus.OK)
@@ -32,7 +36,7 @@ class PlanController(private val service: PlanService) {
   fun getPlanGoals(
     @PathVariable planUuid: UUID,
   ): List<GoalEntity> {
-    return service.getGoalsByPlanUuid(planUuid)
+    return goalService.getGoalsByPlanUuid(planUuid)
   }
 
   @PostMapping("/{planUuid}/goals")
@@ -41,6 +45,6 @@ class PlanController(private val service: PlanService) {
     @PathVariable planUuid: UUID,
     @RequestBody goal: GoalEntity,
   ): GoalEntity {
-    return service.createNewGoal(planUuid, goal)
+    return goalService.createNewGoal(planUuid, goal)
   }
 }

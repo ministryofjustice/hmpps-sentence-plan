@@ -25,10 +25,8 @@ class PlanController(
 
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
-  fun createPlan(
-    @RequestBody oasysAssessmentPk: String,
-  ): PlanEntity {
-    return service.createPlan(oasysAssessmentPk)
+  fun createPlan(): PlanEntity {
+    return service.createPlan()
   }
 
   @GetMapping("/{planUuid}")

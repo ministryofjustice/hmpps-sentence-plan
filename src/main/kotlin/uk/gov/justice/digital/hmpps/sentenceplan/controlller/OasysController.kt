@@ -13,7 +13,8 @@ import uk.gov.justice.digital.hmpps.sentenceplan.services.PlanService
 @RequestMapping("/oasys")
 class OasysController(private val service: PlanService) {
 
-  @GetMapping("/{oasysAssessmentPk}")
+  @GetMapping("/plans/{oasysAssessmentPk}")
+  @ResponseStatus(HttpStatus.OK)
   fun getPlan(
     @PathVariable oasysAssessmentPk: String,
   ): PlanEntity {

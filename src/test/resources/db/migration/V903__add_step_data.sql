@@ -1,1 +1,1 @@
-INSERT INTO step (id, uuid, related_goal_uuid, description, actor, status, creation_date) VALUES (1, '71793b64-545e-4ae7-9936-610639093857', '31d7e986-4078-4f5c-af1d-115f9ba3722d', 'Test step 1', 'Actor name', 'Status name', '2024-06-27 16:26:38.000000');
+INSERT INTO step (uuid, related_goal_uuid, description, actor, status, creation_date) VALUES ('71793b64-545e-4ae7-9936-610639093857', '31d7e986-4078-4f5c-af1d-115f9ba3722d', 'Test step 1', 'Actor name', 'Status name', '2024-06-27 16:26:38.000000');

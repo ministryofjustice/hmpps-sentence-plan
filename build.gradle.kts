@@ -1,3 +1,6 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.springframework.boot.gradle.tasks.run.BootRun
+
 plugins {
   id("uk.gov.justice.hmpps.gradle-spring-boot") version "5.15.6"
   kotlin("plugin.spring") version "1.9.23"
@@ -28,12 +31,17 @@ dependencies {
     }
   }
   implementation("org.springframework.cloud:spring-cloud-dependencies:2023.0.1")
-  implementation("org.flywaydb:flyway-core")
+  implementation("org.flywaydb:flyway-core:9.22.3")
   implementation("com.vladmihalcea:hibernate-types-60:2.21.1")
   runtimeOnly("org.postgresql:postgresql")
+
+  // Test dependencies
   testImplementation("com.ninja-squad:springmockk:4.0.2")
   testImplementation("io.jsonwebtoken:jjwt-impl:0.12.3")
   testImplementation("io.jsonwebtoken:jjwt-jackson:0.12.3")
+
+  // Dev dependencies
+  developmentOnly("org.springframework.boot:spring-boot-devtools")
 }
 
 kotlin {
@@ -41,9 +49,14 @@ kotlin {
 }
 
 tasks {
-  withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+  withType<KotlinCompile> {
     kotlinOptions {
       jvmTarget = "21"
     }
+  }
+  withType<BootRun> {
+    jvmArgs = listOf(
+      "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005",
+    )
   }
 }

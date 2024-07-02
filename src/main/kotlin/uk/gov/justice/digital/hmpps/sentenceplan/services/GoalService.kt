@@ -15,30 +15,29 @@ class GoalService(
   private val stepRepository: StepRepository,
 ) {
 
-  fun createNewGoal(goal: GoalEntity): GoalEntity {
-    return goalRepository.save(goal)
-  }
+  fun createNewGoal(goal: GoalEntity): GoalEntity = goalRepository.save(goal)
 
   @Transactional
-  fun createNewStep(steps: List<StepEntity>, goalId: UUID): List<StepEntity> {
-    for (step in steps) {
-      step.relatedGoalId = goalId
-    }
-    return stepRepository.saveAll(steps)
+  fun createNewStep(goalUuid: UUID, steps: List<StepEntity>): List<StepEntity> {
+    val stepsRelatedToGoal: List<StepEntity> = addRelatedGoalUuidToSteps(goalUuid, steps)
+    return stepRepository.saveAll(stepsRelatedToGoal)
   }
 
-  fun getAllGoals(): List<GoalEntity> {
-    return goalRepository.findAll()
+  internal fun addRelatedGoalUuidToSteps(
+    goalUuid: UUID,
+    steps: List<StepEntity>,
+  ): List<StepEntity> {
+    return steps.onEach { it -> it.relatedGoalUuid = goalUuid }
   }
 
-  fun getAllGoalSteps(goalId: UUID): List<StepEntity> {
-    return stepRepository.findAllByRelatedGoalId(goalId).get()
-  }
+  fun getAllGoals(): List<GoalEntity> = goalRepository.findAll()
+
+  fun getAllGoalSteps(goalUuid: UUID): List<StepEntity> = stepRepository.findByRelatedGoalUuid(goalUuid)
 
   @Transactional
   fun updateGoalsOrder(goalsOrder: List<GoalOrder>) {
     for (goal in goalsOrder) {
-      goal.goalOrder?.let { goalRepository.updateGoalOrder(it, goal.goalId) }
+      goal.goalOrder?.let { goalRepository.updateGoalOrder(it, goal.goalUuid) }
     }
   }
 }

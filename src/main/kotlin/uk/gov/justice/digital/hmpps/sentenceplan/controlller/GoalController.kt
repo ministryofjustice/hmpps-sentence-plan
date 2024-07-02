@@ -26,13 +26,13 @@ class GoalController(private val service: GoalService) {
     return service.createNewGoal(goal)
   }
 
-  @PostMapping("/{goalId}/steps")
+  @PostMapping("/{goalUuid}/steps")
   @ResponseStatus(HttpStatus.CREATED)
   fun createNewStep(
-    @PathVariable goalId: UUID,
+    @PathVariable goalUuid: UUID,
     @RequestBody steps: List<StepEntity>,
   ): List<StepEntity> {
-    return service.createNewStep(steps, goalId)
+    return service.createNewStep(goalUuid, steps)
   }
 
   @GetMapping
@@ -41,12 +41,12 @@ class GoalController(private val service: GoalService) {
     return service.getAllGoals()
   }
 
-  @GetMapping("/{goalId}/steps")
+  @GetMapping("/{goalUuid}/steps")
   @ResponseStatus(HttpStatus.OK)
   fun getAllGoalSteps(
-    @PathVariable goalId: UUID,
+    @PathVariable goalUuid: UUID,
   ): List<StepEntity> {
-    return service.getAllGoalSteps(goalId)
+    return service.getAllGoalSteps(goalUuid)
   }
 
   @PostMapping("/order")

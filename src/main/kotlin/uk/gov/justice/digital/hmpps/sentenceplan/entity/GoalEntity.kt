@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.sentenceplan.entity
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.GeneratedValue
@@ -11,7 +12,6 @@ import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import java.time.Instant
 import java.time.format.DateTimeFormatter
-import java.util.Optional
 import java.util.UUID
 
 @Entity(name = "Goal")
@@ -20,6 +20,7 @@ class GoalEntity(
   @Id
   @Column(name = "id")
   @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @JsonIgnore
   val id: Long? = null,
 
   @Column(name = "uuid")
@@ -40,10 +41,12 @@ class GoalEntity(
   @Column(name = "goal_order")
   val goalOrder: Int,
 
+  @Column(name = "plan_uuid")
+  val planUuid: UUID,
 )
 
-interface GoalRepository : JpaRepository<GoalEntity, UUID> {
-  override fun findById(uuid: UUID): Optional<GoalEntity>
+interface GoalRepository : JpaRepository<GoalEntity, Long> {
+  fun findByUuid(uuid: UUID): GoalEntity?
 
   @Modifying
   @Query("update Goal g set g.goalOrder = ?1 where g.uuid = ?2")

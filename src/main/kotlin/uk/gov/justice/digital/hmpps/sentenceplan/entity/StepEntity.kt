@@ -10,7 +10,6 @@ import jakarta.persistence.Table
 import org.springframework.data.jpa.repository.JpaRepository
 import java.time.Instant
 import java.time.format.DateTimeFormatter
-import java.util.Optional
 import java.util.UUID
 
 @Entity(name = "Step")
@@ -43,7 +42,7 @@ class StepEntity(
 )
 
 interface StepRepository : JpaRepository<StepEntity, Long> {
-  fun findByUuid(uuid: UUID): Optional<StepEntity>
+  fun findByUuid(uuid: UUID): StepEntity?
 
   // This query always returns a list, even if there is no Goal with this UUID
   fun findByRelatedGoalUuid(relatedGoalUuid: UUID): List<StepEntity>

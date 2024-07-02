@@ -3,7 +3,7 @@ package uk.gov.justice.digital.hmpps.sentenceplan.services
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
-import java.util.*
+import java.util.UUID
 
 @Service
 class PlanService(

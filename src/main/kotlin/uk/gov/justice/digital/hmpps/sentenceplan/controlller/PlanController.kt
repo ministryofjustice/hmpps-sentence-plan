@@ -23,6 +23,12 @@ class PlanController(
   private val goalService: GoalService,
 ) {
 
+  @PostMapping
+  @ResponseStatus(HttpStatus.CREATED)
+  fun createPlan(): PlanEntity {
+    return service.createPlan()
+  }
+
   @GetMapping("/{planUuid}")
   @ResponseStatus(HttpStatus.OK)
   fun getPlan(

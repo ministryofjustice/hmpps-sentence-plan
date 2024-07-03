@@ -1,20 +1,22 @@
 package uk.gov.justice.digital.hmpps.sentenceplan.entity
 
 import com.fasterxml.jackson.annotation.JsonIgnore
-import jakarta.persistence.AttributeConverter
 import jakarta.persistence.Column
-import jakarta.persistence.Converter
 import jakarta.persistence.Entity
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Table
+import jakarta.transaction.Transactional
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
 import java.time.Instant
 import java.time.format.DateTimeFormatter
-import java.util.*
+import java.util.UUID
 
 @Entity(name = "Plan")
 @Table(name = "plan")
@@ -29,7 +31,8 @@ class PlanEntity(
   val uuid: UUID = UUID.randomUUID(),
 
   @Column(name = "status")
-  val status: PlanStatus,
+  @Enumerated(EnumType.STRING)
+  val status: PlanStatus = PlanStatus.INCOMPLETE,
 
   @Column(name = "creation_date")
   val creationDate: String = DateTimeFormatter.ISO_INSTANT.format(Instant.now()),
@@ -45,16 +48,14 @@ enum class PlanStatus {
   SIGNED,
 }
 
-@Converter(autoApply = true)
-class PlanStatusConverter : AttributeConverter<PlanStatus, String> {
-  override fun convertToDatabaseColumn(status: PlanStatus): String = status.name
-
-  override fun convertToEntityAttribute(status: String): PlanStatus = PlanStatus.valueOf(status.uppercase())
-}
-
 interface PlanRepository : JpaRepository<PlanEntity, Long> {
   fun findByUuid(uuid: UUID): PlanEntity?
 
   @Query("select p.* from plan p inner join oasys_pk_to_plan o on p.uuid = o.plan_uuid and o.oasys_assessment_pk = :oasysAssessmentPk", nativeQuery = true)
   fun findByOasysAssessmentPk(@Param("oasysAssessmentPk") oasysAssessmentPk: String): PlanEntity?
+
+  @Modifying
+  @Transactional
+  @Query("insert into oasys_pk_to_plan(oasys_assessment_pk, plan_uuid) values (:oasysAssessmentPk, :planUuid)", nativeQuery = true)
+  fun createOasysAssessmentPk(@Param("oasysAssessmentPk") oasysAssessmentPk: String, @Param("planUuid") planUuid: UUID)
 }

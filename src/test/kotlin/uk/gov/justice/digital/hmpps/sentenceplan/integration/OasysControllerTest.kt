@@ -10,6 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient
 import org.springframework.cloud.contract.spec.internal.HttpStatus.CONFLICT
 import org.springframework.cloud.contract.verifier.assertion.SpringCloudContractAssertions.assertThat
+import org.springframework.test.web.reactive.server.expectBody
+import uk.gov.justice.digital.hmpps.sentenceplan.config.ErrorResponse
 import uk.gov.justice.digital.hmpps.sentenceplan.data.CreatePlanWithOasysAssesmentPkRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
@@ -61,11 +63,11 @@ class OasysControllerTest : IntegrationTestBase() {
         .bodyValue(planRequestBody)
         .exchange()
         .expectStatus().isEqualTo(CONFLICT)
-        .expectBody(String::class.java)
+        .expectBody<ErrorResponse>()
         .returnResult()
         .responseBody
 
-      assertThat(response).contains("Plan already associated with PK: ${planRequestBody.oasysAssessmentPk}")
+      assertThat(response.developerMessage).contains("Plan already associated with PK: ${planRequestBody.oasysAssessmentPk}")
     }
   }
 

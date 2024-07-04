@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.sentenceplan.controlller
+package uk.gov.justice.digital.hmpps.sentenceplan.controller
 
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.PostMapping

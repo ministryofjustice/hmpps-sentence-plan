@@ -1,5 +1,5 @@
 do $$ begin
-    create type status_type as enum ('incomplete', 'complete', 'locked', 'signed');
+    create type status_type as enum ('INCOMPLETE', 'COMPLETE', 'LOCKED', 'SIGNED');
 exception
     when duplicate_object then null;
 end $$;

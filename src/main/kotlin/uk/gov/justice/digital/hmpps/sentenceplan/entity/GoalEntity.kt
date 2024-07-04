@@ -24,7 +24,7 @@ class GoalEntity(
   val id: Long? = null,
 
   @Column(name = "uuid")
-  val uuid: UUID = UUID.randomUUID(),
+  var uuid: UUID = UUID.randomUUID(),
 
   @Column(name = "title")
   val title: String,
@@ -42,11 +42,13 @@ class GoalEntity(
   val goalOrder: Int,
 
   @Column(name = "plan_uuid")
-  val planUuid: UUID,
+  var planUuid: UUID? = null,
 )
 
 interface GoalRepository : JpaRepository<GoalEntity, Long> {
   fun findByUuid(uuid: UUID): GoalEntity?
+
+  fun findByPlanUuid(planUuid: UUID): List<GoalEntity>
 
   @Modifying
   @Query("update Goal g set g.goalOrder = ?1 where g.uuid = ?2")

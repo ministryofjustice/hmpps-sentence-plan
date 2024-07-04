@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.sentenceplan.controlller
+package uk.gov.justice.digital.hmpps.sentenceplan.controller
 
 import org.springframework.http.HttpMethod
 import org.springframework.web.bind.annotation.GetMapping

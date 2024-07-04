@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.sentenceplan.controlller
+package uk.gov.justice.digital.hmpps.sentenceplan.controller
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import org.springframework.http.MediaType

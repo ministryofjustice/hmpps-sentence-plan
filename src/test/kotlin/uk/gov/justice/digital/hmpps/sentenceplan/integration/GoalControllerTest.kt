@@ -43,13 +43,11 @@ class GoalControllerTest : IntegrationTestBase() {
 
   private val stepOne = StepEntity(
     description = "Step description",
-    actor = "Step actor",
     status = "incomplete",
   )
 
   private val stepTwo = StepEntity(
     description = "Step description two",
-    actor = "Step actor two",
     status = "incomplete",
   )
 

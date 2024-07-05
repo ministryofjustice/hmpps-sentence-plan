@@ -30,9 +30,6 @@ class StepEntity(
   @Column(name = "description")
   val description: String,
 
-  @Column(name = "actor")
-  val actor: String,
-
   @Column(name = "status")
   val status: String,
 

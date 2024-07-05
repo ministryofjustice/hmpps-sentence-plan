@@ -25,7 +25,6 @@ class GoalServiceTest {
   val stepEntity = StepEntity(
     description = "description",
     id = 123L,
-    actor = "actor",
     status = "status",
     creationDate = currentTime,
   )
@@ -43,7 +42,6 @@ class GoalServiceTest {
     assertThat(stepsList.get(0).status).isEqualTo("status")
     assertThat(stepsList.get(0).id).isEqualTo(123)
     assertThat(stepsList.get(0).relatedGoalUuid).isEqualTo(uuid)
-    assertThat(stepsList.get(0).actor).isEqualTo("actor")
     assertThat(stepsList.get(0).description).isEqualTo("description")
     assertThat(stepsList.get(0).creationDate).isEqualTo(currentTime)
   }

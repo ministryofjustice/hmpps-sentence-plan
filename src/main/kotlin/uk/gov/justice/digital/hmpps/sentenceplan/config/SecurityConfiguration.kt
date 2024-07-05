@@ -24,7 +24,6 @@ class SecurityConfiguration {
             "/swagger-ui.html",
             "/swagger-ui/**",
             "/v3/api-docs/**",
-            "/hello/**",
             "/question-reference-data",
           ).permitAll()
           .anyRequest().hasAuthority("ROLE_RISK_INTEGRATIONS_RO")

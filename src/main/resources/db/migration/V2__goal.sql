@@ -10,15 +10,3 @@ create table if not exists goal
     goal_order          integer         NULL,
     FOREIGN KEY (plan_uuid) references  plan(uuid)
 );
-
-create table if not exists step
-(
-    id                    serial          PRIMARY KEY,
-    uuid                  uuid            NOT NULL UNIQUE,
-    related_goal_uuid     uuid            NOT NULL,
-    description           varchar(256)    NOT NULL,
-    actor                 varchar(256)    NOT NULL,
-    status                varchar(256)    NOT NULL,
-    creation_date         timestamp       NOT NULL,
-    FOREIGN KEY (related_goal_uuid) REFERENCES goal (uuid)
-);

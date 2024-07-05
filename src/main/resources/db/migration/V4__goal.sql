@@ -5,9 +5,10 @@ create table if not exists goal
     title               varchar(128)    NOT NULL,
     area_of_need        varchar(128)    NOT NULL,
     target_date         timestamp       NOT NULL,
-    is_agreed           boolean         NOT NULL,
-    agreement_note      varchar(256)    NOT NULL,
-    creation_date       timestamp       NOT NULL
+    creation_date       timestamp       NOT NULL,
+    plan_uuid           uuid            NOT NULL,
+    goal_order          integer         NULL,
+    FOREIGN KEY (plan_uuid) references  plan(uuid)
 );
 
 create table if not exists step

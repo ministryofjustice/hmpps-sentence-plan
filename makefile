@@ -47,7 +47,8 @@ lint-fix: ## Runs the Kotlin linter and auto-fixes.
 	docker compose ${DEV_COMPOSE_FILES} exec api gradle ktlintFormat --parallel
 
 clean: ## Stops and removes all project containers. Deletes local build/cache directories.
-	docker compose ${DEV_COMPOSE_FILES} down
+	docker compose down
+	docker volume ls -qf "dangling=true" | xargs -r docker volume rm
 	rm -rf .gradle build
 
 update: ## Downloads the latest versions of containers.

@@ -10,6 +10,8 @@ import org.springframework.test.web.reactive.server.expectBody
 import org.springframework.test.web.reactive.server.expectBodyList
 import uk.gov.justice.digital.hmpps.sentenceplan.config.ErrorResponse
 import uk.gov.justice.digital.hmpps.sentenceplan.data.GoalOrder
+import uk.gov.justice.digital.hmpps.sentenceplan.data.Step
+import uk.gov.justice.digital.hmpps.sentenceplan.data.StepActor
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
@@ -41,17 +43,19 @@ class GoalControllerTest : IntegrationTestBase() {
 
   private val goalOrderList = listOf(goalOrder)
 
-  private val stepOne = StepEntity(
+  private val stepOne = Step(
     description = "Step description",
     status = "incomplete",
+    actor = listOf(StepActor("actor1", 1)),
   )
 
-  private val stepTwo = StepEntity(
+  private val stepTwo = Step(
     description = "Step description two",
-    status = "incomplete",
+    status = "complete",
+    actor = listOf(StepActor("actor2", 2)),
   )
 
-  private val stepList: List<StepEntity> = listOf(stepOne, stepTwo)
+  private val stepList: List<Step> = listOf(stepOne, stepTwo)
 
   private lateinit var plan: PlanEntity
 

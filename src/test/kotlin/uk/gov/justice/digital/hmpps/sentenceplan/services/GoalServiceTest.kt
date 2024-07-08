@@ -7,7 +7,11 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
+import uk.gov.justice.digital.hmpps.sentenceplan.data.Step
+import uk.gov.justice.digital.hmpps.sentenceplan.data.StepActor
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalRepository
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepActorRepository
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepActorsEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepRepository
 import java.time.LocalDateTime
@@ -18,27 +22,35 @@ import java.util.UUID
 class GoalServiceTest {
   private val stepRepository: StepRepository = mockk()
   private val goalRepository: GoalRepository = mockk()
+  private val stepActorRepository: StepActorRepository = mockk()
   private val currentTime = LocalDateTime.now().toString()
-  private val goalService = GoalService(goalRepository, stepRepository)
-  private val uuid = UUID.randomUUID()
+  private val goalService = GoalService(goalRepository, stepRepository, stepActorRepository)
+  private val uuid = UUID.fromString("ef74ee4b-5a0b-481b-860f-19187260f2e7")
 
-  val stepEntity = StepEntity(
+  private val stepEntity = StepEntity(
     description = "description",
     id = 123L,
     status = "status",
+    relatedGoalUuid = UUID.fromString("ef74ee4b-5a0b-481b-860f-19187260f2e7"),
     creationDate = currentTime,
+  )
+  private val actorsEntityList = listOf(
+    StepActorsEntity(1, UUID.fromString("71793b64-545e-4ae7-9936-610639093857"), "actor", 1),
+  )
+  private val actors = listOf(
+    StepActor("actor", 1),
+  )
+  private val steps = Step(
+    description = "description",
+    status = "status",
+    actor = actors,
   )
 
   @Test
-  fun `add related goal UUID to list of steps`() {
-    val stepsList = goalService.addRelatedGoalUuidToSteps(uuid, listOf(stepEntity))
-    assertThat(stepsList.get(0).relatedGoalUuid).isEqualTo(uuid)
-  }
-
-  @Test
-  fun `create new step`() {
-    every { stepRepository.saveAll(any<List<StepEntity>>()) } returns listOf(stepEntity)
-    val stepsList = goalService.createNewStep(uuid, listOf(stepEntity))
+  fun `create new steps`() {
+    every { stepRepository.save(any<StepEntity>()) } returns stepEntity
+    every { stepActorRepository.saveAll(any<List<StepActorsEntity>>()) } returns actorsEntityList
+    val stepsList = goalService.createNewSteps(uuid, listOf(steps))
     assertThat(stepsList.get(0).status).isEqualTo("status")
     assertThat(stepsList.get(0).id).isEqualTo(123)
     assertThat(stepsList.get(0).relatedGoalUuid).isEqualTo(uuid)

@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.servlet.resource.NoResourceFoundException
 import uk.gov.justice.digital.hmpps.sentenceplan.data.GoalOrder
+import uk.gov.justice.digital.hmpps.sentenceplan.data.Step
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.services.GoalService
@@ -29,11 +30,11 @@ class GoalController(private val service: GoalService) {
 
   @PostMapping("/{goalUuid}/steps")
   @ResponseStatus(HttpStatus.CREATED)
-  fun createNewStep(
+  fun createNewSteps(
     @PathVariable goalUuid: UUID,
-    @RequestBody steps: List<StepEntity>,
+    @RequestBody steps: List<Step>,
   ): List<StepEntity> {
-    return service.createNewStep(goalUuid, steps)
+    return service.createNewSteps(goalUuid, steps)
   }
 
   @GetMapping("/{goalUuid}/steps")

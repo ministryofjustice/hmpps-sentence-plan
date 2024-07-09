@@ -23,8 +23,7 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-security")
   implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
   implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
-  implementation("org.springframework.cloud:spring-cloud-starter-contract-stub-runner:4.0.2")
-  implementation("org.springframework.cloud:spring-cloud-starter-openfeign:4.1.1")
+  implementation("org.springframework.cloud:spring-cloud-starter-openfeign:4.1.2")
   constraints {
     implementation("org.bouncycastle:bcprov-jdk18on:1.78.1") {
       because("1.77 has CVEs")

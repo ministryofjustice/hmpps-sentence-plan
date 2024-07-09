@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.sentenceplan.integration
 
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
@@ -8,14 +9,13 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient
-import org.springframework.cloud.contract.spec.internal.HttpStatus.CONFLICT
-import org.springframework.cloud.contract.verifier.assertion.SpringCloudContractAssertions.assertThat
+import org.springframework.http.HttpStatus
 import org.springframework.test.web.reactive.server.expectBody
 import uk.gov.justice.digital.hmpps.sentenceplan.config.ErrorResponse
 import uk.gov.justice.digital.hmpps.sentenceplan.data.CreatePlanWithOasysAssesmentPkRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
-import java.util.*
+import java.util.UUID
 
 @AutoConfigureWebTestClient(timeout = "5s")
 @DisplayName("Oasys Controller Tests")
@@ -62,7 +62,7 @@ class OasysControllerTest : IntegrationTestBase() {
         .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
         .bodyValue(planRequestBody)
         .exchange()
-        .expectStatus().isEqualTo(CONFLICT)
+        .expectStatus().isEqualTo(HttpStatus.CONFLICT)
         .expectBody<ErrorResponse>()
         .returnResult()
         .responseBody

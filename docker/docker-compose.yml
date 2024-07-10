@@ -40,10 +40,10 @@ services:
       - postgres
       - hmpps-auth
       - forward-proxy
-#    healthcheck:
-#      test: ["CMD", "curl", "-f", "http://api:8080/health/ping"]
-#      interval: 5s
-#      retries: 100
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://api:8080/health/ping"]
+      interval: 5s
+      retries: 100
     ports:
       - "8080:8080"
     environment:

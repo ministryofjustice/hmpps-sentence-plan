@@ -7,6 +7,7 @@ plugins {
   kotlin("plugin.spring") version "2.0.0"
   kotlin("plugin.jpa") version "2.0.0"
   kotlin("jvm") version "2.0.0"
+  id("org.jlleitschuh.gradle.ktlint") version "12.1.1"
   id("org.openapi.generator") version "7.7.0"
   jacoco
 }
@@ -29,8 +30,9 @@ dependencies {
     }
   }
   implementation("org.springframework.cloud:spring-cloud-dependencies:2023.0.2")
-  implementation("org.flywaydb:flyway-core:9.22.3")
   implementation("com.vladmihalcea:hibernate-types-60:2.21.1")
+  implementation("org.flywaydb:flyway-core:10.15.2")
+  runtimeOnly("org.flywaydb:flyway-database-postgresql")
   runtimeOnly("org.postgresql:postgresql")
 
   // Test dependencies

@@ -29,8 +29,8 @@ class GoalEntity(
   @Column(name = "title")
   val title: String,
 
-  @Column(name = "area_of_need")
-  val areaOfNeed: String,
+  @Column(name = "area_of_need_uuid")
+  val areaOfNeedUuid: UUID,
 
   @Column(name = "target_date")
   val targetDate: String,

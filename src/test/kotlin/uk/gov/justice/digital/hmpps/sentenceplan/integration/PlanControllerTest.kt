@@ -11,6 +11,8 @@ import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWeb
 import org.springframework.test.web.reactive.server.expectBody
 import org.springframework.test.web.reactive.server.expectBodyList
 import uk.gov.justice.digital.hmpps.sentenceplan.config.ErrorResponse
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.AreaOfNeedEntity
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.AreaOfNeedRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
@@ -26,10 +28,17 @@ class PlanControllerTest : IntegrationTestBase() {
   lateinit var planRepository: PlanRepository
   lateinit var planUuid: UUID
 
+  @Autowired
+  lateinit var areaOfNeedRepository: AreaOfNeedRepository
+  lateinit var areaOfNeedUuid: UUID
+
   @BeforeAll
   fun setup() {
     val plan: PlanEntity = planRepository.findAll().first()
     planUuid = plan.uuid
+
+    val areaOfNeed: AreaOfNeedEntity = areaOfNeedRepository.findAll().first()
+    areaOfNeedUuid = areaOfNeed.uuid
   }
 
   @Nested
@@ -87,7 +96,7 @@ class PlanControllerTest : IntegrationTestBase() {
     fun setup() {
       goalRequestBody = GoalEntity(
         title = "abc",
-        areaOfNeed = "xzv",
+        areaOfNeedUuid = areaOfNeedUuid,
         targetDate = LocalDateTime.now().toString(),
         goalOrder = 1,
       )

@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.sentenceplan.integration
 
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.DisplayName
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.springframework.beans.factory.annotation.Autowired
@@ -31,7 +32,7 @@ class GoalControllerTest : IntegrationTestBase() {
 
   private var goalRequestBody: GoalEntity = GoalEntity(
     title = "abc",
-    areaOfNeed = "xzv",
+    areaOfNeedUuid = UUID.randomUUID(),
     targetDate = LocalDateTime.now().toString(),
     goalOrder = 1,
   )
@@ -64,66 +65,98 @@ class GoalControllerTest : IntegrationTestBase() {
     plan = planRepository.findAll().first()
   }
 
-  @Test
-  fun `create goal should return unauthorized when no auth token`() {
-    webTestClient.post().uri("/plans/$plan.uuid/goals")
-      .header("Content-Type", "application/json")
-      .bodyValue(goalRequestBody)
-      .exchange()
-      .expectStatus().isUnauthorized
-  }
+  @Nested
+  @DisplayName("authTests")
+  inner class GoalActionRoleTests {
 
-  @Test
-  fun `create goal should return forbidden when no role`() {
-    webTestClient.post().uri("/plans/$plan.uuid/goals")
-      .header("Content-Type", "application/json")
-      .headers(setAuthorisation(roles = listOf("abc")))
-      .bodyValue(goalRequestBody)
-      .exchange()
-      .expectStatus().isForbidden
-  }
+    @Test
+    fun `create goal should return unauthorized when no auth token`() {
+      webTestClient.post().uri("/plans/$plan.uuid/goals")
+        .header("Content-Type", "application/json")
+        .bodyValue(goalRequestBody)
+        .exchange()
+        .expectStatus().isUnauthorized
+    }
 
-  @Test
-  fun `create steps should return unauthorized when no auth token`() {
-    webTestClient.post().uri("/plans/$plan.uuid/goals/1/steps")
-      .header("Content-Type", "application/json")
-      .exchange()
-      .expectStatus().isUnauthorized
-  }
+    @Test
+    fun `create goal should return forbidden when no role`() {
+      webTestClient.post().uri("/plans/$plan.uuid/goals")
+        .header("Content-Type", "application/json")
+        .headers(setAuthorisation(roles = listOf("abc")))
+        .bodyValue(goalRequestBody)
+        .exchange()
+        .expectStatus().isForbidden
+    }
 
-  @Test
-  fun `create steps should return forbidden when no role`() {
-    webTestClient.post().uri("/plans/$plan.uuid/goals/1/steps")
-      .header("Content-Type", "application/json")
-      .headers(setAuthorisation(roles = listOf("abc")))
-      .exchange()
-      .expectStatus().isForbidden
-  }
+    @Test
+    fun `create steps should return unauthorized when no auth token`() {
+      webTestClient.post().uri("/plans/$plan.uuid/goals/1/steps")
+        .header("Content-Type", "application/json")
+        .exchange()
+        .expectStatus().isUnauthorized
+    }
 
-  @Test
-  fun `get goals should return forbidden when no role`() {
-    webTestClient.get().uri("/plans/$plan.uuid/goals")
-      .header("Content-Type", "application/json")
-      .headers(setAuthorisation(roles = listOf("abc")))
-      .exchange()
-      .expectStatus().isForbidden
-  }
+    @Test
+    fun `create steps should return forbidden when no role`() {
+      webTestClient.post().uri("/plans/$plan.uuid/goals/1/steps")
+        .header("Content-Type", "application/json")
+        .headers(setAuthorisation(roles = listOf("abc")))
+        .exchange()
+        .expectStatus().isForbidden
+    }
 
-  @Test
-  fun `get goals should return unauthorized when no auth token`() {
-    webTestClient.get().uri("/plans/$plan.uuid/goals")
-      .header("Content-Type", "application/json")
-      .exchange()
-      .expectStatus().isUnauthorized
-  }
+    @Test
+    fun `get goals should return forbidden when no role`() {
+      webTestClient.get().uri("/plans/$plan.uuid/goals")
+        .header("Content-Type", "application/json")
+        .headers(setAuthorisation(roles = listOf("abc")))
+        .exchange()
+        .expectStatus().isForbidden
+    }
 
-  @Test
-  fun `get goal steps should return forbidden when no role`() {
-    webTestClient.get().uri("/plans/$plan.uuid/goals/e6fb513d-3800-4c35-bb3a-5f9bdc9759dd/steps")
-      .header("Content-Type", "application/json")
-      .headers(setAuthorisation(roles = listOf("abc")))
-      .exchange()
-      .expectStatus().isForbidden
+    @Test
+    fun `get goals should return unauthorized when no auth token`() {
+      webTestClient.get().uri("/plans/$plan.uuid/goals")
+        .header("Content-Type", "application/json")
+        .exchange()
+        .expectStatus().isUnauthorized
+    }
+
+    @Test
+    fun `get goal steps should return forbidden when no role`() {
+      webTestClient.get().uri("/plans/$plan.uuid/goals/e6fb513d-3800-4c35-bb3a-5f9bdc9759dd/steps")
+        .header("Content-Type", "application/json")
+        .headers(setAuthorisation(roles = listOf("abc")))
+        .exchange()
+        .expectStatus().isForbidden
+    }
+
+    @Test
+    fun `get goal steps should return unauthorized when no auth token`() {
+      webTestClient.get().uri("/plans/$plan.uuid/goals/e6fb513d-3800-4c35-bb3a-5f9bdc9759dd/steps")
+        .header("Content-Type", "application/json")
+        .exchange()
+        .expectStatus().isUnauthorized
+    }
+
+    @Test
+    fun `update goals order should return unauthorized when no auth token`() {
+      webTestClient.post().uri("/goals/order")
+        .header("Content-Type", "application/json")
+        .bodyValue(goalOrderList)
+        .exchange()
+        .expectStatus().isUnauthorized
+    }
+
+    @Test
+    fun `update goals order should return forbidden when no role`() {
+      webTestClient.post().uri("/plans/$plan.uuid/goals/order")
+        .header("Content-Type", "application/json")
+        .headers(setAuthorisation(roles = listOf("abc")))
+        .bodyValue(goalOrderList)
+        .exchange()
+        .expectStatus().isForbidden
+    }
   }
 
   @Test
@@ -202,14 +235,6 @@ class GoalControllerTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `get goal steps should return unauthorized when no auth token`() {
-    webTestClient.get().uri("/plans/$plan.uuid/goals/e6fb513d-3800-4c35-bb3a-5f9bdc9759dd/steps")
-      .header("Content-Type", "application/json")
-      .exchange()
-      .expectStatus().isUnauthorized
-  }
-
-  @Test
   fun `update goals order should return created`() {
     webTestClient.post().uri("/goals/order")
       .header("Content-Type", "application/json")
@@ -217,24 +242,5 @@ class GoalControllerTest : IntegrationTestBase() {
       .bodyValue(goalOrderList)
       .exchange()
       .expectStatus().isCreated
-  }
-
-  @Test
-  fun `update goals order should return unauthorized when no auth token`() {
-    webTestClient.post().uri("/goals/order")
-      .header("Content-Type", "application/json")
-      .bodyValue(goalOrderList)
-      .exchange()
-      .expectStatus().isUnauthorized
-  }
-
-  @Test
-  fun `update goals order should return forbidden when no role`() {
-    webTestClient.post().uri("/plans/$plan.uuid/goals/order")
-      .header("Content-Type", "application/json")
-      .headers(setAuthorisation(roles = listOf("abc")))
-      .bodyValue(goalOrderList)
-      .exchange()
-      .expectStatus().isForbidden
   }
 }

@@ -30,7 +30,7 @@ dependencies {
     }
   }
   implementation("org.springframework.cloud:spring-cloud-dependencies:2023.0.1")
-  implementation("org.flywaydb:flyway-core:9.22.3")
+  implementation("org.flywaydb:flyway-core:10.15.2")
   implementation("com.vladmihalcea:hibernate-types-60:2.21.1")
   runtimeOnly("org.postgresql:postgresql")
 

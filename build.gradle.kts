@@ -1,14 +1,14 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.springframework.boot.gradle.tasks.run.BootRun
 
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "5.15.6"
-  kotlin("plugin.spring") version "1.9.23"
-  kotlin("jvm") version "1.9.22"
-  kotlin("plugin.jpa") version "1.9.22"
-  id("org.openapi.generator") version "5.4.0"
-  id("org.jlleitschuh.gradle.ktlint") version "12.1.0"
-  id("com.google.cloud.tools.jib") version "3.4.1"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "6.0.1"
+  kotlin("plugin.spring") version "2.0.0"
+  kotlin("plugin.jpa") version "2.0.0"
+  kotlin("jvm") version "2.0.0"
+  id("org.jlleitschuh.gradle.ktlint") version "12.1.1"
+  id("org.openapi.generator") version "7.7.0"
   jacoco
 }
 
@@ -17,8 +17,8 @@ configurations {
 }
 
 dependencies {
+  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0")
   implementation("org.springframework.boot:spring-boot-starter-webflux")
-  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.4.0")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
   implementation("org.springframework.boot:spring-boot-starter-security")
   implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
@@ -29,15 +29,16 @@ dependencies {
       because("1.77 has CVEs")
     }
   }
-  implementation("org.springframework.cloud:spring-cloud-dependencies:2023.0.1")
-  implementation("org.flywaydb:flyway-core:9.22.3")
+  implementation("org.springframework.cloud:spring-cloud-dependencies:2023.0.2")
   implementation("com.vladmihalcea:hibernate-types-60:2.21.1")
+  implementation("org.flywaydb:flyway-core:10.15.2")
+  runtimeOnly("org.flywaydb:flyway-database-postgresql:10.15.2")
   runtimeOnly("org.postgresql:postgresql")
 
   // Test dependencies
   testImplementation("com.ninja-squad:springmockk:4.0.2")
-  testImplementation("io.jsonwebtoken:jjwt-impl:0.12.3")
-  testImplementation("io.jsonwebtoken:jjwt-jackson:0.12.3")
+  testImplementation("io.jsonwebtoken:jjwt-impl:0.12.6")
+  testImplementation("io.jsonwebtoken:jjwt-jackson:0.12.6")
 
   // Dev dependencies
   developmentOnly("org.springframework.boot:spring-boot-devtools")
@@ -49,10 +50,9 @@ kotlin {
 
 tasks {
   withType<KotlinCompile> {
-    kotlinOptions {
-      jvmTarget = "21"
-    }
+    compilerOptions.jvmTarget = JvmTarget.JVM_21
   }
+
   withType<BootRun> {
     jvmArgs = listOf(
       "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005",

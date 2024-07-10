@@ -14,7 +14,7 @@ class SecurityConfiguration {
   @Throws(java.lang.Exception::class)
   fun filterChain(http: HttpSecurity): SecurityFilterChain? {
     http
-      .csrf().disable()
+      .csrf { it.disable() }
       .authorizeHttpRequests { authorize ->
         authorize
           .requestMatchers(
@@ -28,7 +28,7 @@ class SecurityConfiguration {
           ).permitAll()
           .anyRequest().hasAuthority("ROLE_RISK_INTEGRATIONS_RO")
       }
-      .oauth2ResourceServer().jwt().jwtAuthenticationConverter(AuthAwareTokenConverter())
+      .oauth2ResourceServer { oauth2 -> oauth2.jwt { it.jwtAuthenticationConverter(AuthAwareTokenConverter()) } }
 
     return http.build()
   }

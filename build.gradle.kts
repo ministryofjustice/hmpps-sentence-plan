@@ -23,13 +23,13 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-security")
   implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
   implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
-  implementation("org.springframework.cloud:spring-cloud-starter-openfeign:4.1.2")
+  implementation("org.springframework.cloud:spring-cloud-starter-openfeign:4.1.3")
   constraints {
     implementation("org.bouncycastle:bcprov-jdk18on:1.78.1") {
       because("1.77 has CVEs")
     }
   }
-  implementation("org.springframework.cloud:spring-cloud-dependencies:2023.0.2")
+  implementation("org.springframework.cloud:spring-cloud-dependencies:2023.0.3")
   implementation("com.vladmihalcea:hibernate-types-60:2.21.1")
   implementation("org.flywaydb:flyway-core:10.15.2")
   runtimeOnly("org.flywaydb:flyway-database-postgresql:10.15.2")

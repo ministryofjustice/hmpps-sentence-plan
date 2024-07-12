@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.servlet.resource.NoResourceFoundException
+import uk.gov.justice.digital.hmpps.sentenceplan.data.Goal
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.services.GoalService
@@ -49,7 +50,7 @@ class PlanController(
   @ResponseStatus(HttpStatus.CREATED)
   fun createNewGoal(
     @PathVariable planUuid: UUID,
-    @RequestBody goal: GoalEntity,
+    @RequestBody goal: Goal,
   ): GoalEntity {
     return goalService.createNewGoal(planUuid, goal)
   }

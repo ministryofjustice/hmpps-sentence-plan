@@ -10,9 +10,11 @@ import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWeb
 import org.springframework.test.web.reactive.server.expectBody
 import org.springframework.test.web.reactive.server.expectBodyList
 import uk.gov.justice.digital.hmpps.sentenceplan.config.ErrorResponse
+import uk.gov.justice.digital.hmpps.sentenceplan.data.Goal
 import uk.gov.justice.digital.hmpps.sentenceplan.data.GoalOrder
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Step
 import uk.gov.justice.digital.hmpps.sentenceplan.data.StepActor
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.AreaOfNeedRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
@@ -30,12 +32,10 @@ class GoalControllerTest : IntegrationTestBase() {
   @Autowired
   lateinit var planRepository: PlanRepository
 
-  private var goalRequestBody: GoalEntity = GoalEntity(
-    title = "abc",
-    areaOfNeedUuid = UUID.randomUUID(),
-    targetDate = LocalDateTime.now().toString(),
-    goalOrder = 1,
-  )
+  @Autowired
+  lateinit var areaOfNeedRepository: AreaOfNeedRepository
+
+  lateinit var goalRequestBody: Goal
 
   private val goalOrder = GoalOrder(
     goalUuid = UUID.randomUUID(),
@@ -63,6 +63,12 @@ class GoalControllerTest : IntegrationTestBase() {
   @BeforeAll
   fun setup() {
     plan = planRepository.findAll().first()
+
+    goalRequestBody = Goal(
+      title = "abc",
+      areaOfNeed = areaOfNeedRepository.findAll().first().name,
+      targetDate = LocalDateTime.now().toString(),
+    )
   }
 
   @Nested

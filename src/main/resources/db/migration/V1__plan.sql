@@ -6,7 +6,7 @@ end $$;
 
 create table if not exists plan
 (
-    id            serial PRIMARY KEY,
+    id            serial      PRIMARY KEY,
     uuid          uuid        NOT NULL UNIQUE,
     status        status_type NOT NULL,
     creation_date timestamp   NOT NULL,

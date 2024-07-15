@@ -40,7 +40,7 @@ class GoalEntity(
   val creationDate: String = DateTimeFormatter.ISO_INSTANT.format(Instant.now()),
 
   @Column(name = "goal_order")
-  val goalOrder: Int,
+  val goalOrder: Int? = null,
 
   @Column(name = "plan_uuid")
   var planUuid: UUID? = null,

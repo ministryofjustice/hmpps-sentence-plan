@@ -36,7 +36,6 @@ class GoalService(
       title = goal.title,
       areaOfNeedUuid = areaOfNeedUuid,
       targetDate = goal.targetDate,
-      goalOrder = -1,
       planUuid = planUuid,
     )
     val savedGoalEntity = goalRepository.save(goalEntity)

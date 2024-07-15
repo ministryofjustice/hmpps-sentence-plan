@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Step
 import uk.gov.justice.digital.hmpps.sentenceplan.data.StepActor
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.AreaOfNeedRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepActorRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepActorsEntity
@@ -23,8 +24,9 @@ class GoalServiceTest {
   private val stepRepository: StepRepository = mockk()
   private val goalRepository: GoalRepository = mockk()
   private val stepActorRepository: StepActorRepository = mockk()
+  private val areaOfNeedRepository: AreaOfNeedRepository = mockk()
   private val currentTime = LocalDateTime.now().toString()
-  private val goalService = GoalService(goalRepository, stepRepository, stepActorRepository)
+  private val goalService = GoalService(goalRepository, stepRepository, stepActorRepository, areaOfNeedRepository)
   private val uuid = UUID.fromString("ef74ee4b-5a0b-481b-860f-19187260f2e7")
 
   private val stepEntity = StepEntity(

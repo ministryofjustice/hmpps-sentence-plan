@@ -2,8 +2,10 @@ package uk.gov.justice.digital.hmpps.sentenceplan.services
 
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import uk.gov.justice.digital.hmpps.sentenceplan.data.Goal
 import uk.gov.justice.digital.hmpps.sentenceplan.data.GoalOrder
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Step
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.AreaOfNeedRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepActorRepository
@@ -17,15 +19,31 @@ class GoalService(
   private val goalRepository: GoalRepository,
   private val stepRepository: StepRepository,
   private val stepActorRepository: StepActorRepository,
+  private val areaOfNeedRepository: AreaOfNeedRepository,
 ) {
 
   fun getGoalByUuid(goalUuid: UUID): GoalEntity? = goalRepository.findByUuid(goalUuid)
 
   fun getGoalsByPlanUuid(planUuid: UUID): List<GoalEntity> = goalRepository.findByPlanUuid(planUuid)
 
-  fun createNewGoal(planUuid: UUID, goal: GoalEntity): GoalEntity {
-    goal.planUuid = planUuid
-    return goalRepository.save(goal)
+  fun getGoalsByAreaOfNeed(areaOfNeedName: String) = goalRepository.findByAreaOfNeed(areaOfNeedName)
+
+  @Transactional
+  fun createNewGoal(planUuid: UUID, goal: Goal): GoalEntity {
+    val areaOfNeedUuid = areaOfNeedRepository.findByName(goal.areaOfNeed).uuid
+
+    val goalEntity = GoalEntity(
+      title = goal.title,
+      areaOfNeedUuid = areaOfNeedUuid,
+      targetDate = goal.targetDate,
+      planUuid = planUuid,
+    )
+    val savedGoalEntity = goalRepository.save(goalEntity)
+
+    goal.relatedAreasOfNeed.forEach {
+      areaOfNeedRepository.saveRelatedAreaOfNeed(savedGoalEntity.uuid, it)
+    }
+    return goalEntity
   }
 
   @Transactional

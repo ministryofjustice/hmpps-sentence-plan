@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.sentenceplan.integration
 
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
@@ -11,6 +12,9 @@ import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWeb
 import org.springframework.test.web.reactive.server.expectBody
 import org.springframework.test.web.reactive.server.expectBodyList
 import uk.gov.justice.digital.hmpps.sentenceplan.config.ErrorResponse
+import uk.gov.justice.digital.hmpps.sentenceplan.data.Goal
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.AreaOfNeedEntity
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.AreaOfNeedRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
@@ -25,6 +29,9 @@ class PlanControllerTest : IntegrationTestBase() {
   @Autowired
   lateinit var planRepository: PlanRepository
   lateinit var planUuid: UUID
+
+  @Autowired
+  lateinit var areaOfNeedRepository: AreaOfNeedRepository
 
   @BeforeAll
   fun setup() {
@@ -81,25 +88,46 @@ class PlanControllerTest : IntegrationTestBase() {
   @Nested
   @DisplayName("createNewGoal")
   inner class CreateNewGoal {
-    lateinit var goalRequestBody: GoalEntity
+    lateinit var goalRequestBody: Goal
 
     @BeforeEach
     fun setup() {
-      goalRequestBody = GoalEntity(
+      goalRequestBody = Goal(
         title = "abc",
-        areaOfNeed = "xzv",
+        areaOfNeed = "Accommodation",
         targetDate = LocalDateTime.now().toString(),
-        goalOrder = 1,
       )
     }
 
     @Test
-    fun `should return created when creating goal`() {
-      webTestClient.post().uri("/plans/$planUuid/goals").header("Content-Type", "application/json")
+    fun `should return created when creating goal with no related areas of need`() {
+      val goalEntity: GoalEntity = webTestClient.post().uri("/plans/$planUuid/goals").header("Content-Type", "application/json")
         .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
         .bodyValue(goalRequestBody)
         .exchange()
         .expectStatus().isCreated
+        .expectBody<GoalEntity>()
+        .returnResult().responseBody
+
+      val relatedAreasOfNeed: Set<AreaOfNeedEntity> = areaOfNeedRepository.findRelatedAreasOfNeedByGoal(goalEntity.uuid)
+
+      assertEquals(0, relatedAreasOfNeed.size)
+    }
+
+    @Test
+    fun `should return created when creating goal with multiple related areas of need`() {
+      goalRequestBody.relatedAreasOfNeed = listOf("Accommodation", "Finance")
+      val goalEntity: GoalEntity = webTestClient.post().uri("/plans/$planUuid/goals").header("Content-Type", "application/json")
+        .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .bodyValue(goalRequestBody)
+        .exchange()
+        .expectStatus().isCreated
+        .expectBody<GoalEntity>()
+        .returnResult().responseBody
+
+      val relatedAreasOfNeed: Set<AreaOfNeedEntity> = areaOfNeedRepository.findRelatedAreasOfNeedByGoal(goalEntity.uuid)
+
+      assertEquals(2, relatedAreasOfNeed.size)
     }
 
     @Test

@@ -1,0 +1,29 @@
+---
+# Per environment values which override defaults in hmpps-sentence-plan/values.yaml
+
+generic-service:
+  replicaCount: 2
+
+  ingress:
+    host: sentence-plan-api-test.hmpps.service.justice.gov.uk
+
+  env:
+    SPRING_PROFILES_ACTIVE: "dev"
+    APPLICATIONINSIGHTS_CONFIGURATION_FILE: applicationinsights.dev.json
+    HMPPS_AUTH_BASE_URL: https://sign-in-dev.hmpps.service.justice.gov.uk
+    ARNS_API_BASE_URL: https://assess-risks-and-needs-dev.hmpps.service.justice.gov.uk
+    DELIUS_API_BASE_URL: https://sentence-plan-and-delius-dev.hmpps.service.justice.gov.uk
+    USE_STUB: true
+
+# CloudPlatform AlertManager receiver to route prometheus alerts to slack
+# See https://user-guide.cloud-platform.service.justice.gov.uk/documentation/monitoring-an-app/how-to-create-alarms.html#creating-your-own-custom-alerts
+generic-prometheus-alerts:
+  alertSeverity: hmpps-sentence-plan-notifications
+
+securityContext:
+  runAsNonRoot: true
+  allowPrivilegeEscalation: false
+  seccompProfile:
+    type: RuntimeDefault
+  capabilities:
+    drop: [ "ALL" ]

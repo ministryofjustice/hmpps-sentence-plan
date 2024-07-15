@@ -27,6 +27,10 @@ parameters:
   releases-slack-channel:
     type: string
     default: hmpps-sentence-plan-notifications
+  deploy:
+    description: Trigger a manual deployment
+    type: string
+    default: ""
 
 jobs:
   validate:
@@ -54,6 +58,8 @@ jobs:
 workflows:
   version: 2
   build-test-and-deploy:
+    when:
+      not: << pipeline.parameters.deploy >>
     jobs:
       - validate:
           filters:
@@ -135,6 +141,42 @@ workflows:
 #            - request-prod-approval
 #          helm_timeout: 5m
 
+  deploy-to-test-env:
+    when:
+      and:
+        - equal: [ "test", << pipeline.parameters.deploy >> ]
+    jobs:
+      - hmpps/build_docker:
+          name: build_docker
+          publish: false
+          persist_container_image: true
+          jira_update: true
+          pipeline_id: << pipeline.id >>
+          pipeline_number: << pipeline.number >>
+          context:
+            - hmpps-common-vars
+            - hmpps-sentence-plan-test
+      - hmpps/publish_docker:
+          name: publish_docker
+          publish_latest_tag: false
+          context: hmpps-common-vars
+          requires:
+            - build_docker
+      - hmpps/deploy_env:
+          name: deploy_test
+          env: "test"
+          jira_update: true
+          jira_env_type: testing
+          pipeline_id: << pipeline.id >>
+          pipeline_number: << pipeline.number >>
+          context:
+            - hmpps-common-vars
+            - hmpps-sentence-plan-test
+          requires:
+            - publish_docker
+          helm_timeout: 5m
+
+
   security:
     triggers:
       - schedule:
@@ -173,5 +215,3 @@ workflows:
           context:
             - veracode-credentials
             - hmpps-common-vars
-
-

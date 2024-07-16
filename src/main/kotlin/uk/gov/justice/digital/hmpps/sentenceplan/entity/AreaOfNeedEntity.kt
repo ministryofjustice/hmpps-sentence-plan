@@ -36,7 +36,7 @@ interface AreaOfNeedRepository : JpaRepository<AreaOfNeedEntity, Long> {
 
   fun findByUuid(uuid: UUID): AreaOfNeedEntity
 
-  fun findByName(name: String): AreaOfNeedEntity
+  fun findByNameIgnoreCase(name: String): AreaOfNeedEntity?
 
   @Modifying
   @Transactional

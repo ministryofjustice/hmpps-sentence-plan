@@ -100,6 +100,41 @@ class PlanControllerTest : IntegrationTestBase() {
     }
 
     @Test
+    fun `should fail to create goal if Area of Need is not known`() {
+      val goalRequestBodyBadAreaOfNeed = Goal(
+        title = "abc",
+        areaOfNeed = "doesn't exist",
+        targetDate = LocalDateTime.now().toString(),
+      )
+      webTestClient.post().uri("/plans/$planUuid/goals").header("Content-Type", "application/json")
+        .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .bodyValue(goalRequestBodyBadAreaOfNeed)
+        .exchange()
+        .expectStatus().is5xxServerError
+        .expectBody<ErrorResponse>()
+    }
+
+    @Test
+    fun `should create goal with Area of Need has different case to DB`() {
+      val goalRequestBodyUppercaseAreaOfNeed = Goal(
+        title = "abc",
+        areaOfNeed = "ACCOMMODATION",
+        targetDate = LocalDateTime.now().toString(),
+      )
+      val goalEntity: GoalEntity = webTestClient.post().uri("/plans/$planUuid/goals").header("Content-Type", "application/json")
+        .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .bodyValue(goalRequestBodyUppercaseAreaOfNeed)
+        .exchange()
+        .expectStatus().isCreated
+        .expectBody<GoalEntity>()
+        .returnResult().responseBody
+
+      val relatedAreasOfNeed: Set<AreaOfNeedEntity> = areaOfNeedRepository.findRelatedAreasOfNeedByGoal(goalEntity.uuid)
+
+      assertEquals(0, relatedAreasOfNeed.size)
+    }
+
+    @Test
     fun `should return created when creating goal with no related areas of need`() {
       val goalEntity: GoalEntity = webTestClient.post().uri("/plans/$planUuid/goals").header("Content-Type", "application/json")
         .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))

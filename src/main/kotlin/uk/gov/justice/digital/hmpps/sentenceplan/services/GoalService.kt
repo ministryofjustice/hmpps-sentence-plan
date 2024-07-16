@@ -30,11 +30,12 @@ class GoalService(
 
   @Transactional
   fun createNewGoal(planUuid: UUID, goal: Goal): GoalEntity {
-    val areaOfNeedUuid = areaOfNeedRepository.findByName(goal.areaOfNeed).uuid
+    val areaOfNeed = areaOfNeedRepository.findByNameIgnoreCase(goal.areaOfNeed)
+      ?: throw Exception("This Area of Need is not recognised: ${goal.areaOfNeed}")
 
     val goalEntity = GoalEntity(
       title = goal.title,
-      areaOfNeedUuid = areaOfNeedUuid,
+      areaOfNeedUuid = areaOfNeed.uuid,
       targetDate = goal.targetDate,
       planUuid = planUuid,
     )

@@ -115,13 +115,30 @@ class PlanControllerTest : IntegrationTestBase() {
     }
 
     @Test
+    fun `should create goal with no target date`() {
+      val goalRequestBodyWithNoTargetDate = Goal(
+        title = "abc",
+        areaOfNeed = "ACCOMMODATION",
+      )
+      val goalEntity: GoalEntity? = webTestClient.post().uri("/plans/$planUuid/goals").header("Content-Type", "application/json")
+        .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .bodyValue(goalRequestBodyWithNoTargetDate)
+        .exchange()
+        .expectStatus().isCreated
+        .expectBody<GoalEntity>()
+        .returnResult().responseBody
+
+      assertEquals(null, goalEntity?.targetDate)
+    }
+
+    @Test
     fun `should create goal with Area of Need has different case to DB`() {
       val goalRequestBodyUppercaseAreaOfNeed = Goal(
         title = "abc",
         areaOfNeed = "ACCOMMODATION",
         targetDate = LocalDateTime.now().toString(),
       )
-      val goalEntity: GoalEntity = webTestClient.post().uri("/plans/$planUuid/goals").header("Content-Type", "application/json")
+      val goalEntity: GoalEntity? = webTestClient.post().uri("/plans/$planUuid/goals").header("Content-Type", "application/json")
         .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
         .bodyValue(goalRequestBodyUppercaseAreaOfNeed)
         .exchange()
@@ -129,14 +146,14 @@ class PlanControllerTest : IntegrationTestBase() {
         .expectBody<GoalEntity>()
         .returnResult().responseBody
 
-      val relatedAreasOfNeed: Set<AreaOfNeedEntity> = areaOfNeedRepository.findRelatedAreasOfNeedByGoal(goalEntity.uuid)
+      val relatedAreasOfNeed: Set<AreaOfNeedEntity> = areaOfNeedRepository.findRelatedAreasOfNeedByGoal(goalEntity?.uuid!!)
 
       assertEquals(0, relatedAreasOfNeed.size)
     }
 
     @Test
     fun `should return created when creating goal with no related areas of need`() {
-      val goalEntity: GoalEntity = webTestClient.post().uri("/plans/$planUuid/goals").header("Content-Type", "application/json")
+      val goalEntity: GoalEntity? = webTestClient.post().uri("/plans/$planUuid/goals").header("Content-Type", "application/json")
         .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
         .bodyValue(goalRequestBody)
         .exchange()
@@ -144,15 +161,20 @@ class PlanControllerTest : IntegrationTestBase() {
         .expectBody<GoalEntity>()
         .returnResult().responseBody
 
-      val relatedAreasOfNeed: Set<AreaOfNeedEntity> = areaOfNeedRepository.findRelatedAreasOfNeedByGoal(goalEntity.uuid)
+      val relatedAreasOfNeed: Set<AreaOfNeedEntity> = areaOfNeedRepository.findRelatedAreasOfNeedByGoal(goalEntity?.uuid!!)
 
       assertEquals(0, relatedAreasOfNeed.size)
     }
 
     @Test
     fun `should return created when creating goal with multiple related areas of need`() {
-      goalRequestBody.relatedAreasOfNeed = listOf("Accommodation", "Finance")
-      val goalEntity: GoalEntity = webTestClient.post().uri("/plans/$planUuid/goals").header("Content-Type", "application/json")
+      goalRequestBody = Goal(
+        title = "abc",
+        areaOfNeed = "Accommodation",
+        targetDate = LocalDateTime.now().toString(),
+        relatedAreasOfNeed = listOf("Accommodation", "Finance"),
+      )
+      val goalEntity: GoalEntity? = webTestClient.post().uri("/plans/$planUuid/goals").header("Content-Type", "application/json")
         .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
         .bodyValue(goalRequestBody)
         .exchange()
@@ -160,7 +182,7 @@ class PlanControllerTest : IntegrationTestBase() {
         .expectBody<GoalEntity>()
         .returnResult().responseBody
 
-      val relatedAreasOfNeed: Set<AreaOfNeedEntity> = areaOfNeedRepository.findRelatedAreasOfNeedByGoal(goalEntity.uuid)
+      val relatedAreasOfNeed: Set<AreaOfNeedEntity> = areaOfNeedRepository.findRelatedAreasOfNeedByGoal(goalEntity?.uuid!!)
 
       assertEquals(2, relatedAreasOfNeed.size)
     }

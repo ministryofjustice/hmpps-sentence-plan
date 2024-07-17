@@ -34,7 +34,7 @@ class GoalEntity(
   val areaOfNeedUuid: UUID,
 
   @Column(name = "target_date")
-  val targetDate: String,
+  val targetDate: String? = null,
 
   @Column(name = "creation_date")
   val creationDate: String = DateTimeFormatter.ISO_INSTANT.format(Instant.now()),

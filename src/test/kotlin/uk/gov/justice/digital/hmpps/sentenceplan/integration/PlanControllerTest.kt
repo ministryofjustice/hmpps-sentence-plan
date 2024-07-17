@@ -132,7 +132,7 @@ class PlanControllerTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `should create goal with Area of Need has different case to DB`() {
+    fun `should create goal with Area of Need having a different case to DB field`() {
       val goalRequestBodyUppercaseAreaOfNeed = Goal(
         title = "abc",
         areaOfNeed = "ACCOMMODATION",

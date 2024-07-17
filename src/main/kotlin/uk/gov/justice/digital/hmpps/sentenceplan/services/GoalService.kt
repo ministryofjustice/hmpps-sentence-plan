@@ -8,6 +8,8 @@ import uk.gov.justice.digital.hmpps.sentenceplan.data.Step
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.AreaOfNeedRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalRepository
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntity
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepActorRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepActorsEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepEntity
@@ -20,11 +22,16 @@ class GoalService(
   private val stepRepository: StepRepository,
   private val stepActorRepository: StepActorRepository,
   private val areaOfNeedRepository: AreaOfNeedRepository,
+  private val planRepository: PlanRepository,
 ) {
 
   fun getGoalByUuid(goalUuid: UUID): GoalEntity? = goalRepository.findByUuid(goalUuid)
 
-  fun getGoalsByPlanUuid(planUuid: UUID): List<GoalEntity> = goalRepository.findByPlanUuid(planUuid)
+  fun getGoalsByPlanUuid(planUuid: UUID): List<GoalEntity> {
+    val plan: PlanEntity? = planRepository.findByUuid(planUuid)
+      ?: throw Exception("No plan with this UUID found: $planUuid")
+    return goalRepository.findByPlan(plan!!)
+  }
 
   fun getGoalsByAreaOfNeed(areaOfNeedName: String) = goalRepository.findByAreaOfNeed(areaOfNeedName)
 
@@ -33,11 +40,14 @@ class GoalService(
     val areaOfNeed = areaOfNeedRepository.findByNameIgnoreCase(goal.areaOfNeed)
       ?: throw Exception("This Area of Need is not recognised: ${goal.areaOfNeed}")
 
+    val plan = planRepository.findByUuid(planUuid)
+      ?: throw Exception("This Plan is not found: $planUuid")
+
     val goalEntity = GoalEntity(
       title = goal.title,
       areaOfNeedUuid = areaOfNeed.uuid,
       targetDate = goal.targetDate,
-      planUuid = planUuid,
+      plan = plan,
     )
     val savedGoalEntity = goalRepository.save(goalEntity)
 

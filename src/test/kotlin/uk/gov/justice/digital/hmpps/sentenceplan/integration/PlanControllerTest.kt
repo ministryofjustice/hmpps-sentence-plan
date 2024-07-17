@@ -80,8 +80,8 @@ class PlanControllerTest : IntegrationTestBase() {
         .header("Content-Type", "application/json")
         .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
         .exchange()
-        .expectStatus().isOk
-        .expectBodyList<GoalEntity>().hasSize(0)
+        .expectStatus().isNotFound
+        .expectBodyList<ErrorResponse>()
     }
   }
 

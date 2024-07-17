@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.sentenceplan.data.Step
 import uk.gov.justice.digital.hmpps.sentenceplan.data.StepActor
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.AreaOfNeedRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalRepository
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepActorRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepActorsEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepEntity
@@ -25,8 +26,9 @@ class GoalServiceTest {
   private val goalRepository: GoalRepository = mockk()
   private val stepActorRepository: StepActorRepository = mockk()
   private val areaOfNeedRepository: AreaOfNeedRepository = mockk()
+  private val planRepository: PlanRepository = mockk()
   private val currentTime = LocalDateTime.now().toString()
-  private val goalService = GoalService(goalRepository, stepRepository, stepActorRepository, areaOfNeedRepository)
+  private val goalService = GoalService(goalRepository, stepRepository, stepActorRepository, areaOfNeedRepository, planRepository)
   private val uuid = UUID.fromString("ef74ee4b-5a0b-481b-860f-19187260f2e7")
 
   private val stepEntity = StepEntity(

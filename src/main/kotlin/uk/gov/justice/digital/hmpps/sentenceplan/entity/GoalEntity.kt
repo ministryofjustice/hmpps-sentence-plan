@@ -3,9 +3,12 @@ package uk.gov.justice.digital.hmpps.sentenceplan.entity
 import com.fasterxml.jackson.annotation.JsonIgnore
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
+import jakarta.persistence.FetchType
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
+import jakarta.persistence.JoinColumn
+import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
@@ -42,25 +45,28 @@ class GoalEntity(
   @Column(name = "goal_order")
   val goalOrder: Int? = null,
 
-  @Column(name = "plan_uuid")
-  var planUuid: UUID? = null,
+  // this is nullable in the declaration to enable ignoring the field in JSON serialisation
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "plan_id", nullable = false)
+  @JsonIgnore
+  val plan: PlanEntity?,
 )
 
 interface GoalRepository : JpaRepository<GoalEntity, Long> {
   fun findByUuid(uuid: UUID): GoalEntity?
 
-  fun findByPlanUuid(planUuid: UUID): List<GoalEntity>
+  fun findByPlan(plan: PlanEntity): List<GoalEntity>
 
-  @Query("select g.* from goal g, area_of_need aon where aon.uuid = g.area_of_need_uuid and aon.name=:areaOfNeedName;", nativeQuery = true)
+  @Query("select g.* from goal g, 'sentence-plan'.area_of_need aon where aon.uuid = g.area_of_need_uuid and aon.name=:areaOfNeedName;", nativeQuery = true)
   fun findByAreaOfNeed(@Param("areaOfNeedName") areaOfNeedName: String): Set<GoalEntity>
 
   @Query("select g from Goal g where g.areaOfNeedUuid = :#{#areaOfNeed.uuid}")
   fun getGoalsByAreaOfNeed(@Param("areaOfNeed") areaOfNeed: AreaOfNeedEntity): Set<GoalEntity>
 
   @Query(
-    "select g.* from goal g" +
-      "    inner join related_area_of_need raon on g.uuid = raon.goal_uuid" +
-      "    inner join area_of_need aon on raon.area_of_need_uuid = aon.uuid" +
+    "select g.* from 'sentence-plan'.goal g" +
+      "    inner join 'sentence-plan'.related_area_of_need raon on g.uuid = raon.goal_uuid" +
+      "    inner join 'sentence-plan'.area_of_need aon on raon.area_of_need_uuid = aon.uuid" +
       "    where aon.uuid = :#{#areaOfNeed.uuid}",
     nativeQuery = true,
   )

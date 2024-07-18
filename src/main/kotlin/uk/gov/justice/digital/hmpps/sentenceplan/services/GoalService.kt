@@ -11,7 +11,6 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepActorRepository
-import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepActorsEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepRepository
 import java.util.UUID
@@ -58,33 +57,51 @@ class GoalService(
   }
 
   @Transactional
-  fun createNewSteps(goalUuid: UUID, steps: List<Step>): List<StepEntity> {
+  fun createNewSteps(goalUuid: UUID, steps: List<Step>): GoalEntity {
+    var goal: GoalEntity = goalRepository.findByUuid(goalUuid)
+      ?: throw Exception("This Goal is not found: $goalUuid")
+
     val stepEntityList = ArrayList<StepEntity>()
     steps.forEach { step ->
       val stepEntity = StepEntity(
-        relatedGoalUuid = goalUuid,
         description = step.description,
         status = step.status,
+        goal = goal,
       )
-      val savedStep = stepRepository.save(stepEntity)
-      val stepActorEntityList = ArrayList<StepActorsEntity>()
-      step.actor.forEach {
-        val stepActorsEntity = StepActorsEntity(
-          stepUuid = savedStep.uuid,
-          actor = it.actor,
-          actorOptionId = it.actorOptionId,
-        )
-        stepActorEntityList.add(stepActorsEntity)
-        stepActorRepository.saveAll(stepActorEntityList)
-        stepEntityList.add(savedStep)
-      }
+      stepEntityList.add(stepEntity)
     }
-    return stepEntityList
+
+    goal.steps = stepEntityList
+    return goalRepository.save(goal)
+
+//    val stepEntityList = ArrayList<StepEntity>()
+//    steps.forEach { step ->
+//      val stepEntity = StepEntity(
+//        description = step.description,
+//        status = step.status,
+//      )
+//      val savedStep = stepRepository.save(stepEntity)
+//      val stepActorEntityList = ArrayList<StepActorsEntity>()
+//      step.actor.forEach {
+//        val stepActorsEntity = StepActorsEntity(
+//          stepUuid = savedStep.uuid,
+//          actor = it.actor,
+//          actorOptionId = it.actorOptionId,
+//        )
+//        stepActorEntityList.add(stepActorsEntity)
+//        stepActorRepository.saveAll(stepActorEntityList)
+//        stepEntityList.add(savedStep)
+//      }
+//    }
   }
 
   fun getAllGoals(): List<GoalEntity> = goalRepository.findAll()
 
-  fun getAllGoalSteps(goalUuid: UUID): List<StepEntity> = stepRepository.findByRelatedGoalUuid(goalUuid)
+  fun getAllGoalSteps(goalUuid: UUID): List<StepEntity> {
+    val goal = goalRepository.findByUuid(goalUuid)
+      ?: throw Exception("This Goal is not found: $goalUuid")
+    return goal.steps!!
+  }
 
   @Transactional
   fun updateGoalsOrder(goalsOrder: List<GoalOrder>) {

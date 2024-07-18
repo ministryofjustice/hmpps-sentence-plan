@@ -35,7 +35,7 @@ class GoalServiceTest {
     description = "description",
     id = 123L,
     status = "status",
-    relatedGoalUuid = UUID.fromString("ef74ee4b-5a0b-481b-860f-19187260f2e7"),
+    goal = null,
     creationDate = currentTime,
   )
   private val actorsEntityList = listOf(
@@ -54,10 +54,10 @@ class GoalServiceTest {
   fun `create new steps`() {
     every { stepRepository.save(any<StepEntity>()) } returns stepEntity
     every { stepActorRepository.saveAll(any<List<StepActorsEntity>>()) } returns actorsEntityList
-    val stepsList = goalService.createNewSteps(uuid, listOf(steps))
+    val stepsList = goalService.createNewSteps(uuid, listOf(steps)).steps!!
     assertThat(stepsList.get(0).status).isEqualTo("status")
     assertThat(stepsList.get(0).id).isEqualTo(123)
-    assertThat(stepsList.get(0).relatedGoalUuid).isEqualTo(uuid)
+    assertThat(stepsList.get(0).goal?.uuid).isEqualTo(uuid)
     assertThat(stepsList.get(0).description).isEqualTo("description")
     assertThat(stepsList.get(0).creationDate).isEqualTo(currentTime)
   }

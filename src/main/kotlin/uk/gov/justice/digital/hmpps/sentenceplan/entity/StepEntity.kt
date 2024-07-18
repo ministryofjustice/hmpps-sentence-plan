@@ -3,9 +3,12 @@ package uk.gov.justice.digital.hmpps.sentenceplan.entity
 import com.fasterxml.jackson.annotation.JsonIgnore
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
+import jakarta.persistence.FetchType
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
+import jakarta.persistence.JoinColumn
+import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
 import org.springframework.data.jpa.repository.JpaRepository
 import java.time.Instant
@@ -24,9 +27,6 @@ class StepEntity(
   @Column(name = "uuid")
   val uuid: UUID = UUID.randomUUID(),
 
-  @Column(name = "related_goal_uuid")
-  var relatedGoalUuid: UUID? = null,
-
   @Column(name = "description")
   val description: String,
 
@@ -36,11 +36,13 @@ class StepEntity(
   @Column(name = "creation_date")
   val creationDate: String = DateTimeFormatter.ISO_INSTANT.format(Instant.now()),
 
+  // this is nullable in the declaration to enable ignoring the field in JSON serialisation
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "goal_id", nullable = false)
+  @JsonIgnore
+  val goal: GoalEntity? = null,
 )
 
 interface StepRepository : JpaRepository<StepEntity, Long> {
   fun findByUuid(uuid: UUID): StepEntity?
-
-  // This query always returns a list, even if there is no Goal with this UUID
-  fun findByRelatedGoalUuid(relatedGoalUuid: UUID): List<StepEntity>
 }

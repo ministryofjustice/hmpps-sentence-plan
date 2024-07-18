@@ -13,7 +13,6 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepActorsEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepRepository
 import java.util.UUID
-import kotlin.math.acos
 
 @Service
 class GoalService(

@@ -27,8 +27,8 @@ class GoalController(private val service: GoalService) {
     @PathVariable goalUuid: UUID,
   ): GoalEntity {
     return service.getGoalByUuid(goalUuid) ?: throw NoResourceFoundException(
-        HttpMethod.GET,
-        "No goal found for $goalUuid",
+      HttpMethod.GET,
+      "No goal found for $goalUuid",
     )
   }
 

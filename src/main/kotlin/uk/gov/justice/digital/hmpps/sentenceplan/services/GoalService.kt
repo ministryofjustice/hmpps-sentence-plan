@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepActorsEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepRepository
 import java.util.UUID
+import kotlin.math.acos
 
 @Service
 class GoalService(
@@ -81,5 +82,14 @@ class GoalService(
     for (goal in goalsOrder) {
       goal.goalOrder?.let { goalRepository.updateGoalOrder(it, goal.goalUuid) }
     }
+  }
+
+  @Transactional
+  fun deleteGoal(goalUuid: UUID): GoalEntity? {
+    val goalEntity: GoalEntity? = goalRepository.findByUuid(goalUuid)
+
+    goalEntity?.let { goalRepository.delete(it) }
+
+    return goalEntity
   }
 }

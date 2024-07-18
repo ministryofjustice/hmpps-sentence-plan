@@ -249,4 +249,22 @@ class GoalControllerTest : IntegrationTestBase() {
       .exchange()
       .expectStatus().isCreated
   }
+
+  @Test
+  fun `delete goal should return no content`() {
+    webTestClient.delete().uri("/goals/ede47f7f-8431-4ff9-80ec-2dd3a8db3841")
+      .header("Content-Type", "application/json")
+      .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+      .exchange()
+      .expectStatus().isNoContent
+  }
+
+  @Test
+  fun `deleting a goal that does not exist should return 404`() {
+    webTestClient.delete().uri("/goals/93ab5028-867f-4554-aa5a-2383e6b50f1f")
+      .header("Content-Type", "application/json")
+      .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+      .exchange()
+      .expectStatus().isNotFound
+  }
 }

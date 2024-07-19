@@ -15,7 +15,6 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepActorRepository
-import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepActorsEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepRepository
 import java.util.UUID
 
@@ -37,11 +36,9 @@ class GoalServiceTest {
     uuid = goalUuid,
   )
 
-  private val actorsEntityList = listOf(
-    StepActorsEntity(1, UUID.fromString("71793b64-545e-4ae7-9936-610639093857"), "actor", 1),
-  )
   private val actors = listOf(
-    StepActor("actor", 1),
+    StepActor("actor 1", 1),
+    StepActor("actor 2", 2),
   )
   private val steps = listOf(
     Step(
@@ -69,6 +66,9 @@ class GoalServiceTest {
     assertThat(stepsList.get(0).status).isEqualTo("status 1")
     assertThat(stepsList.get(0).goal?.uuid).isEqualTo(goalUuid)
     assertThat(stepsList.get(0).description).isEqualTo("description 1")
+    assertThat(stepsList.get(0).actors.size).isEqualTo(2)
+    assertThat(stepsList.get(0).actors.get(0).actor).isEqualTo("actor 1")
+    assertThat(stepsList.get(0).actors.get(1).actor).isEqualTo("actor 2")
 
     assertThat(stepsList.get(1).status).isEqualTo("status 2")
     assertThat(stepsList.get(1).goal?.uuid).isEqualTo(goalUuid)

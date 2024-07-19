@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepActorEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepActorRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepRepository
@@ -68,31 +69,22 @@ class GoalService(
         status = step.status,
         goal = goal,
       )
+
+      val stepActorEntityList = ArrayList<StepActorEntity>()
+      step.actor.forEach {
+        val stepActorEntity = StepActorEntity(
+          step = stepEntity,
+          actor = it.actor,
+          actorOptionId = it.actorOptionId,
+        )
+        stepActorEntityList.add(stepActorEntity)
+      }
+
+      stepEntity.actors = stepActorEntityList
       stepEntityList.add(stepEntity)
     }
-
     goal.steps = stepEntityList
     return goalRepository.save(goal)
-
-//    val stepEntityList = ArrayList<StepEntity>()
-//    steps.forEach { step ->
-//      val stepEntity = StepEntity(
-//        description = step.description,
-//        status = step.status,
-//      )
-//      val savedStep = stepRepository.save(stepEntity)
-//      val stepActorEntityList = ArrayList<StepActorsEntity>()
-//      step.actor.forEach {
-//        val stepActorsEntity = StepActorsEntity(
-//          stepUuid = savedStep.uuid,
-//          actor = it.actor,
-//          actorOptionId = it.actorOptionId,
-//        )
-//        stepActorEntityList.add(stepActorsEntity)
-//        stepActorRepository.saveAll(stepActorEntityList)
-//        stepEntityList.add(savedStep)
-//      }
-//    }
   }
 
   fun getAllGoals(): List<GoalEntity> = goalRepository.findAll()

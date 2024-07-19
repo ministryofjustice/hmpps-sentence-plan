@@ -84,11 +84,8 @@ class GoalService(
   }
 
   @Transactional
-  fun deleteGoal(goalUuid: UUID): GoalEntity? {
+  fun deleteGoal(goalUuid: UUID): Unit? {
     val goalEntity: GoalEntity? = goalRepository.findByUuid(goalUuid)
-
-    goalEntity?.let { goalRepository.delete(it) }
-
-    return goalEntity
+    return goalEntity?.let { goalRepository.delete(it) }
   }
 }

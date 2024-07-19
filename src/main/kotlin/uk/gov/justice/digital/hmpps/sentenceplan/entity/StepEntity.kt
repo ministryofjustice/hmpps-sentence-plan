@@ -11,8 +11,7 @@ import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
 import org.springframework.data.jpa.repository.JpaRepository
-import java.time.Instant
-import java.time.format.DateTimeFormatter
+import java.time.LocalDateTime
 import java.util.UUID
 
 @Entity(name = "Step")
@@ -33,8 +32,8 @@ class StepEntity(
   @Column(name = "status")
   val status: String,
 
-  @Column(name = "creation_date")
-  val creationDate: String = DateTimeFormatter.ISO_INSTANT.format(Instant.now()),
+  @Column(name = "creation_date", columnDefinition = "TIMESTAMP")
+  val creationDate: LocalDateTime = LocalDateTime.now(),
 
   // this is nullable in the declaration to enable ignoring the field in JSON serialisation
   @ManyToOne(fetch = FetchType.LAZY)

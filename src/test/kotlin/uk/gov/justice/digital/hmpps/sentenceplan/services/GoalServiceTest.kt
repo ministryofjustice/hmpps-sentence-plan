@@ -17,7 +17,6 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepActorRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepActorsEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepRepository
-import java.time.LocalDateTime
 import java.util.UUID
 
 @ExtendWith(MockKExtension::class)
@@ -28,7 +27,6 @@ class GoalServiceTest {
   private val stepActorRepository: StepActorRepository = mockk()
   private val areaOfNeedRepository: AreaOfNeedRepository = mockk()
   private val planRepository: PlanRepository = mockk()
-  private val currentTime: LocalDateTime = LocalDateTime.parse("2019-12-15T15:14:21.629")
   private val goalService = GoalService(goalRepository, stepRepository, stepActorRepository, areaOfNeedRepository, planRepository)
   private val goalUuid = UUID.fromString("ef74ee4b-5a0b-481b-860f-19187260f2e7")
 

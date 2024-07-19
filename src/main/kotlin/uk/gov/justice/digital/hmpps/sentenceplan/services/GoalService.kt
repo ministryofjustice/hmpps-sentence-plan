@@ -8,32 +8,19 @@ import uk.gov.justice.digital.hmpps.sentenceplan.data.Step
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.AreaOfNeedRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalRepository
-import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepActorEntity
-import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepActorRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepEntity
-import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepRepository
 import java.util.UUID
 
 @Service
 class GoalService(
   private val goalRepository: GoalRepository,
-  private val stepRepository: StepRepository,
-  private val stepActorRepository: StepActorRepository,
   private val areaOfNeedRepository: AreaOfNeedRepository,
   private val planRepository: PlanRepository,
 ) {
 
   fun getGoalByUuid(goalUuid: UUID): GoalEntity? = goalRepository.findByUuid(goalUuid)
-
-  fun getGoalsByPlanUuid(planUuid: UUID): List<GoalEntity> {
-    val plan: PlanEntity? = planRepository.findByUuid(planUuid)
-      ?: throw Exception("No plan with this UUID found: $planUuid")
-    return goalRepository.findByPlan(plan!!)
-  }
-
-  fun getGoalsByAreaOfNeed(areaOfNeedName: String) = goalRepository.findByAreaOfNeed(areaOfNeedName)
 
   @Transactional
   fun createNewGoal(planUuid: UUID, goal: Goal): GoalEntity {
@@ -59,7 +46,7 @@ class GoalService(
 
   @Transactional
   fun createNewSteps(goalUuid: UUID, steps: List<Step>): GoalEntity {
-    var goal: GoalEntity = goalRepository.findByUuid(goalUuid)
+    val goal: GoalEntity = goalRepository.findByUuid(goalUuid)
       ?: throw Exception("This Goal is not found: $goalUuid")
 
     val stepEntityList = ArrayList<StepEntity>()
@@ -85,14 +72,6 @@ class GoalService(
     }
     goal.steps = stepEntityList
     return goalRepository.save(goal)
-  }
-
-  fun getAllGoals(): List<GoalEntity> = goalRepository.findAll()
-
-  fun getAllGoalSteps(goalUuid: UUID): List<StepEntity> {
-    val goal = goalRepository.findByUuid(goalUuid)
-      ?: throw Exception("This Goal is not found: $goalUuid")
-    return goal.steps!!
   }
 
   @Transactional

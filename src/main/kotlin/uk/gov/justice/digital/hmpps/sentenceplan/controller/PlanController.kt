@@ -44,8 +44,7 @@ class PlanController(
     @PathVariable planUuid: UUID,
   ): Set<GoalEntity> {
     val plan = planService.getPlanByUuid(planUuid) ?: throw NoResourceFoundException(HttpMethod.GET, "No Plan found for $planUuid")
-    return plan.goals!!
-//    return goalService.getGoalsByPlanUuid(planUuid)
+    return plan.goals
   }
 
   @PostMapping("/{planUuid}/goals")

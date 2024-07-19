@@ -42,7 +42,7 @@ class PlanEntity(
   val updatedDate: String = DateTimeFormatter.ISO_INSTANT.format(Instant.now()),
 
   @OneToMany(mappedBy = "plan")
-  val goals: Set<GoalEntity>? = emptySet(),
+  val goals: Set<GoalEntity> = emptySet(),
 )
 
 enum class PlanStatus {

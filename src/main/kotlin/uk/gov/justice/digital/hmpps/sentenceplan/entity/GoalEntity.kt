@@ -54,7 +54,7 @@ class GoalEntity(
   val plan: PlanEntity?,
 
   @OneToMany(mappedBy = "goal", cascade = arrayOf(CascadeType.ALL))
-  var steps: List<StepEntity>? = emptyList(),
+  var steps: List<StepEntity> = emptyList(),
 )
 
 interface GoalRepository : JpaRepository<GoalEntity, Long> {
@@ -63,22 +63,10 @@ interface GoalRepository : JpaRepository<GoalEntity, Long> {
   fun findByPlan(plan: PlanEntity): List<GoalEntity>
 
   @Query(
-    "select g.* from goal g, 'sentence-plan'.area_of_need aon where aon.uuid = g.area_of_need_uuid and aon.name=:areaOfNeedName;",
+    "select g.* from goal g, area_of_need aon where aon.uuid = g.area_of_need_uuid and aon.name=:areaOfNeedName;",
     nativeQuery = true,
   )
   fun findByAreaOfNeed(@Param("areaOfNeedName") areaOfNeedName: String): Set<GoalEntity>
-
-  @Query("select g from Goal g where g.areaOfNeedUuid = :#{#areaOfNeed.uuid}")
-  fun getGoalsByAreaOfNeed(@Param("areaOfNeed") areaOfNeed: AreaOfNeedEntity): Set<GoalEntity>
-
-  @Query(
-    "select g.* from 'sentence-plan'.goal g" +
-      "    inner join 'sentence-plan'.related_area_of_need raon on g.uuid = raon.goal_uuid" +
-      "    inner join 'sentence-plan'.area_of_need aon on raon.area_of_need_uuid = aon.uuid" +
-      "    where aon.uuid = :#{#areaOfNeed.uuid}",
-    nativeQuery = true,
-  )
-  fun getGoalsByRelatedAreaOfNeed(@Param("areaOfNeed") areaOfNeed: AreaOfNeedEntity): Set<GoalEntity>
 
   @Modifying
   @Query("update Goal g set g.goalOrder = ?1 where g.uuid = ?2")

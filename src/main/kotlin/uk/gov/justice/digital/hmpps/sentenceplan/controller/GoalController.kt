@@ -35,7 +35,7 @@ class GoalController(private val service: GoalService) {
     @RequestBody steps: List<Step>,
   ): List<StepEntity> {
     val goal: GoalEntity = service.createNewSteps(goalUuid, steps)
-    return goal.steps!!
+    return goal.steps
   }
 
   @GetMapping("/{goalUuid}/steps")
@@ -44,7 +44,7 @@ class GoalController(private val service: GoalService) {
     @PathVariable goalUuid: UUID,
   ): List<StepEntity> {
     val goal: GoalEntity = service.getGoalByUuid(goalUuid) ?: throw NoResourceFoundException(HttpMethod.GET, "No goal found for $goalUuid")
-    return goal.steps!!
+    return goal.steps
   }
 
   @PostMapping("/order")

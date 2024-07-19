@@ -14,19 +14,15 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.AreaOfNeedRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
-import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepActorRepository
-import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepRepository
 import java.util.UUID
 
 @ExtendWith(MockKExtension::class)
 @DisplayName("Goal Service Tests")
 class GoalServiceTest {
-  private val stepRepository: StepRepository = mockk()
   private val goalRepository: GoalRepository = mockk()
-  private val stepActorRepository: StepActorRepository = mockk()
   private val areaOfNeedRepository: AreaOfNeedRepository = mockk()
   private val planRepository: PlanRepository = mockk()
-  private val goalService = GoalService(goalRepository, stepRepository, stepActorRepository, areaOfNeedRepository, planRepository)
+  private val goalService = GoalService(goalRepository, areaOfNeedRepository, planRepository)
   private val goalUuid = UUID.fromString("ef74ee4b-5a0b-481b-860f-19187260f2e7")
 
   private val goalEntityNoSteps: GoalEntity = GoalEntity(
@@ -59,7 +55,7 @@ class GoalServiceTest {
     every { goalRepository.findByUuid(goalUuid) } returns goalEntityNoSteps
     every { goalRepository.save(capture(goalSlot)) } answers { goalSlot.captured }
 
-    val stepsList = goalService.createNewSteps(goalUuid, steps).steps!!
+    val stepsList = goalService.createNewSteps(goalUuid, steps).steps
 
     assertThat(stepsList.size).isEqualTo(2)
 

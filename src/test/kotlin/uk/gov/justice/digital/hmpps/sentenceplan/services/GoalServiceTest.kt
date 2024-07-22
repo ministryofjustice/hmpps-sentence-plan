@@ -59,15 +59,15 @@ class GoalServiceTest {
 
     assertThat(stepsList.size).isEqualTo(2)
 
-    assertThat(stepsList.get(0).status).isEqualTo("status 1")
-    assertThat(stepsList.get(0).goal?.uuid).isEqualTo(goalUuid)
-    assertThat(stepsList.get(0).description).isEqualTo("description 1")
-    assertThat(stepsList.get(0).actors.size).isEqualTo(2)
-    assertThat(stepsList.get(0).actors.get(0).actor).isEqualTo("actor 1")
-    assertThat(stepsList.get(0).actors.get(1).actor).isEqualTo("actor 2")
+    assertThat(stepsList[0].status).isEqualTo("status 1")
+    assertThat(stepsList[0].goal?.uuid).isEqualTo(goalUuid)
+    assertThat(stepsList[0].description).isEqualTo("description 1")
+    assertThat(stepsList[0].actors.size).isEqualTo(2)
+    assertThat(stepsList[0].actors[0].actor).isEqualTo("actor 1")
+    assertThat(stepsList[0].actors[1].actor).isEqualTo("actor 2")
 
-    assertThat(stepsList.get(1).status).isEqualTo("status 2")
-    assertThat(stepsList.get(1).goal?.uuid).isEqualTo(goalUuid)
-    assertThat(stepsList.get(1).description).isEqualTo("description 2")
+    assertThat(stepsList[1].status).isEqualTo("status 2")
+    assertThat(stepsList[1].goal?.uuid).isEqualTo(goalUuid)
+    assertThat(stepsList[1].description).isEqualTo("description 2")
   }
 }

@@ -74,7 +74,7 @@ class PlanControllerTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `should return empty list when getting goals by non-existent plan UUID`() {
+    fun `should return not found when getting goals by non-existent plan UUID`() {
       val randomPlanUuid = UUID.randomUUID()
       webTestClient.get().uri("/plans/$randomPlanUuid/goals")
         .header("Content-Type", "application/json")

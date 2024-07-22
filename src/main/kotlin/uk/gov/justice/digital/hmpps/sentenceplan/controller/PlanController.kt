@@ -20,14 +20,14 @@ import java.util.UUID
 @RestController
 @RequestMapping("/plans")
 class PlanController(
-  private val service: PlanService,
+  private val planService: PlanService,
   private val goalService: GoalService,
 ) {
 
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
   fun createPlan(): PlanEntity {
-    return service.createPlan()
+    return planService.createPlan()
   }
 
   @GetMapping("/{planUuid}")
@@ -35,15 +35,16 @@ class PlanController(
   fun getPlan(
     @PathVariable planUuid: UUID,
   ): PlanEntity {
-    return service.getPlanByUuid(planUuid) ?: throw NoResourceFoundException(HttpMethod.GET, "No Plan found for $planUuid")
+    return planService.getPlanByUuid(planUuid) ?: throw NoResourceFoundException(HttpMethod.GET, "No Plan found for $planUuid")
   }
 
   @GetMapping("/{planUuid}/goals")
   @ResponseStatus(HttpStatus.OK)
   fun getPlanGoals(
     @PathVariable planUuid: UUID,
-  ): List<GoalEntity> {
-    return goalService.getGoalsByPlanUuid(planUuid)
+  ): Set<GoalEntity> {
+    val plan = planService.getPlanByUuid(planUuid) ?: throw NoResourceFoundException(HttpMethod.GET, "No Plan found for $planUuid")
+    return plan.goals
   }
 
   @PostMapping("/{planUuid}/goals")

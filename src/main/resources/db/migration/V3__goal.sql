@@ -6,8 +6,8 @@ create table if not exists goal
     area_of_need_uuid   uuid            NOT NULL,
     target_date         timestamp       NULL,
     creation_date       timestamp       NOT NULL,
-    plan_uuid           uuid            NOT NULL,
+    plan_id             integer         NOT NULL,
     goal_order          integer         NULL,
-    FOREIGN KEY (plan_uuid) references  plan(uuid),
+    FOREIGN KEY (plan_id) references  plan(id),
     FOREIGN KEY (area_of_need_uuid) references  area_of_need(uuid)
 );

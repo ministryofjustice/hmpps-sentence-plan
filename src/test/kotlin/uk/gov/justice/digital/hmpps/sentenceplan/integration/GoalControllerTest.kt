@@ -197,13 +197,14 @@ class GoalControllerTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `get goal steps for UUID which doesn't exist should return OK and an empty list`() {
+  fun `get goal steps for UUID which doesn't exist should return not found`() {
     val randomUuid = UUID.randomUUID()
     webTestClient.get().uri("/goals/$randomUuid/steps")
       .header("Content-Type", "application/json")
       .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
       .exchange()
-      .expectBodyList<StepEntity>().hasSize(0)
+      .expectStatus().isNotFound
+      .expectBody<ErrorResponse>()
   }
 
   @Test

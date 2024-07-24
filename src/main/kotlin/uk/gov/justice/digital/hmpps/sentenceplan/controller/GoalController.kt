@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.sentenceplan.controller
 
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
+import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
@@ -25,7 +26,18 @@ class GoalController(private val service: GoalService) {
   fun getGoal(
     @PathVariable goalUuid: UUID,
   ): GoalEntity {
-    return service.getGoalByUuid(goalUuid) ?: throw NoResourceFoundException(HttpMethod.GET, "No goal found for $goalUuid")
+    return service.getGoalByUuid(goalUuid) ?: throw NoResourceFoundException(
+      HttpMethod.GET,
+      "No goal found for $goalUuid",
+    )
+  }
+
+  @DeleteMapping("/{goalUuid}")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  fun deleteGoal(
+    @PathVariable goalUuid: UUID,
+  ) {
+    service.deleteGoal(goalUuid) ?: throw NoResourceFoundException(HttpMethod.DELETE, "No goal found for $goalUuid")
   }
 
   @PostMapping("/{goalUuid}/steps")

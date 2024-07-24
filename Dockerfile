@@ -1,4 +1,4 @@
-FROM gradle:8.6.0-jdk21 AS builder
+FROM gradle:8.9.0-jdk21 AS builder
 
 FROM eclipse-temurin:21.0.2_13-jre AS runtime
 

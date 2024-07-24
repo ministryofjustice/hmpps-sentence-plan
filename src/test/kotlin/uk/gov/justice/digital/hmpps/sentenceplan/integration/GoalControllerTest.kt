@@ -252,12 +252,16 @@ class GoalControllerTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `delete goal should return no content`() {
+  fun `delete goal should return no content and confirm steps deleted`() {
     webTestClient.delete().uri("/goals/ede47f7f-8431-4ff9-80ec-2dd3a8db3841")
-      .header("Content-Type", "application/json")
       .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
       .exchange()
       .expectStatus().isNoContent
+
+    webTestClient.get().uri("/steps/79803555-fad5-4cb7-8f8e-10f6d436834c")
+      .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+      .exchange()
+      .expectStatus().isNotFound
   }
 
   @Test

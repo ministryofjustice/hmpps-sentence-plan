@@ -42,9 +42,10 @@ class PlanController(
   @ResponseStatus(HttpStatus.OK)
   fun getPlanGoals(
     @PathVariable planUuid: UUID,
-  ): Set<GoalEntity> {
+  ): Map<String, List<GoalEntity>> {
     val plan = planService.getPlanByUuid(planUuid) ?: throw NoResourceFoundException(HttpMethod.GET, "No Plan found for $planUuid")
-    return plan.goals
+    val(now, future) = plan.goals.partition { it.targetDate != null }
+    return mapOf("now" to now, "future" to future)
   }
 
   @PostMapping("/{planUuid}/goals")

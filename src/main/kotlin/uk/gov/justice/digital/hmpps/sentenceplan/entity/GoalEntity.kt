@@ -9,13 +9,16 @@ import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
+import jakarta.persistence.JoinTable
+import jakarta.persistence.ManyToMany
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.OneToMany
+import jakarta.persistence.OrderBy
 import jakarta.persistence.Table
+import jakarta.persistence.UniqueConstraint
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
-import org.springframework.data.repository.query.Param
 import java.time.Instant
 import java.time.format.DateTimeFormatter
 import java.util.UUID
@@ -35,8 +38,9 @@ class GoalEntity(
   @Column(name = "title")
   val title: String,
 
-  @Column(name = "area_of_need_uuid")
-  val areaOfNeedUuid: UUID,
+  @ManyToOne
+  @JoinColumn(name = "area_of_need_id", nullable = false)
+  val areaOfNeed: AreaOfNeedEntity,
 
   @Column(name = "target_date")
   val targetDate: String? = null,
@@ -53,20 +57,24 @@ class GoalEntity(
   @JsonIgnore
   val plan: PlanEntity?,
 
-  @OneToMany(mappedBy = "goal", cascade = arrayOf(CascadeType.ALL))
+  @OneToMany(mappedBy = "goal", cascade = [CascadeType.ALL])
+  @OrderBy("creationDate ASC")
   var steps: List<StepEntity> = emptyList(),
+
+  @ManyToMany
+  @JoinTable(
+    name = "related_area_of_need",
+    joinColumns = [JoinColumn(name = "goal_id")],
+    inverseJoinColumns = [JoinColumn(name = "area_of_need_id")],
+    uniqueConstraints = [UniqueConstraint(columnNames = ["goal_id", "area_of_need_id"])],
+  )
+  val relatedAreasOfNeed: List<AreaOfNeedEntity>? = emptyList(),
 )
 
 interface GoalRepository : JpaRepository<GoalEntity, Long> {
   fun findByUuid(uuid: UUID): GoalEntity?
 
   fun findByPlan(plan: PlanEntity): List<GoalEntity>
-
-  @Query(
-    "select g.* from goal g, area_of_need aon where aon.uuid = g.area_of_need_uuid and aon.name=:areaOfNeedName;",
-    nativeQuery = true,
-  )
-  fun findByAreaOfNeed(@Param("areaOfNeedName") areaOfNeedName: String): Set<GoalEntity>
 
   @Modifying
   @Query("update Goal g set g.goalOrder = ?1 where g.uuid = ?2")

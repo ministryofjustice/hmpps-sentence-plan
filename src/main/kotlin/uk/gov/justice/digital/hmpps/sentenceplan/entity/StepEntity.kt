@@ -43,7 +43,7 @@ class StepEntity(
   @JsonIgnore
   val goal: GoalEntity? = null,
 
-  @OneToMany(mappedBy = "step", cascade = arrayOf(CascadeType.ALL))
+  @OneToMany(mappedBy = "step", cascade = [CascadeType.ALL])
   var actors: List<StepActorEntity> = emptyList(),
 )
 

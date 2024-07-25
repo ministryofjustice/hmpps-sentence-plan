@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.sentenceplan.integration
 
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
@@ -60,13 +61,17 @@ class GoalControllerTest : IntegrationTestBase() {
 
   private lateinit var plan: PlanEntity
 
+  private var areaOfNeedName: String = ""
+
   @BeforeAll
   fun setup() {
     plan = planRepository.findAll().first()
 
+    areaOfNeedName = areaOfNeedRepository.findAll().first().name
+
     goalRequestBody = Goal(
       title = "abc",
-      areaOfNeed = areaOfNeedRepository.findAll().first().name,
+      areaOfNeed = areaOfNeedName,
       targetDate = LocalDateTime.now().toString(),
     )
   }
@@ -167,12 +172,16 @@ class GoalControllerTest : IntegrationTestBase() {
 
   @Test
   fun `get goal by UUID should return OK when goal exists`() {
-    webTestClient.get().uri("/goals/$TEST_DATA_GOAL_UUID")
+    val goal: GoalEntity? = webTestClient.get().uri("/goals/$TEST_DATA_GOAL_UUID")
       .header("Content-Type", "application/json")
       .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
       .exchange()
       .expectStatus().isOk
       .expectBody<GoalEntity>()
+      .returnResult().responseBody
+
+    assertThat(goal?.areaOfNeed?.name).isEqualTo(areaOfNeedName)
+    assertThat(goal?.areaOfNeed?.goals?.size).isNull()
   }
 
   @Test

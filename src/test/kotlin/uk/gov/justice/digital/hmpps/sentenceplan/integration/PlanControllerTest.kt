@@ -80,7 +80,7 @@ class PlanControllerTest : IntegrationTestBase() {
       assertThat(goalsMap).isNotNull
       assertThat(goalsMap?.size).isEqualTo(2)
       assertThat(goalsMap?.get("now")?.first()?.title).isEqualTo("Goal For Now Title")
-      assertThat(goalsMap?.get("future")?.first()?.title).isEqualTo("Goal For Later Title")
+      assertThat(goalsMap?.get("future")?.first()?.title).isEqualTo("Goal For Future Title")
     }
 
     @Test

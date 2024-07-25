@@ -23,8 +23,6 @@ class GoalService(
 
   fun getGoalByUuid(goalUuid: UUID): GoalEntity? = goalRepository.findByUuid(goalUuid)
 
-  fun getAllByPlanUuid(planUuid: UUID): Set<GoalEntity>? = goalRepository.findAllByPlanUuidAndTargetDateIsNull(planUuid)
-
   @Transactional
   fun createNewGoal(planUuid: UUID, goal: Goal): GoalEntity {
     val planEntity = planRepository.findByUuid(planUuid)

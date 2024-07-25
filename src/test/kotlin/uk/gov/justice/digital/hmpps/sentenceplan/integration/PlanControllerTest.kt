@@ -1,20 +1,17 @@
 package uk.gov.justice.digital.hmpps.sentenceplan.integration
 
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient
 import org.springframework.test.web.reactive.server.expectBody
 import org.springframework.test.web.reactive.server.expectBodyList
 import uk.gov.justice.digital.hmpps.sentenceplan.config.ErrorResponse
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Goal
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.AreaOfNeedEntity
-import uk.gov.justice.digital.hmpps.sentenceplan.entity.AreaOfNeedRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntity
 import java.time.LocalDateTime
@@ -27,9 +24,6 @@ class PlanControllerTest : IntegrationTestBase() {
 
   val staticPlanUuid = "556db5c8-a1eb-4064-986b-0740d6a83c33"
   val mutablePlanUuid = "4fe411e3-820d-4198-8400-ab4268208641"
-
-  @Autowired
-  lateinit var areaOfNeedRepository: AreaOfNeedRepository
 
   @Nested
   @DisplayName("createPlan")
@@ -183,10 +177,7 @@ class PlanControllerTest : IntegrationTestBase() {
           .expectBody<GoalEntity>()
           .returnResult().responseBody
 
-      val relatedAreasOfNeed: Set<AreaOfNeedEntity> =
-        areaOfNeedRepository.findRelatedAreasOfNeedByGoal(goalEntity?.uuid!!)
-
-      assertThat(relatedAreasOfNeed?.size).isZero()
+      assertThat(goalEntity?.relatedAreasOfNeed?.size).isZero()
     }
 
     @Test

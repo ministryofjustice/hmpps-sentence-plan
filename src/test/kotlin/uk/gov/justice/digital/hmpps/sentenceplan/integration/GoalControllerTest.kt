@@ -172,7 +172,7 @@ class GoalControllerTest : IntegrationTestBase() {
 
   @Test
   fun `get goal by UUID should return OK when goal exists`() {
-    val goal: GoalEntity = webTestClient.get().uri("/goals/$TEST_DATA_GOAL_UUID")
+    val goal: GoalEntity? = webTestClient.get().uri("/goals/$TEST_DATA_GOAL_UUID")
       .header("Content-Type", "application/json")
       .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
       .exchange()
@@ -180,8 +180,8 @@ class GoalControllerTest : IntegrationTestBase() {
       .expectBody<GoalEntity>()
       .returnResult().responseBody
 
-    assertThat(goal.areaOfNeed.name).isEqualTo(areaOfNeedName)
-    assertThat(goal.areaOfNeed.goals?.size).isNull()
+    assertThat(goal?.areaOfNeed?.name).isEqualTo(areaOfNeedName)
+    assertThat(goal?.areaOfNeed?.goals?.size).isNull()
   }
 
   @Test

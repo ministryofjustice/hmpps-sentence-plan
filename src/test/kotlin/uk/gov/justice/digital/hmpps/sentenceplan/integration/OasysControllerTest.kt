@@ -67,7 +67,7 @@ class OasysControllerTest : IntegrationTestBase() {
         .returnResult()
         .responseBody
 
-      assertThat(response.developerMessage).contains("Plan already associated with PK: ${planRequestBody.oasysAssessmentPk}")
+      assertThat(response?.developerMessage).contains("Plan already associated with PK: ${planRequestBody.oasysAssessmentPk}")
     }
   }
 

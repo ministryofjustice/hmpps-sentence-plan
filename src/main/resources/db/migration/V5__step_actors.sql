@@ -1,8 +1,8 @@
 create table if not exists step_actors
 (
     id                    serial          PRIMARY KEY,
-    step_uuid             uuid            NOT NULL,
+    step_id               integer         NOT NULL,
     actor                 varchar(256)    NOT NULL,
     actor_option_id       integer         NOT NULL,
-    FOREIGN KEY (step_uuid) references    step(uuid)
+    FOREIGN KEY (step_id) references      step(id) ON DELETE CASCADE
 )

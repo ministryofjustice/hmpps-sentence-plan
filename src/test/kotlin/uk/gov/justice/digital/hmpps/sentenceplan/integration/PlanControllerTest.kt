@@ -40,6 +40,19 @@ class PlanControllerTest : IntegrationTestBase() {
   }
 
   @Nested
+  @DisplayName("createPlan")
+  inner class CreatePlan {
+    @Test
+    fun `should create a new plan`() {
+      webTestClient.post().uri("/plans").header("Content-Type", "application/json")
+        .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .exchange()
+        .expectStatus().isCreated
+        .expectBody<PlanEntity>()
+    }
+  }
+
+  @Nested
   @DisplayName("getPlan")
   inner class GetPlan {
     @Test
@@ -74,14 +87,14 @@ class PlanControllerTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `should return empty list when getting goals by non-existent plan UUID`() {
+    fun `should return not found when getting goals by non-existent plan UUID`() {
       val randomPlanUuid = UUID.randomUUID()
       webTestClient.get().uri("/plans/$randomPlanUuid/goals")
         .header("Content-Type", "application/json")
         .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
         .exchange()
-        .expectStatus().isOk
-        .expectBodyList<GoalEntity>().hasSize(0)
+        .expectStatus().isNotFound
+        .expectBodyList<ErrorResponse>()
     }
   }
 

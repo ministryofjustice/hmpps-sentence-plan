@@ -8,6 +8,7 @@ import jakarta.persistence.Enumerated
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
+import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
 import jakarta.transaction.Transactional
 import org.springframework.data.jpa.repository.JpaRepository
@@ -39,6 +40,9 @@ class PlanEntity(
 
   @Column(name = "updated_date")
   val updatedDate: String = DateTimeFormatter.ISO_INSTANT.format(Instant.now()),
+
+  @OneToMany(mappedBy = "plan")
+  val goals: Set<GoalEntity> = emptySet(),
 )
 
 enum class PlanStatus {

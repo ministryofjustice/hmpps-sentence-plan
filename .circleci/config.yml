@@ -69,40 +69,37 @@ workflows:
           name: helm_lint
       - hmpps/build_docker:
           name: build_docker
-      - request-dev-preview-approval:
-          <<: *feature_branch
-          type: approval
-          requires:
-            - helm_lint
-            # - unit_test
-            # - integration_test
-            - build_docker
-      - hmpps/deploy_env:
-          <<: *feature_branch
-          pipeline_id: <<pipeline.id>>
-          pipeline_number: <<pipeline.number>>
+          publish: false
+          persist_container_image: true
           jira_update: true
-          jira_env_type: development
-          name: deploy_dev_preview
-          env: "dev"
+          pipeline_id: << pipeline.id >>
+          pipeline_number: << pipeline.number >>
+          context: hmpps-common-vars
+      - hmpps/publish_docker:
+          name: publish_docker
+          publish_latest_tag: true
           context: hmpps-common-vars
           requires:
-            - request-dev-preview-approval
+            - validate
+            - helm_lint
+            - build_docker
+          filters:
+            branches:
+              only:
+                - main
       - hmpps/deploy_env:
           name: deploy_dev
           env: "dev"
           jira_update: true
-          pipeline_id: <<pipeline.id>>
-          pipeline_number: <<pipeline.number>>
+          pipeline_id: << pipeline.id >>
+          pipeline_number: << pipeline.number >>
           context: hmpps-common-vars
           filters:
             branches:
               only:
                 - main
           requires:
-            - validate
-            - build_docker
-            - helm_lint
+            - publish_docker
           helm_timeout: 5m
 #      - request-preprod-approval:
 #          type: approval

@@ -1,6 +1,6 @@
 package uk.gov.justice.digital.hmpps.sentenceplan.integration
 
-import org.junit.jupiter.api.Assertions.assertEquals
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
@@ -14,7 +14,6 @@ import org.springframework.test.web.reactive.server.expectBodyList
 import uk.gov.justice.digital.hmpps.sentenceplan.config.ErrorResponse
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Goal
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.AreaOfNeedEntity
-import uk.gov.justice.digital.hmpps.sentenceplan.entity.AreaOfNeedRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
@@ -29,9 +28,6 @@ class PlanControllerTest : IntegrationTestBase() {
   @Autowired
   lateinit var planRepository: PlanRepository
   lateinit var planUuid: UUID
-
-  @Autowired
-  lateinit var areaOfNeedRepository: AreaOfNeedRepository
 
   @BeforeAll
   fun setup() {
@@ -101,7 +97,7 @@ class PlanControllerTest : IntegrationTestBase() {
   @Nested
   @DisplayName("createNewGoal")
   inner class CreateNewGoal {
-    lateinit var goalRequestBody: Goal
+    private lateinit var goalRequestBody: Goal
 
     @BeforeEach
     fun setup() {
@@ -128,6 +124,25 @@ class PlanControllerTest : IntegrationTestBase() {
     }
 
     @Test
+    fun `should fail to create goal if Plan does not exist`() {
+      val goalRequestBodyBadAreaOfNeed = Goal(
+        title = "abc",
+        areaOfNeed = "doesn't exist",
+        targetDate = LocalDateTime.now().toString(),
+      )
+      val randomUuid = UUID.randomUUID()
+      val errorResponse: ErrorResponse? = webTestClient.post().uri("/plans/$randomUuid/goals").header("Content-Type", "application/json")
+        .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .bodyValue(goalRequestBodyBadAreaOfNeed)
+        .exchange()
+        .expectStatus().is5xxServerError
+        .expectBody<ErrorResponse>()
+        .returnResult().responseBody
+
+      assertThat(errorResponse?.developerMessage).startsWith("A Plan with this UUID was not found:")
+    }
+
+    @Test
     fun `should create goal with no target date`() {
       val goalRequestBodyWithNoTargetDate = Goal(
         title = "abc",
@@ -141,7 +156,7 @@ class PlanControllerTest : IntegrationTestBase() {
         .expectBody<GoalEntity>()
         .returnResult().responseBody
 
-      assertEquals(null, goalEntity?.targetDate)
+      assertThat(goalEntity?.targetDate).isNull()
     }
 
     @Test
@@ -159,9 +174,9 @@ class PlanControllerTest : IntegrationTestBase() {
         .expectBody<GoalEntity>()
         .returnResult().responseBody
 
-      val relatedAreasOfNeed: Set<AreaOfNeedEntity> = areaOfNeedRepository.findRelatedAreasOfNeedByGoal(goalEntity?.uuid!!)
+      val relatedAreasOfNeed = goalEntity?.relatedAreasOfNeed
 
-      assertEquals(0, relatedAreasOfNeed.size)
+      assertThat(relatedAreasOfNeed?.size).isZero()
     }
 
     @Test
@@ -174,9 +189,9 @@ class PlanControllerTest : IntegrationTestBase() {
         .expectBody<GoalEntity>()
         .returnResult().responseBody
 
-      val relatedAreasOfNeed: Set<AreaOfNeedEntity> = areaOfNeedRepository.findRelatedAreasOfNeedByGoal(goalEntity?.uuid!!)
+      val relatedAreasOfNeed: List<AreaOfNeedEntity>? = goalEntity?.relatedAreasOfNeed
 
-      assertEquals(0, relatedAreasOfNeed.size)
+      assertThat(relatedAreasOfNeed?.size).isZero()
     }
 
     @Test
@@ -195,9 +210,9 @@ class PlanControllerTest : IntegrationTestBase() {
         .expectBody<GoalEntity>()
         .returnResult().responseBody
 
-      val relatedAreasOfNeed: Set<AreaOfNeedEntity> = areaOfNeedRepository.findRelatedAreasOfNeedByGoal(goalEntity?.uuid!!)
+      val relatedAreasOfNeed: List<AreaOfNeedEntity>? = goalEntity?.relatedAreasOfNeed
 
-      assertEquals(2, relatedAreasOfNeed.size)
+      assertThat(relatedAreasOfNeed?.size).isEqualTo(2)
     }
 
     @Test

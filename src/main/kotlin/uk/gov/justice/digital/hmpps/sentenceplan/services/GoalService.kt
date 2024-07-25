@@ -5,6 +5,7 @@ import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Goal
 import uk.gov.justice.digital.hmpps.sentenceplan.data.GoalOrder
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Step
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.AreaOfNeedEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.AreaOfNeedRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalRepository
@@ -24,24 +25,33 @@ class GoalService(
 
   @Transactional
   fun createNewGoal(planUuid: UUID, goal: Goal): GoalEntity {
-    val areaOfNeed = areaOfNeedRepository.findByNameIgnoreCase(goal.areaOfNeed)
-      ?: throw Exception("This Area of Need is not recognised: ${goal.areaOfNeed}")
+    val planEntity = planRepository.findByUuid(planUuid)
+      ?: throw Exception("A Plan with this UUID was not found: $planUuid")
 
-    val plan = planRepository.findByUuid(planUuid)
-      ?: throw Exception("This Plan is not found: $planUuid")
+    val areaOfNeedEntity = areaOfNeedRepository.findByNameIgnoreCase(goal.areaOfNeed)
+      ?: throw Exception("An Area of Need with this name was not found: ${goal.areaOfNeed}")
+
+    var relatedAreasOfNeedEntity: List<AreaOfNeedEntity> = emptyList()
+
+    if (goal.relatedAreasOfNeed.isNotEmpty()) {
+      relatedAreasOfNeedEntity = areaOfNeedRepository.findAllByNames(goal.relatedAreasOfNeed)
+        ?: throw Exception("One or more of the Related Areas of Need was not found: ${goal.relatedAreasOfNeed}")
+
+      if (goal.relatedAreasOfNeed.size != relatedAreasOfNeedEntity.size) {
+        throw Exception("One or more of the Related Areas of Need was not found")
+      }
+    }
 
     val goalEntity = GoalEntity(
       title = goal.title,
-      areaOfNeedUuid = areaOfNeed.uuid,
+      areaOfNeed = areaOfNeedEntity,
       targetDate = goal.targetDate,
-      plan = plan,
+      plan = planEntity,
+      relatedAreasOfNeed = relatedAreasOfNeedEntity,
     )
     val savedGoalEntity = goalRepository.save(goalEntity)
 
-    goal.relatedAreasOfNeed.forEach {
-      areaOfNeedRepository.saveRelatedAreaOfNeed(savedGoalEntity.uuid, it)
-    }
-    return goalEntity
+    return savedGoalEntity
   }
 
   @Transactional

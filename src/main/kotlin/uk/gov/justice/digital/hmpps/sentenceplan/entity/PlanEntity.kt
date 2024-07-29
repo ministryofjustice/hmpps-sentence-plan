@@ -43,7 +43,7 @@ class PlanEntity(
   val updatedDate: String = DateTimeFormatter.ISO_INSTANT.format(Instant.now()),
 
   @OneToMany(mappedBy = "plan")
-  @OrderBy("targetDate ASC, goalOrder ASC")
+  @OrderBy("goalOrder ASC")
   val goals: Set<GoalEntity> = emptySet(),
 )
 

@@ -42,12 +42,16 @@ class GoalService(
       }
     }
 
+    val highestGoalOrder = planEntity.goals.maxByOrNull { g -> g.goalOrder }?.goalOrder ?: 0
+
     val goalEntity = GoalEntity(
       title = goal.title,
       areaOfNeed = areaOfNeedEntity,
       targetDate = goal.targetDate,
       plan = planEntity,
       relatedAreasOfNeed = relatedAreasOfNeedEntity,
+      goalOrder = highestGoalOrder + 1,
+
     )
     val savedGoalEntity = goalRepository.save(goalEntity)
 

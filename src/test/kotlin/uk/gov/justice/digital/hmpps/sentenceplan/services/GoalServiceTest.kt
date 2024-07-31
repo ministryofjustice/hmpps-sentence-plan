@@ -55,6 +55,7 @@ class GoalServiceTest {
     areaOfNeed = mockk<AreaOfNeedEntity>(),
     plan = null,
     uuid = goalUuid,
+    goalOrder = 1,
   )
 
   private val actors = listOf(

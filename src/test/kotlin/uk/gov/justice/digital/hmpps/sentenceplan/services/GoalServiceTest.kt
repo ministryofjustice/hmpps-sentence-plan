@@ -41,8 +41,6 @@ class GoalServiceTest {
     title = "Goal",
   )
 
-  private val planEntity: PlanEntity = PlanEntity()
-
   private val areaOfNeedEntity: AreaOfNeedEntity = AreaOfNeedEntity(
     id = null,
     name = "Area of Need",
@@ -55,7 +53,14 @@ class GoalServiceTest {
     areaOfNeed = mockk<AreaOfNeedEntity>(),
     plan = null,
     uuid = goalUuid,
+    goalOrder = 1,
   )
+
+  private val planEntity: PlanEntity = PlanEntity()
+
+  private val goalSet = setOf(goalEntityNoSteps)
+
+  private val planEntityWithOneGoal: PlanEntity = PlanEntity(goals = goalSet)
 
   private val actors = listOf(
     StepActor("actor 1", 1),
@@ -142,6 +147,26 @@ class GoalServiceTest {
 
       assertThat(goalEntity).isNotNull()
       assertThat(goalEntity.relatedAreasOfNeed).isEmpty()
+    }
+
+    @Test
+    fun `creating two goals should set incrementing goal order values`() {
+      every { planRepository.findByUuid(any()) } returns planEntity
+      every { areaOfNeedRepository.findByNameIgnoreCase(any()) } returns areaOfNeedEntity
+      every { areaOfNeedRepository.findAllByNames(any()) } returns null
+
+      val goalSlot = slot<GoalEntity>()
+      every { goalRepository.save(capture(goalSlot)) } answers { goalSlot.captured }
+
+      val goalEntityOne = goalService.createNewGoal(planEntity.uuid, goalWithNoRelatedAreasOfNeed)
+      assertThat(goalEntityOne).isNotNull()
+      assertThat(goalEntityOne.goalOrder).isEqualTo(1)
+
+      every { planRepository.findByUuid(any()) } returns planEntityWithOneGoal
+
+      val goalEntityTwo = goalService.createNewGoal(planEntity.uuid, goalWithNoRelatedAreasOfNeed)
+      assertThat(goalEntityTwo).isNotNull()
+      assertThat(goalEntityTwo.goalOrder).isEqualTo(2)
     }
   }
 

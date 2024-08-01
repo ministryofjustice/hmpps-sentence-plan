@@ -49,7 +49,7 @@ class GoalEntity(
   val creationDate: String = DateTimeFormatter.ISO_INSTANT.format(Instant.now()),
 
   @Column(name = "goal_order")
-  val goalOrder: Int? = null,
+  val goalOrder: Int = 0,
 
   // this is nullable in the declaration to enable ignoring the field in JSON serialisation
   @ManyToOne(fetch = FetchType.LAZY)

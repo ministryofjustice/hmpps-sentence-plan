@@ -51,11 +51,38 @@ class GoalService(
       plan = planEntity,
       relatedAreasOfNeed = relatedAreasOfNeedEntity,
       goalOrder = highestGoalOrder + 1,
-
     )
     val savedGoalEntity = goalRepository.save(goalEntity)
 
     return savedGoalEntity
+  }
+
+  @Transactional
+  fun updateGoalByUuid(goalUuid: UUID, goal: Goal): GoalEntity {
+    // get existing GoalEntity by UUID
+    val goalEntity = goalRepository.findByUuid(goalUuid)
+      ?: throw Exception("This Goal is not found: $goalUuid")
+
+    goalEntity.title = goal.title
+    goalEntity.targetDate = goal.targetDate
+
+    // get new related objects from DB using the values in Goal (related areas of need)
+    var relatedAreasOfNeedEntity: List<AreaOfNeedEntity> = emptyList()
+
+    if (goal.relatedAreasOfNeed.isNotEmpty()) {
+      relatedAreasOfNeedEntity = areaOfNeedRepository.findAllByNames(goal.relatedAreasOfNeed)
+        ?: throw Exception("One or more of the Related Areas of Need was not found: ${goal.relatedAreasOfNeed}")
+
+      if (goal.relatedAreasOfNeed.size != relatedAreasOfNeedEntity.size) {
+        throw Exception("One or more of the Related Areas of Need was not found")
+      }
+    }
+
+    // update the GoalEntity object to use the new related areas of need, title, targetDate
+    goalEntity.relatedAreasOfNeed = relatedAreasOfNeedEntity
+
+    // save it
+    return goalRepository.save(goalEntity)
   }
 
   @Transactional

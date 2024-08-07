@@ -36,14 +36,14 @@ class GoalEntity(
   var uuid: UUID = UUID.randomUUID(),
 
   @Column(name = "title")
-  val title: String,
+  var title: String,
 
   @ManyToOne
   @JoinColumn(name = "area_of_need_id", nullable = false)
   val areaOfNeed: AreaOfNeedEntity,
 
   @Column(name = "target_date")
-  val targetDate: String? = null,
+  var targetDate: String? = null,
 
   @Column(name = "creation_date")
   val creationDate: String = DateTimeFormatter.ISO_INSTANT.format(Instant.now()),
@@ -68,7 +68,7 @@ class GoalEntity(
     inverseJoinColumns = [JoinColumn(name = "area_of_need_id")],
     uniqueConstraints = [UniqueConstraint(columnNames = ["goal_id", "area_of_need_id"])],
   )
-  val relatedAreasOfNeed: List<AreaOfNeedEntity>? = emptyList(),
+  var relatedAreasOfNeed: List<AreaOfNeedEntity>? = emptyList(),
 )
 
 interface GoalRepository : JpaRepository<GoalEntity, Long> {

@@ -49,7 +49,7 @@ class GoalService(
       areaOfNeed = areaOfNeedEntity,
       targetDate = goal.targetDate,
       plan = planEntity,
-      relatedAreasOfNeed = relatedAreasOfNeedEntity,
+      relatedAreasOfNeed = relatedAreasOfNeedEntity.toMutableList(),
       goalOrder = highestGoalOrder + 1,
     )
     val savedGoalEntity = goalRepository.save(goalEntity)
@@ -79,7 +79,7 @@ class GoalService(
     }
 
     // update the GoalEntity object to use the new related areas of need, title, targetDate
-    goalEntity.relatedAreasOfNeed = relatedAreasOfNeedEntity
+    goalEntity.relatedAreasOfNeed = relatedAreasOfNeedEntity.toMutableList()
 
     // save it
     return goalRepository.save(goalEntity)

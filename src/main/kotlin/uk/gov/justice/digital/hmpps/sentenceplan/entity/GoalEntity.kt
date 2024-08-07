@@ -68,7 +68,7 @@ class GoalEntity(
     inverseJoinColumns = [JoinColumn(name = "area_of_need_id")],
     uniqueConstraints = [UniqueConstraint(columnNames = ["goal_id", "area_of_need_id"])],
   )
-  var relatedAreasOfNeed: List<AreaOfNeedEntity>? = emptyList(),
+  var relatedAreasOfNeed: MutableList<AreaOfNeedEntity>? = mutableListOf(),
 )
 
 interface GoalRepository : JpaRepository<GoalEntity, Long> {

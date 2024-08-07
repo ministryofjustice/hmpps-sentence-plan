@@ -50,7 +50,7 @@ class PlanControllerTest : IntegrationTestBase() {
         .expectBody<PlanEntity>()
         .returnResult().responseBody
 
-      assertThat(planEntity?.goals?.size).isEqualTo(2)
+      assertThat(planEntity?.goals?.size).isEqualTo(3)
     }
 
     @Test

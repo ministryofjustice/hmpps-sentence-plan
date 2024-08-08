@@ -233,5 +233,29 @@ class GoalServiceTest {
 
       assertThat(savedGoal.title).isEqualTo(goal.title)
     }
+
+    @Test
+    fun `update goal with related areas of need not found should throw Exception`() {
+      every { goalRepository.findByUuid(any()) } returns goalEntityWithRelatedAreasOfNeed
+      every { areaOfNeedRepository.findAllByNames(any()) } returns null
+
+      val exception = assertThrows<Exception> {
+        goalService.updateGoalByUuid(UUID.randomUUID(), goal)
+      }
+
+      assertThat(exception.message).startsWith("One or more of the Related Areas of Need was not found:")
+    }
+
+    @Test
+    fun `update goal with unmatched related areas of need should throw Exception`() {
+      every { goalRepository.findByUuid(any()) } returns goalEntityWithRelatedAreasOfNeed
+      every { areaOfNeedRepository.findAllByNames(any()) } returns listOf(areaOfNeedEntity, areaOfNeedEntity)
+
+      val exception = assertThrows<Exception> {
+        goalService.updateGoalByUuid(UUID.randomUUID(), goal)
+      }
+
+      assertThat(exception.message).startsWith("One or more of the Related Areas of Need was not found")
+    }
   }
 }

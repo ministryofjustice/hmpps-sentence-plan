@@ -309,5 +309,47 @@ class GoalControllerTest : IntegrationTestBase() {
   }
 
   // add test that sends different Area of Need and assert that it hasn't changed
+  @Test
+  fun `should update goal without changing area of need`() {
+    val goalRequestBody = Goal(
+      title = "Non Changing Area of Need Goal",
+      areaOfNeed = "Finance",
+    )
+
+    val goalUuid = "070442be-f855-4eb6-af7e-72f68aab54be"
+
+    val goalEntity: GoalEntity? =
+      webTestClient.patch().uri("/goals/$goalUuid").header("Content-Type", "application/json")
+        .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .bodyValue(goalRequestBody)
+        .exchange()
+        .expectStatus().isOk
+        .expectBody<GoalEntity>()
+        .returnResult().responseBody
+
+    assertThat(goalEntity?.areaOfNeed?.name).isEqualTo("Accommodation")
+  }
+
   // add test that removes related areas of need
+  @Test
+  fun `should delete related area of need`() {
+    val goalRequestBody = Goal(
+      title = "Non Changing Area of Need Goal",
+      areaOfNeed = "Finance",
+    )
+
+    val goalUuid = "070442be-f855-4eb6-af7e-72f68aab54be"
+
+    val goalEntity: GoalEntity? =
+      webTestClient.patch().uri("/goals/$goalUuid").header("Content-Type", "application/json")
+        .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .bodyValue(goalRequestBody)
+        .exchange()
+        .expectStatus().isOk
+        .expectBody<GoalEntity>()
+        .returnResult().responseBody
+
+    assertThat(goalEntity?.relatedAreasOfNeed).isEmpty()
+
+  }
 }

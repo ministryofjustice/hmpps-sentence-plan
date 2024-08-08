@@ -288,7 +288,7 @@ class GoalControllerTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `should update goal`() {
+  fun `should update goal title`() {
     val goalRequestBody = Goal(
       title = "New Goal Title",
       areaOfNeed = "Accommodation",
@@ -308,7 +308,6 @@ class GoalControllerTest : IntegrationTestBase() {
     assertThat(goalEntity?.title).isEqualTo("New Goal Title")
   }
 
-  // add test that sends different Area of Need and assert that it hasn't changed
   @Test
   fun `should update goal without changing area of need`() {
     val goalRequestBody = Goal(
@@ -330,9 +329,8 @@ class GoalControllerTest : IntegrationTestBase() {
     assertThat(goalEntity?.areaOfNeed?.name).isEqualTo("Accommodation")
   }
 
-  // add test that removes related areas of need
   @Test
-  fun `should delete related area of need`() {
+  fun `should update goal and delete related areas of need`() {
     val goalRequestBody = Goal(
       title = "Non Changing Area of Need Goal",
       areaOfNeed = "Finance",

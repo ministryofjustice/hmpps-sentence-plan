@@ -350,6 +350,5 @@ class GoalControllerTest : IntegrationTestBase() {
         .returnResult().responseBody
 
     assertThat(goalEntity?.relatedAreasOfNeed).isEmpty()
-
   }
 }

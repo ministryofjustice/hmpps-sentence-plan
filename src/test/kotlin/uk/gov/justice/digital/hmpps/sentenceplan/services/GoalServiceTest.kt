@@ -56,6 +56,15 @@ class GoalServiceTest {
     goalOrder = 1,
   )
 
+  private val goalEntityWithRelatedAreasOfNeed: GoalEntity = GoalEntity(
+    title = "Mock Goal with Related Areas of Need",
+    areaOfNeed = mockk<AreaOfNeedEntity>(),
+    plan = null,
+    uuid = goalUuid,
+    goalOrder = 1,
+    relatedAreasOfNeed = mockk<MutableList<AreaOfNeedEntity>>(),
+  )
+
   private val planEntity: PlanEntity = PlanEntity()
 
   private val goalSet = setOf(goalEntityNoSteps)
@@ -194,6 +203,35 @@ class GoalServiceTest {
       assertThat(stepsList.last().status).isEqualTo("status 2")
       assertThat(stepsList.last().goal?.uuid).isEqualTo(goalUuid)
       assertThat(stepsList.last().description).isEqualTo("description 2")
+    }
+  }
+
+  @Nested
+  @DisplayName("UpdateGoal")
+  inner class UpdateGoal {
+
+    @Test
+    fun `update goal with random Plan UUID should throw Exception`() {
+      every { goalRepository.findByUuid(any()) } returns null
+
+      val exception = assertThrows<Exception> {
+        goalService.updateGoalByUuid(UUID.randomUUID(), goal)
+      }
+
+      assertThat(exception.message).startsWith("This Goal is not found:")
+    }
+
+    @Test
+    fun `update goal with related areas of need`() {
+      every { goalRepository.findByUuid(any()) } returns goalEntityWithRelatedAreasOfNeed
+      every { areaOfNeedRepository.findAllByNames(any()) } returns listOf(areaOfNeedEntity)
+
+      val goalSlot = slot<GoalEntity>()
+      every { goalRepository.save(capture(goalSlot)) } answers { goalSlot.captured }
+
+      val savedGoal: GoalEntity = goalService.updateGoalByUuid(UUID.randomUUID(), goal)
+
+      assertThat(savedGoal.title).isEqualTo(goal.title)
     }
   }
 }

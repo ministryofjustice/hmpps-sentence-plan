@@ -3,10 +3,10 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.springframework.boot.gradle.tasks.run.BootRun
 
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "6.0.1"
-  kotlin("plugin.spring") version "2.0.0"
-  kotlin("plugin.jpa") version "2.0.0"
-  kotlin("jvm") version "2.0.0"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "6.0.2"
+  kotlin("plugin.spring") version "2.0.10"
+  kotlin("plugin.jpa") version "2.0.10"
+  kotlin("jvm") version "2.0.10"
   id("org.jlleitschuh.gradle.ktlint") version "12.1.1"
   id("org.openapi.generator") version "7.7.0"
   jacoco

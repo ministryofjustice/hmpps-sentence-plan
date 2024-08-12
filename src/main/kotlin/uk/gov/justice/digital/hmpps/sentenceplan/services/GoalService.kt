@@ -71,6 +71,8 @@ class GoalService(
       relatedAreasOfNeedEntity = areaOfNeedRepository.findAllByNames(goal.relatedAreasOfNeed)
         ?: throw Exception("One or more of the Related Areas of Need was not found: ${goal.relatedAreasOfNeed}")
 
+      // findAllByNames doesn't throw an exception if a subset of goal.relatedAreasOfNeed is not found, so we
+      // do a hard check on the count of returned items here
       if (goal.relatedAreasOfNeed.size != relatedAreasOfNeedEntity.size) {
         throw Exception("One or more of the Related Areas of Need was not found")
       }

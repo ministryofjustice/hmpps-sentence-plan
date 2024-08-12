@@ -49,13 +49,38 @@ class GoalService(
       areaOfNeed = areaOfNeedEntity,
       targetDate = goal.targetDate,
       plan = planEntity,
-      relatedAreasOfNeed = relatedAreasOfNeedEntity,
+      relatedAreasOfNeed = relatedAreasOfNeedEntity.toMutableList(),
       goalOrder = highestGoalOrder + 1,
-
     )
     val savedGoalEntity = goalRepository.save(goalEntity)
 
     return savedGoalEntity
+  }
+
+  @Transactional
+  fun updateGoalByUuid(goalUuid: UUID, goal: Goal): GoalEntity {
+    val goalEntity = goalRepository.findByUuid(goalUuid)
+      ?: throw Exception("This Goal is not found: $goalUuid")
+
+    goalEntity.title = goal.title
+    goalEntity.targetDate = goal.targetDate
+
+    var relatedAreasOfNeedEntity: List<AreaOfNeedEntity> = emptyList()
+
+    if (goal.relatedAreasOfNeed.isNotEmpty()) {
+      relatedAreasOfNeedEntity = areaOfNeedRepository.findAllByNames(goal.relatedAreasOfNeed)
+        ?: throw Exception("One or more of the Related Areas of Need was not found: ${goal.relatedAreasOfNeed}")
+
+      // findAllByNames doesn't throw an exception if a subset of goal.relatedAreasOfNeed is not found, so we
+      // do a hard check on the count of returned items here
+      if (goal.relatedAreasOfNeed.size != relatedAreasOfNeedEntity.size) {
+        throw Exception("One or more of the Related Areas of Need was not found")
+      }
+    }
+
+    goalEntity.relatedAreasOfNeed = relatedAreasOfNeedEntity.toMutableList()
+
+    return goalRepository.save(goalEntity)
   }
 
   @Transactional

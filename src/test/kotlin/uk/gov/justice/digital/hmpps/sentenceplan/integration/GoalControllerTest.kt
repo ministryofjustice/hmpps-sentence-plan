@@ -286,4 +286,67 @@ class GoalControllerTest : IntegrationTestBase() {
       .exchange()
       .expectStatus().isNotFound
   }
+
+  @Test
+  fun `should update goal title`() {
+    val goalRequestBody = Goal(
+      title = "New Goal Title",
+      areaOfNeed = "Accommodation",
+    )
+
+    val goalUuid = "070442be-f855-4eb6-af7e-72f68aab54be"
+
+    val goalEntity: GoalEntity? =
+      webTestClient.patch().uri("/goals/$goalUuid").header("Content-Type", "application/json")
+        .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .bodyValue(goalRequestBody)
+        .exchange()
+        .expectStatus().isOk
+        .expectBody<GoalEntity>()
+        .returnResult().responseBody
+
+    assertThat(goalEntity?.title).isEqualTo("New Goal Title")
+  }
+
+  @Test
+  fun `should update goal without changing area of need`() {
+    val goalRequestBody = Goal(
+      title = "Non Changing Area of Need Goal",
+      areaOfNeed = "Finance",
+    )
+
+    val goalUuid = "070442be-f855-4eb6-af7e-72f68aab54be"
+
+    val goalEntity: GoalEntity? =
+      webTestClient.patch().uri("/goals/$goalUuid").header("Content-Type", "application/json")
+        .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .bodyValue(goalRequestBody)
+        .exchange()
+        .expectStatus().isOk
+        .expectBody<GoalEntity>()
+        .returnResult().responseBody
+
+    assertThat(goalEntity?.areaOfNeed?.name).isEqualTo("Accommodation")
+  }
+
+  @Test
+  fun `should update goal and delete related areas of need`() {
+    val goalRequestBody = Goal(
+      title = "Non Changing Area of Need Goal",
+      areaOfNeed = "Finance",
+    )
+
+    val goalUuid = "070442be-f855-4eb6-af7e-72f68aab54be"
+
+    val goalEntity: GoalEntity? =
+      webTestClient.patch().uri("/goals/$goalUuid").header("Content-Type", "application/json")
+        .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .bodyValue(goalRequestBody)
+        .exchange()
+        .expectStatus().isOk
+        .expectBody<GoalEntity>()
+        .returnResult().responseBody
+
+    assertThat(goalEntity?.relatedAreasOfNeed).isEmpty()
+  }
 }

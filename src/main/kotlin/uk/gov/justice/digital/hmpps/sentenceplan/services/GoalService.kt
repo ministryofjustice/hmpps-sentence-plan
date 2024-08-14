@@ -21,7 +21,7 @@ class GoalService(
   private val planRepository: PlanRepository,
 ) {
 
-  fun getGoalByUuid(goalUuid: UUID): GoalEntity? = goalRepository.findByUuid(goalUuid)
+  fun getGoalByUuid(goalUuid: UUID): GoalEntity = goalRepository.findByUuid(goalUuid)
 
   @Transactional
   fun createNewGoal(planUuid: UUID, goal: Goal): GoalEntity {
@@ -60,7 +60,6 @@ class GoalService(
   @Transactional
   fun updateGoalByUuid(goalUuid: UUID, goal: Goal): GoalEntity {
     val goalEntity = goalRepository.findByUuid(goalUuid)
-      ?: throw Exception("This Goal is not found: $goalUuid")
 
     goalEntity.title = goal.title
     goalEntity.targetDate = goal.targetDate
@@ -86,7 +85,6 @@ class GoalService(
   @Transactional
   fun createNewSteps(goalUuid: UUID, steps: List<Step>): GoalEntity {
     val goal: GoalEntity = goalRepository.findByUuid(goalUuid)
-      ?: throw Exception("This Goal is not found: $goalUuid")
 
     val stepEntityList = ArrayList<StepEntity>()
     steps.forEach { step ->
@@ -122,7 +120,7 @@ class GoalService(
 
   @Transactional
   fun deleteGoal(goalUuid: UUID): Unit? {
-    val goalEntity: GoalEntity? = goalRepository.findByUuid(goalUuid)
-    return goalEntity?.let { goalRepository.delete(it) }
+    val goalEntity: GoalEntity = goalRepository.findByUuid(goalUuid)
+    return goalEntity.let { goalRepository.delete(it) }
   }
 }

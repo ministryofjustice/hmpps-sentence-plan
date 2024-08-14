@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
+import org.springframework.dao.EmptyResultDataAccessException
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Goal
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Step
 import uk.gov.justice.digital.hmpps.sentenceplan.data.StepActor
@@ -212,13 +213,13 @@ class GoalServiceTest {
 
     @Test
     fun `update goal with random Plan UUID should throw Exception`() {
-      every { goalRepository.findByUuid(any()) } returns null
+      every { goalRepository.findByUuid(any()) } throws EmptyResultDataAccessException(1)
 
-      val exception = assertThrows<Exception> {
+      val exception = assertThrows<EmptyResultDataAccessException> {
         goalService.updateGoalByUuid(UUID.randomUUID(), goal)
       }
 
-      assertThat(exception.message).startsWith("This Goal is not found:")
+      assertThat(exception.message).startsWith("Incorrect result size: expected 1, actual 0")
     }
 
     @Test

@@ -72,7 +72,7 @@ class GoalEntity(
 )
 
 interface GoalRepository : JpaRepository<GoalEntity, Long> {
-  fun findByUuid(uuid: UUID): GoalEntity?
+  fun findByUuid(uuid: UUID): GoalEntity
 
   fun findByPlan(plan: PlanEntity): List<GoalEntity>
 

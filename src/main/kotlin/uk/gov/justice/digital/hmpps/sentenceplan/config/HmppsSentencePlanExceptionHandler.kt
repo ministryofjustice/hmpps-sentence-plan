@@ -28,7 +28,7 @@ class HmppsSentencePlanExceptionHandler {
     ).also { log.info("Validation exception: {}", e.message) }
 
   @ExceptionHandler(NoResourceFoundException::class)
-  fun handleNoResourceFoundException(e: Exception): ResponseEntity<ErrorResponse> = ResponseEntity
+  fun handleNoResourceFoundException(e: NoResourceFoundException): ResponseEntity<ErrorResponse> = ResponseEntity
     .status(NOT_FOUND)
     .body(
       ErrorResponse(

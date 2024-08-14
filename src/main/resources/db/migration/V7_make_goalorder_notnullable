@@ -1,1 +1,0 @@
-UPDATE goal ALTER goal_order INTEGER NOT NULL

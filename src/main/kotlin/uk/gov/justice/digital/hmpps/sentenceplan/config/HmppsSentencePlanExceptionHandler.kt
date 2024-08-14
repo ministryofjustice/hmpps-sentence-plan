@@ -2,7 +2,6 @@ package uk.gov.justice.digital.hmpps.sentenceplan.config
 
 import jakarta.validation.ValidationException
 import org.slf4j.LoggerFactory
-import org.springframework.dao.EmptyResultDataAccessException
 import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatus.BAD_REQUEST
 import org.springframework.http.HttpStatus.CONFLICT
@@ -11,6 +10,7 @@ import org.springframework.http.HttpStatus.NOT_FOUND
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
+import org.springframework.web.server.ResponseStatusException
 import org.springframework.web.servlet.resource.NoResourceFoundException
 import uk.gov.justice.digital.hmpps.sentenceplan.exceptions.ConflictException
 
@@ -27,7 +27,7 @@ class HmppsSentencePlanExceptionHandler {
       ),
     ).also { log.info("Validation exception: {}", e.message) }
 
-  @ExceptionHandler(NoResourceFoundException::class, EmptyResultDataAccessException::class)
+  @ExceptionHandler(NoResourceFoundException::class)
   fun handleNoResourceFoundException(e: Exception): ResponseEntity<ErrorResponse> = ResponseEntity
     .status(NOT_FOUND)
     .body(
@@ -37,6 +37,17 @@ class HmppsSentencePlanExceptionHandler {
         developerMessage = e.message,
       ),
     ).also { log.info("No resource found exception: {}", e.message) }
+
+  @ExceptionHandler(ResponseStatusException::class)
+  fun handleResponseStatusException(e: ResponseStatusException): ResponseEntity<ErrorResponse> = ResponseEntity
+    .status(e.statusCode)
+    .body(
+      ErrorResponse(
+        status = HttpStatus.valueOf(e.statusCode.value()),
+        userMessage = "${e.message}",
+        developerMessage = e.cause?.message,
+      ),
+    ).also { log.info(e.message) }
 
   @ExceptionHandler(ConflictException::class)
   fun handleConflictException(e: ConflictException): ResponseEntity<ErrorResponse> = ResponseEntity

@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.sentenceplan.controller
 
+import org.springframework.dao.EmptyResultDataAccessException
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.server.ResponseStatusException
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Goal
 import uk.gov.justice.digital.hmpps.sentenceplan.data.GoalOrder
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Step
@@ -26,7 +28,11 @@ class GoalController(private val service: GoalService) {
   fun getGoal(
     @PathVariable goalUuid: UUID,
   ): GoalEntity {
-    return service.getGoalByUuid(goalUuid)
+    try {
+      return service.getGoalByUuid(goalUuid)
+    } catch (e: EmptyResultDataAccessException) {
+      throw ResponseStatusException(HttpStatus.NOT_FOUND, "Goal not found", e)
+    }
   }
 
   @PatchMapping("/{goalUuid}")
@@ -35,7 +41,11 @@ class GoalController(private val service: GoalService) {
     @PathVariable goalUuid: UUID,
     @RequestBody goal: Goal,
   ): GoalEntity {
-    return service.updateGoalByUuid(goalUuid, goal)
+    try {
+      return service.updateGoalByUuid(goalUuid, goal)
+    } catch (e: EmptyResultDataAccessException) {
+      throw ResponseStatusException(HttpStatus.NOT_FOUND, "Goal not found", e)
+    }
   }
 
   @DeleteMapping("/{goalUuid}")
@@ -43,7 +53,11 @@ class GoalController(private val service: GoalService) {
   fun deleteGoal(
     @PathVariable goalUuid: UUID,
   ) {
-    service.deleteGoal(goalUuid)
+    try {
+      service.deleteGoal(goalUuid)
+    } catch (e: EmptyResultDataAccessException) {
+      throw ResponseStatusException(HttpStatus.NOT_FOUND, "Goal not found", e)
+    }
   }
 
   @PostMapping("/{goalUuid}/steps")
@@ -52,8 +66,12 @@ class GoalController(private val service: GoalService) {
     @PathVariable goalUuid: UUID,
     @RequestBody steps: List<Step>,
   ): List<StepEntity> {
-    val goal: GoalEntity = service.createNewSteps(goalUuid, steps)
-    return goal.steps
+    try {
+      val goal: GoalEntity = service.createNewSteps(goalUuid, steps)
+      return goal.steps
+    } catch (e: EmptyResultDataAccessException) {
+      throw ResponseStatusException(HttpStatus.NOT_FOUND, "Goal not found", e)
+    }
   }
 
   @GetMapping("/{goalUuid}/steps")
@@ -61,8 +79,12 @@ class GoalController(private val service: GoalService) {
   fun getAllGoalSteps(
     @PathVariable goalUuid: UUID,
   ): List<StepEntity> {
-    val goal: GoalEntity = service.getGoalByUuid(goalUuid)
-    return goal.steps
+    try {
+      val goal: GoalEntity = service.getGoalByUuid(goalUuid)
+      return goal.steps
+    } catch (e: EmptyResultDataAccessException) {
+      throw ResponseStatusException(HttpStatus.NOT_FOUND, "Goal not found", e)
+    }
   }
 
   @PostMapping("/order")
@@ -70,6 +92,10 @@ class GoalController(private val service: GoalService) {
   fun updateGoalsOrder(
     @RequestBody goalsOrder: List<GoalOrder>,
   ) {
-    return service.updateGoalsOrder(goalsOrder)
+    try {
+      return service.updateGoalsOrder(goalsOrder)
+    } catch (e: EmptyResultDataAccessException) {
+      throw ResponseStatusException(HttpStatus.NOT_FOUND, "Goal not found", e)
+    }
   }
 }

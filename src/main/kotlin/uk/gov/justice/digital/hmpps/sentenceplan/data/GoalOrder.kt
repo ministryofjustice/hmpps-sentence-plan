@@ -5,5 +5,5 @@ import java.util.UUID
 
 data class GoalOrder(
   @SerializedName("goalUuid") var goalUuid: UUID,
-  @SerializedName("galOrder") var goalOrder: Int? = null,
+  @SerializedName("goalOrder") var goalOrder: Int? = null,
 )

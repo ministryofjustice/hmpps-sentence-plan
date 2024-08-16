@@ -1,4 +1,4 @@
-insert into plan(uuid, status, creation_date, updated_date) values ('d1e159a3-e5dc-4464-8b52-59f578100833', 'INCOMPLETE','2024-06-25 10:00:00', '2024-06-25 10:00:00');
+insert into plan(uuid, countersigning_status, agreement_status, creation_date, updated_date) values ('d1e159a3-e5dc-4464-8b52-59f578100833', 'INCOMPLETE', 'DRAFT','2024-06-25 10:00:00', '2024-06-25 10:00:00');
 
 INSERT INTO goal (uuid, title, area_of_need_id, target_date, creation_date, goal_order, plan_id)
 SELECT '070442be-f855-4eb6-af7e-72f68aab54be', 'Goal For Updating', aon.id, null,

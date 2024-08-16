@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.sentenceplan.entity
 
 import com.fasterxml.jackson.annotation.JsonIgnore
+import com.fasterxml.jackson.annotation.JsonProperty
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
@@ -32,9 +33,13 @@ class PlanEntity(
   @Column(name = "uuid")
   val uuid: UUID = UUID.randomUUID(),
 
-  @Column(name = "status")
+  @Column(name = "countersigning_status")
   @Enumerated(EnumType.STRING)
-  val status: PlanStatus = PlanStatus.INCOMPLETE,
+  val status: CountersigningStatus = CountersigningStatus.INCOMPLETE,
+
+  @Column(name = "agreement_status")
+  @Enumerated(EnumType.STRING)
+  var agreementStatus: PlanStatus = PlanStatus.DRAFT,
 
   @Column(name = "creation_date")
   val creationDate: String = DateTimeFormatter.ISO_INSTANT.format(Instant.now()),
@@ -42,16 +47,26 @@ class PlanEntity(
   @Column(name = "updated_date")
   val updatedDate: String = DateTimeFormatter.ISO_INSTANT.format(Instant.now()),
 
+  @Column(name = "agreement_date")
+  val agreementDate: String = DateTimeFormatter.ISO_INSTANT.format(Instant.now()),
+
   @OneToMany(mappedBy = "plan")
   @OrderBy("goalOrder ASC")
   val goals: Set<GoalEntity> = emptySet(),
 )
 
-enum class PlanStatus {
+enum class CountersigningStatus {
   INCOMPLETE,
   COMPLETE,
   LOCKED,
   SIGNED,
+}
+
+enum class PlanStatus {
+  DRAFT,
+  AGREED,
+  DO_NOT_AGREE,
+  COULD_NOT_AGREE
 }
 
 interface PlanRepository : JpaRepository<PlanEntity, Long> {

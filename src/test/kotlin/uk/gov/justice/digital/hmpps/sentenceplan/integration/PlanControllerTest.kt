@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.sentenceplan.integration
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -10,10 +11,12 @@ import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWeb
 import org.springframework.test.web.reactive.server.expectBody
 import org.springframework.test.web.reactive.server.expectBodyList
 import uk.gov.justice.digital.hmpps.sentenceplan.config.ErrorResponse
+import uk.gov.justice.digital.hmpps.sentenceplan.data.Agreement
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Goal
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.AreaOfNeedEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntity
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanStatus
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -227,6 +230,23 @@ class PlanControllerTest : IntegrationTestBase() {
         .exchange()
         .expectStatus().is5xxServerError
         .expectBody<ErrorResponse>()
+    }
+  }
+
+  @Nested
+  @DisplayName("agreePlan")
+  inner class AgreePlan {
+    private val agreePlanBody = Agreement(PlanStatus.AGREED, "", "", "", "")
+
+    @Disabled("code under development")
+    @Test
+    fun `agree plan`() {
+      webTestClient.post().uri("/plans/$mutablePlanUuid/agree")
+        .header("Content-Type", "application/json")
+        .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .bodyValue(agreePlanBody)
+        .exchange()
+        .expectStatus().isCreated
     }
   }
 }

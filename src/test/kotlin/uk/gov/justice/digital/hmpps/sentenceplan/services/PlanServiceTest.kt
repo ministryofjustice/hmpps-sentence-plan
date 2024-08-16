@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntity
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanProgressNotesRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.exceptions.ConflictException
 import java.util.UUID
@@ -18,7 +19,8 @@ import java.util.UUID
 class PlanServiceTest {
 
   private val planRepository: PlanRepository = mockk()
-  private val planService = PlanService(planRepository)
+  private val planProgressNotesRepository: PlanProgressNotesRepository = mockk()
+  private val planService = PlanService(planRepository, planProgressNotesRepository)
 
   @Nested
   @DisplayName("gePlayByUuid")

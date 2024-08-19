@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.sentenceplan.entity
 
 import com.fasterxml.jackson.annotation.JsonIgnore
-import com.fasterxml.jackson.annotation.JsonProperty
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
@@ -66,7 +65,7 @@ enum class PlanStatus {
   DRAFT,
   AGREED,
   DO_NOT_AGREE,
-  COULD_NOT_AGREE
+  COULD_NOT_ANSWER,
 }
 
 interface PlanRepository : JpaRepository<PlanEntity, Long> {

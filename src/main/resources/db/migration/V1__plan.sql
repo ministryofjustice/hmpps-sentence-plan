@@ -1,6 +1,6 @@
 do $$ begin
     create type countersigning_status_type as enum ('INCOMPLETE', 'COMPLETE', 'LOCKED', 'SIGNED');
-    create type agreement_status_type as enum ('DRAFT', 'AGREED', 'DO_NOT_AGREE', 'COULD_NOT_AGREE');
+    create type agreement_status_type as enum ('DRAFT', 'AGREED', 'DO_NOT_AGREE', 'COULD_NOT_ANSWER');
 exception
     when duplicate_object then null;
 end $$;

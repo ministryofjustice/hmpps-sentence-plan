@@ -2,7 +2,11 @@ package uk.gov.justice.digital.hmpps.sentenceplan.services
 
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Agreement
-import uk.gov.justice.digital.hmpps.sentenceplan.entity.*
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntity
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanProgressNoteEntity
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanProgressNotesRepository
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanStatus
 import uk.gov.justice.digital.hmpps.sentenceplan.exceptions.ConflictException
 import java.util.UUID
 
@@ -52,7 +56,7 @@ class PlanService(
       title = agreement.title,
       text = agreement.text,
       practitioner_name = agreement.practitionerName,
-      person_name = agreement.personName
+      person_name = agreement.personName,
     )
     planProgressNotesRepository.save(entity)
   }

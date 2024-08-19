@@ -37,7 +37,7 @@ class PlanProgressNoteEntity(
   var person_name: String,
 
   @Column(name = "creation_date")
-  val creationDate: String = DateTimeFormatter.ISO_INSTANT.format(Instant.now())
+  val creationDate: String = DateTimeFormatter.ISO_INSTANT.format(Instant.now()),
 )
 
 interface PlanProgressNotesRepository : JpaRepository<PlanProgressNoteEntity, Long>

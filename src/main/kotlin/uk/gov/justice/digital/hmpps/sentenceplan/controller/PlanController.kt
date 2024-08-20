@@ -59,11 +59,11 @@ class PlanController(
   }
 
   @PostMapping("/{planUuid}/agree")
-  @ResponseStatus(HttpStatus.CREATED)
+  @ResponseStatus(HttpStatus.ACCEPTED)
   fun agreePlan(
     @PathVariable planUuid: UUID,
     @RequestBody agreement: Agreement,
   ): PlanEntity {
-    return planService.agreePlan(planUuid, agreement) ?: throw NoResourceFoundException(HttpMethod.GET, "No Plan found for $planUuid")
+    return planService.agreePlan(planUuid, agreement)
   }
 }

@@ -1,6 +1,8 @@
 package uk.gov.justice.digital.hmpps.sentenceplan.services
 
+import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
+import org.springframework.web.server.ResponseStatusException
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Agreement
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanProgressNoteEntity
@@ -39,15 +41,18 @@ class PlanService(
   }
 
   fun agreePlan(planUuid: UUID, agreement: Agreement): PlanEntity {
-    val plan = getPlanByUuid(planUuid)
+    val plan: PlanEntity = getPlanByUuid(planUuid) ?: throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY)
 
-    if (plan?.agreementStatus == PlanStatus.DRAFT) {
-      plan.agreementStatus = agreement.agreementStatus
-      planRepository.save(plan)
-      addPlanProgressNote(planUuid, agreement)
+    when(plan.agreementStatus) {
+      PlanStatus.DRAFT -> {
+        plan.agreementStatus = agreement.agreementStatus
+        planRepository.save(plan)
+        addPlanProgressNote(planUuid, agreement)
+      }
+      else -> throw ConflictException("Plan $planUuid has already been agreed.")
     }
 
-    return plan!!
+    return plan
   }
 
   fun addPlanProgressNote(planUuid: UUID, agreement: Agreement) {

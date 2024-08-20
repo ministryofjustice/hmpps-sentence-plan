@@ -2,12 +2,18 @@ package uk.gov.justice.digital.hmpps.sentenceplan.integration
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.DisplayName
+import org.junit.jupiter.api.MethodOrderer
 import org.junit.jupiter.api.Nested
+import org.junit.jupiter.api.Order
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.api.TestMethodOrder
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient
+import org.springframework.http.HttpStatus
+import org.springframework.test.context.jdbc.Sql
+import org.springframework.test.context.jdbc.Sql.ExecutionPhase.AFTER_TEST_CLASS
+import org.springframework.test.context.jdbc.Sql.ExecutionPhase.BEFORE_TEST_CLASS
 import org.springframework.test.web.reactive.server.expectBody
 import org.springframework.test.web.reactive.server.expectBodyList
 import uk.gov.justice.digital.hmpps.sentenceplan.config.ErrorResponse
@@ -235,18 +241,48 @@ class PlanControllerTest : IntegrationTestBase() {
 
   @Nested
   @DisplayName("agreePlan")
+  @TestMethodOrder(MethodOrderer.OrderAnnotation::class)
+  @Sql(scripts = [ "/db/test/agree_plan_data.sql" ], executionPhase = BEFORE_TEST_CLASS)
+  @Sql(scripts = [ "/db/test/agree_plan_cleanup.sql" ], executionPhase = AFTER_TEST_CLASS)
   inner class AgreePlan {
-    private val agreePlanBody = Agreement(PlanStatus.AGREED, "", "", "", "")
+    private val agreePlanBody = Agreement(
+      PlanStatus.AGREED,
+      "Agreed",
+      "Note",
+      "Sarah B",
+      "Tom C"
+    )
 
-    @Disabled("code under development")
     @Test
+    @Order(1)
     fun `agree plan`() {
-      webTestClient.post().uri("/plans/$mutablePlanUuid/agree")
+      webTestClient.post().uri("/plans/650df4b2-f74d-4ab7-85a1-143d2a7d8cfe/agree")
         .header("Content-Type", "application/json")
         .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
         .bodyValue(agreePlanBody)
         .exchange()
-        .expectStatus().isCreated
+        .expectStatus().isAccepted
+    }
+
+    @Test
+    @Order(2)
+    fun `plan has already been agreed`() {
+      webTestClient.post().uri("/plans/650df4b2-f74d-4ab7-85a1-143d2a7d8cfe/agree")
+        .header("Content-Type", "application/json")
+        .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .bodyValue(agreePlanBody)
+        .exchange()
+        .expectStatus().isEqualTo(HttpStatus.CONFLICT)
+    }
+
+    @Test
+    fun `plan not found`() {
+      webTestClient.post().uri("/plans/e0b7707e-a9da-4574-b97f-ea84e402baf6/agree")
+        .header("Content-Type", "application/json")
+        .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .bodyValue(agreePlanBody)
+        .exchange()
+        .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
     }
   }
 }

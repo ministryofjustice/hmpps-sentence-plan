@@ -43,7 +43,7 @@ class PlanService(
   fun agreePlan(planUuid: UUID, agreement: Agreement): PlanEntity {
     val plan: PlanEntity = getPlanByUuid(planUuid) ?: throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY)
 
-    when(plan.agreementStatus) {
+    when (plan.agreementStatus) {
       PlanStatus.DRAFT -> {
         plan.agreementStatus = agreement.agreementStatus
         planRepository.save(plan)

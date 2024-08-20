@@ -60,8 +60,8 @@ class PlanService(
       planUuid = planUuid,
       title = agreement.title,
       text = agreement.text,
-      practitioner_name = agreement.practitionerName,
-      person_name = agreement.personName,
+      practitionerName = agreement.practitionerName,
+      personName = agreement.personName,
     )
     planProgressNotesRepository.save(entity)
   }

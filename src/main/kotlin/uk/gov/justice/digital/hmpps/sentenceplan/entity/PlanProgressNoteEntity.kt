@@ -31,10 +31,10 @@ class PlanProgressNoteEntity(
   var text: String,
 
   @Column(name = "practitioner_name")
-  var practitioner_name: String,
+  var practitionerName: String,
 
   @Column(name = "person_name")
-  var person_name: String,
+  var personName: String,
 
   @Column(name = "creation_date")
   val creationDate: String = DateTimeFormatter.ISO_INSTANT.format(Instant.now()),

@@ -250,7 +250,7 @@ class PlanControllerTest : IntegrationTestBase() {
       "Agreed",
       "Note",
       "Sarah B",
-      "Tom C"
+      "Tom C",
     )
 
     @Test

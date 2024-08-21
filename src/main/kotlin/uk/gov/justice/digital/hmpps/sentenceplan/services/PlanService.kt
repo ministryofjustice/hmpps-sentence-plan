@@ -10,6 +10,9 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanProgressNotesReposit
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanStatus
 import uk.gov.justice.digital.hmpps.sentenceplan.exceptions.ConflictException
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.UUID
 
 @Service
@@ -42,10 +45,13 @@ class PlanService(
 
   fun agreePlan(planUuid: UUID, agreement: Agreement): PlanEntity {
     val plan: PlanEntity = getPlanByUuid(planUuid) ?: throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY)
+    val updatedDate = LocalDateTime.now()
 
     when (plan.agreementStatus) {
       PlanStatus.DRAFT -> {
         plan.agreementStatus = agreement.agreementStatus
+        plan.agreementDate = updatedDate
+        plan.updatedDate = updatedDate
         planRepository.save(plan)
         addPlanProgressNote(planUuid, agreement)
       }

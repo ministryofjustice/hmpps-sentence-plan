@@ -256,12 +256,17 @@ class PlanControllerTest : IntegrationTestBase() {
     @Test
     @Order(1)
     fun `agree plan`() {
-      webTestClient.post().uri("/plans/650df4b2-f74d-4ab7-85a1-143d2a7d8cfe/agree")
+      val planEntity: PlanEntity? = webTestClient.post().uri("/plans/650df4b2-f74d-4ab7-85a1-143d2a7d8cfe/agree")
         .header("Content-Type", "application/json")
         .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
         .bodyValue(agreePlanBody)
         .exchange()
         .expectStatus().isAccepted
+        .expectBody<PlanEntity>()
+        .returnResult().responseBody
+
+      assertThat(planEntity?.agreementDate).isNotNull()
+      assertThat(planEntity?.agreementDate).isEqualTo(planEntity?.updatedDate)
     }
 
     @Test

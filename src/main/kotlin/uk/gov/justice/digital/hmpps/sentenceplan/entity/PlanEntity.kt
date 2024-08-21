@@ -16,8 +16,7 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
-import java.time.Instant
-import java.time.format.DateTimeFormatter
+import java.time.LocalDateTime
 import java.util.UUID
 
 @Entity(name = "Plan")
@@ -41,13 +40,13 @@ class PlanEntity(
   var agreementStatus: PlanStatus = PlanStatus.DRAFT,
 
   @Column(name = "creation_date")
-  val creationDate: String = DateTimeFormatter.ISO_INSTANT.format(Instant.now()),
+  val creationDate: LocalDateTime = LocalDateTime.now(),
 
   @Column(name = "updated_date")
-  val updatedDate: String = DateTimeFormatter.ISO_INSTANT.format(Instant.now()),
+  var updatedDate: LocalDateTime = LocalDateTime.now(),
 
   @Column(name = "agreement_date")
-  val agreementDate: String = DateTimeFormatter.ISO_INSTANT.format(Instant.now()),
+  var agreementDate: LocalDateTime? = null,
 
   @OneToMany(mappedBy = "plan")
   @OrderBy("goalOrder ASC")

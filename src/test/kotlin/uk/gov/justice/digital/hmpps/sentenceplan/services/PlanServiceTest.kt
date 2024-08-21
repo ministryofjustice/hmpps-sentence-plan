@@ -10,9 +10,12 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
+import org.springframework.web.server.ResponseStatusException
+import uk.gov.justice.digital.hmpps.sentenceplan.data.Agreement
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanProgressNotesRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanStatus
 import uk.gov.justice.digital.hmpps.sentenceplan.exceptions.ConflictException
 import java.util.UUID
 
@@ -130,6 +133,53 @@ class PlanServiceTest {
       val result = planService.createPlan()
 
       verify { planRepository.save(withArg { assertEquals(result, it) }) }
+    }
+  }
+
+  @Nested
+  @DisplayName("agreePlan")
+  inner class AgreePlan {
+    private val agreement = Agreement(
+      PlanStatus.AGREED,
+      "Agree",
+      "Agreed",
+      "Tom C",
+      "Pop A",
+    )
+
+    @Test
+    fun `should agree plan`() {
+      every { planRepository.save(any()) } returns any()
+      every { planRepository.findByUuid(any()) } returns PlanEntity()
+      every { planProgressNotesRepository.save(any()) } returns any()
+
+      val result = planService.agreePlan(UUID.randomUUID(), agreement)
+
+      verify(exactly = 1) { planRepository.save(withArg { assertEquals(result, it) }) }
+      verify(exactly = 1) { planProgressNotesRepository.save(any()) }
+    }
+
+    @Test
+    fun `should throw exception when plan already agreed`() {
+      val planEntity: PlanEntity = PlanEntity(agreementStatus = PlanStatus.AGREED)
+      every { planRepository.findByUuid(any()) } returns planEntity
+
+      val exception = assertThrows(ConflictException::class.java) {
+        planService.agreePlan(UUID.fromString("559a2111-832c-4652-a99f-eec9e570640f"), agreement)
+      }
+
+      assertEquals("Plan 559a2111-832c-4652-a99f-eec9e570640f has already been agreed.", exception.message)
+    }
+
+    @Test
+    fun `should throw exception when plan not found`() {
+      every { planRepository.findByUuid(any()) } returns any()
+
+      val exception = assertThrows(ResponseStatusException::class.java) {
+        planService.agreePlan(UUID.randomUUID(), agreement)
+      }
+
+      assertEquals("422 UNPROCESSABLE_ENTITY", exception.message)
     }
   }
 }

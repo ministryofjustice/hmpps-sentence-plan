@@ -10,9 +10,7 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanProgressNotesReposit
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanStatus
 import uk.gov.justice.digital.hmpps.sentenceplan.exceptions.ConflictException
-import java.time.Instant
 import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 import java.util.UUID
 
 @Service

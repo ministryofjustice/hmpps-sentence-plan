@@ -176,10 +176,10 @@ class PlanServiceTest {
       every { planRepository.findByUuid(any()) } returns any()
 
       val exception = assertThrows(ResponseStatusException::class.java) {
-        planService.agreePlan(UUID.randomUUID(), agreement)
+        planService.agreePlan(UUID.fromString("1c93ebe7-1d8d-4fcc-aef2-f97c4c983a6b"), agreement)
       }
 
-      assertEquals("422 UNPROCESSABLE_ENTITY", exception.message)
+      assertEquals("422 UNPROCESSABLE_ENTITY \"Plan 1c93ebe7-1d8d-4fcc-aef2-f97c4c983a6b was not found.\"", exception.message)
     }
   }
 }

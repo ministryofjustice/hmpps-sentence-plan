@@ -42,7 +42,8 @@ class PlanService(
   }
 
   fun agreePlan(planUuid: UUID, agreement: Agreement): PlanEntity {
-    val plan: PlanEntity = getPlanByUuid(planUuid) ?: throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY)
+    val plan: PlanEntity = getPlanByUuid(planUuid)
+      ?: throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Plan $planUuid was not found.")
 
     when (plan.agreementStatus) {
       PlanStatus.DRAFT -> {

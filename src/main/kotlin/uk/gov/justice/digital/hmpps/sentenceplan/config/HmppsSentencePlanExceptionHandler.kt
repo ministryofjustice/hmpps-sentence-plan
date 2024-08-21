@@ -55,7 +55,7 @@ class HmppsSentencePlanExceptionHandler {
     .body(
       ErrorResponse(
         status = e.statusCode.value(),
-        userMessage = "Response status: ${e.message}",
+        userMessage = "Response: ${e.reason}",
         developerMessage = e.message,
       ),
     ).also { log.info("Response status: {}", e.message) }

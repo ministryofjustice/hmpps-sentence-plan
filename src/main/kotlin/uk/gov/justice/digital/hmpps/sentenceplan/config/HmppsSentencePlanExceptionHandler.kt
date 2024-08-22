@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus.NOT_FOUND
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
+import org.springframework.web.server.ResponseStatusException
 import org.springframework.web.servlet.resource.NoResourceFoundException
 import uk.gov.justice.digital.hmpps.sentenceplan.exceptions.ConflictException
 
@@ -47,6 +48,17 @@ class HmppsSentencePlanExceptionHandler {
         developerMessage = e.message,
       ),
     ).also { log.info("Conflicting resource failure: {}", e.message) }
+
+  @ExceptionHandler(ResponseStatusException::class)
+  fun handleResponseStatusException(e: ResponseStatusException): ResponseEntity<ErrorResponse> = ResponseEntity
+    .status(e.statusCode)
+    .body(
+      ErrorResponse(
+        status = e.statusCode.value(),
+        userMessage = "Response: ${e.reason}",
+        developerMessage = e.message,
+      ),
+    ).also { log.info("Response status: {}", e.message) }
 
   @ExceptionHandler(Exception::class)
   fun handleException(e: Exception): ResponseEntity<ErrorResponse> = ResponseEntity

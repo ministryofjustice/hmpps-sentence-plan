@@ -1,0 +1,1 @@
+DELETE FROM plan WHERE uuid = '650df4b2-f74d-4ab7-85a1-143d2a7d8cfe'

@@ -17,7 +17,6 @@ import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
 import java.time.Instant
-import java.time.format.DateTimeFormatter
 import java.util.UUID
 
 @Entity(name = "Plan")
@@ -32,26 +31,40 @@ class PlanEntity(
   @Column(name = "uuid")
   val uuid: UUID = UUID.randomUUID(),
 
-  @Column(name = "status")
+  @Column(name = "countersigning_status")
   @Enumerated(EnumType.STRING)
-  val status: PlanStatus = PlanStatus.INCOMPLETE,
+  val status: CountersigningStatus = CountersigningStatus.INCOMPLETE,
+
+  @Column(name = "agreement_status")
+  @Enumerated(EnumType.STRING)
+  var agreementStatus: PlanStatus = PlanStatus.DRAFT,
 
   @Column(name = "creation_date")
-  val creationDate: String = DateTimeFormatter.ISO_INSTANT.format(Instant.now()),
+  val creationDate: Instant = Instant.now(),
 
   @Column(name = "updated_date")
-  val updatedDate: String = DateTimeFormatter.ISO_INSTANT.format(Instant.now()),
+  var updatedDate: Instant = Instant.now(),
+
+  @Column(name = "agreement_date")
+  var agreementDate: Instant? = null,
 
   @OneToMany(mappedBy = "plan")
   @OrderBy("goalOrder ASC")
   val goals: Set<GoalEntity> = emptySet(),
 )
 
-enum class PlanStatus {
+enum class CountersigningStatus {
   INCOMPLETE,
   COMPLETE,
   LOCKED,
   SIGNED,
+}
+
+enum class PlanStatus {
+  DRAFT,
+  AGREED,
+  DO_NOT_AGREE,
+  COULD_NOT_ANSWER,
 }
 
 interface PlanRepository : JpaRepository<PlanEntity, Long> {

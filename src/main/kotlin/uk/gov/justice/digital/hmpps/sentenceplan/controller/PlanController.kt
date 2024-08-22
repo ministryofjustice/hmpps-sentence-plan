@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.servlet.resource.NoResourceFoundException
+import uk.gov.justice.digital.hmpps.sentenceplan.data.Agreement
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Goal
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntity
@@ -55,5 +56,14 @@ class PlanController(
     @RequestBody goal: Goal,
   ): GoalEntity {
     return goalService.createNewGoal(planUuid, goal)
+  }
+
+  @PostMapping("/{planUuid}/agree")
+  @ResponseStatus(HttpStatus.ACCEPTED)
+  fun agreePlan(
+    @PathVariable planUuid: UUID,
+    @RequestBody agreement: Agreement,
+  ): PlanEntity {
+    return planService.agreePlan(planUuid, agreement)
   }
 }

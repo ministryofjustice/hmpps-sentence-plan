@@ -72,8 +72,8 @@ class GoalServiceTest {
   private val planEntityWithOneGoal: PlanEntity = PlanEntity(goals = goalSet)
 
   private val actors = listOf(
-    StepActor("actor 1", 1),
-    StepActor("actor 2", 2),
+    StepActor("actor 1"),
+    StepActor("actor 2"),
   )
 
   private val steps = listOf(

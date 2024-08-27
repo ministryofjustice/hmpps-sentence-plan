@@ -48,13 +48,13 @@ class GoalControllerTest : IntegrationTestBase() {
   private val stepOne = Step(
     description = "Step description",
     status = "incomplete",
-    actor = listOf(StepActor("actor1", 1)),
+    actor = listOf(StepActor("actor1")),
   )
 
   private val stepTwo = Step(
     description = "Step description two",
     status = "complete",
-    actor = listOf(StepActor("actor2", 2)),
+    actor = listOf(StepActor("actor2")),
   )
 
   private val stepList: List<Step> = listOf(stepOne, stepTwo)

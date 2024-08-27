@@ -28,10 +28,6 @@ class StepActorEntity(
 
   @Column(name = "actor")
   val actor: String,
-
-  @Column(name = "actor_option_id")
-  val actorOptionId: Int,
-
 )
 
 interface StepActorRepository : JpaRepository<StepActorEntity, Long>

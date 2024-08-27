@@ -101,7 +101,6 @@ class GoalService(
         val stepActorEntity = StepActorEntity(
           step = stepEntity,
           actor = it.actor,
-          actorOptionId = it.actorOptionId,
         )
         stepActorEntityList.add(stepActorEntity)
       }

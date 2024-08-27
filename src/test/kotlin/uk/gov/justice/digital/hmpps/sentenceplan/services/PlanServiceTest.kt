@@ -12,8 +12,8 @@ import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
 import org.springframework.web.server.ResponseStatusException
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Agreement
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanAgreementNoteRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntity
-import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanProgressNotesRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanStatus
 import uk.gov.justice.digital.hmpps.sentenceplan.exceptions.ConflictException
@@ -22,8 +22,8 @@ import java.util.UUID
 class PlanServiceTest {
 
   private val planRepository: PlanRepository = mockk()
-  private val planProgressNotesRepository: PlanProgressNotesRepository = mockk()
-  private val planService = PlanService(planRepository, planProgressNotesRepository)
+  private val planAgreementNoteRepository: PlanAgreementNoteRepository = mockk()
+  private val planService = PlanService(planRepository, planAgreementNoteRepository)
 
   @Nested
   @DisplayName("gePlayByUuid")
@@ -151,12 +151,12 @@ class PlanServiceTest {
     fun `should agree plan`() {
       every { planRepository.save(any()) } returns any()
       every { planRepository.findByUuid(any()) } returns PlanEntity()
-      every { planProgressNotesRepository.save(any()) } returns any()
+      every { planAgreementNoteRepository.save(any()) } returns any()
 
       val result = planService.agreePlan(UUID.randomUUID(), agreement)
 
       verify(exactly = 1) { planRepository.save(withArg { assertEquals(result, it) }) }
-      verify(exactly = 1) { planProgressNotesRepository.save(any()) }
+      verify(exactly = 1) { planAgreementNoteRepository.save(any()) }
     }
 
     @Test

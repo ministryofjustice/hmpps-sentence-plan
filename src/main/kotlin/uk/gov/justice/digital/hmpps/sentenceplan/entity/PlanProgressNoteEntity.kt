@@ -12,6 +12,12 @@ import java.time.Instant
 import java.time.format.DateTimeFormatter
 import java.util.UUID
 
+enum class NoteIsSupportNeeded {
+  YES,
+  NO,
+  DONT_KNOW,
+}
+
 @Entity(name = "PlanProgressNote")
 @Table(name = "plan_progress_notes")
 class PlanProgressNoteEntity(
@@ -24,17 +30,26 @@ class PlanProgressNoteEntity(
   @Column(name = "plan_uuid")
   var planUuid: UUID,
 
-  @Column(name = "title")
-  var title: String,
+  @Column(name = "note")
+  var note: String,
 
-  @Column(name = "text")
-  var text: String,
+  @Column(name = "is_support_needed")
+  var isSupportNeeded: NoteIsSupportNeeded,
 
-  @Column(name = "practitioner_name")
-  var practitionerName: String,
+  @Column(name = "is_support_needed_note")
+  var isSupportNeededNote: String,
+
+  @Column(name = "is_involved")
+  var isInvolved: Boolean,
+
+  @Column(name = "is_involved_note")
+  var isInvolvedNote: String,
 
   @Column(name = "person_name")
   var personName: String,
+
+  @Column(name = "practitioner_name")
+  var practitionerName: String,
 
   @Column(name = "creation_date")
   val creationDate: String = DateTimeFormatter.ISO_INSTANT.format(Instant.now()),

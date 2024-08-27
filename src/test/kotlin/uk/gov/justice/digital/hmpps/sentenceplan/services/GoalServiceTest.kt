@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepEntity
 import java.util.UUID
 
 @ExtendWith(MockKExtension::class)
@@ -82,6 +83,8 @@ class GoalServiceTest {
       actor = "actor 2",
     ),
   )
+
+  private val incompleteSteps = steps + Step("This is a step with no actor", status = "status", actor = "")
 
   @Nested
   @DisplayName("createNewGoal")
@@ -183,7 +186,7 @@ class GoalServiceTest {
       every { goalRepository.findByUuid(goalUuid) } returns goalEntityNoSteps
       every { goalRepository.save(capture(goalSlot)) } answers { goalSlot.captured }
 
-      val stepsList = goalService.createNewSteps(goalUuid, steps).steps
+      val stepsList = goalService.createNewSteps(goalUuid, steps)
 
       assertThat(stepsList.size).isEqualTo(2)
 
@@ -248,6 +251,99 @@ class GoalServiceTest {
       }
 
       assertThat(exception.message).startsWith("One or more of the Related Areas of Need was not found")
+    }
+  }
+
+  @Nested
+  @DisplayName("UpdateSteps")
+  inner class UpdateSteps {
+    @Test
+    fun `update steps for goal that does not exist should throw an exception`() {
+      every { goalRepository.findByUuid(any()) } returns null
+
+      val exception = assertThrows<Exception> {
+        goalService.updateSteps(UUID.randomUUID(), steps)
+      }
+
+      assertThat(exception.message).startsWith("This Goal is not found:")
+    }
+
+    @Test
+    fun `update steps with an empty list should throw an exception`() {
+      every { goalRepository.findByUuid(any()) } returns goalEntityNoSteps
+
+      val exception = assertThrows<Exception> {
+        goalService.updateSteps(UUID.randomUUID(), emptyList())
+      }
+
+      assertThat(exception.message).startsWith("At least one Step must be provided")
+    }
+
+    @Test
+    fun `update steps where a step is incomplete should throw an exception`() {
+      every { goalRepository.findByUuid(any()) } returns goalEntityNoSteps
+
+      val exception = assertThrows<Exception> {
+        goalService.updateSteps(UUID.randomUUID(), incompleteSteps)
+      }
+
+      assertThat(exception.message).startsWith("All Steps must contain all the required information")
+    }
+
+    @Test
+    fun `update steps for goal with no steps should return the new steps`() {
+      val goalSlot = slot<GoalEntity>()
+      every { goalRepository.findByUuid(goalUuid) } returns goalEntityNoSteps
+      every { goalRepository.save(capture(goalSlot)) } answers { goalSlot.captured }
+
+      val stepsList = goalService.updateSteps(goalUuid, steps)!!
+
+      assertThat(stepsList.size).isEqualTo(2)
+
+      assertThat(stepsList.first().status).isEqualTo("status 1")
+      assertThat(stepsList.first().goal?.uuid).isEqualTo(goalUuid)
+      assertThat(stepsList.first().description).isEqualTo("description 1")
+      assertThat(stepsList.first().actor).isEqualTo("actor 1")
+
+      assertThat(stepsList.last().status).isEqualTo("status 2")
+      assertThat(stepsList.last().goal?.uuid).isEqualTo(goalUuid)
+      assertThat(stepsList.last().description).isEqualTo("description 2")
+    }
+
+    @Test
+    fun `update steps for goal with an existing step only returns the new steps`() {
+      val goalSlot = slot<GoalEntity>()
+
+      val goalEntityWithOneStep: GoalEntity = GoalEntity(
+        title = "Mock Goal",
+        areaOfNeed = mockk<AreaOfNeedEntity>(),
+        plan = null,
+        uuid = goalUuid,
+        goalOrder = 1,
+      )
+      goalEntityWithOneStep.steps = listOf(
+        StepEntity(
+          description = "Initial step description",
+          status = "Initial status",
+          actor = "Initial actor",
+          goal = goalEntityWithOneStep
+        ))
+
+      every { goalRepository.findByUuid(goalUuid) } returns goalEntityNoSteps
+      every { goalRepository.save(capture(goalSlot)) } answers { goalSlot.captured }
+
+      val stepsList = goalService.updateSteps(goalUuid, steps)!!
+
+      assertThat(stepsList.size).isEqualTo(2)
+
+      assertThat(stepsList.first().status).isEqualTo("status 1")
+      assertThat(stepsList.first().goal?.uuid).isEqualTo(goalUuid)
+      assertThat(stepsList.first().description).isEqualTo("description 1")
+      assertThat(stepsList.first().actor).isEqualTo("actor 1")
+
+      assertThat(stepsList.last().status).isEqualTo("status 2")
+      assertThat(stepsList.last().goal?.uuid).isEqualTo(goalUuid)
+      assertThat(stepsList.last().description).isEqualTo("description 2")
     }
   }
 }

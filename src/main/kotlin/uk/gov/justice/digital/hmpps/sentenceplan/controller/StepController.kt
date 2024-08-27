@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.servlet.resource.NoResourceFoundException
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.services.StepService
-import java.util.*
+import java.util.UUID
 
 @RestController
 @RequestMapping("/steps")

@@ -83,10 +83,48 @@ class GoalService(
   }
 
   @Transactional
-  fun createNewSteps(goalUuid: UUID, steps: List<Step>): GoalEntity {
+  fun createNewSteps(goalUuid: UUID, steps: List<Step>): List<StepEntity> {
     val goal: GoalEntity = goalRepository.findByUuid(goalUuid)
       ?: throw Exception("This Goal is not found: $goalUuid")
 
+    if(steps.isNotEmpty()) {
+      checkStepsAreValid(steps)
+    }
+
+    goal.steps = createStepEntitiesFromSteps(goal, steps)
+    return goalRepository.save(goal).steps
+  }
+
+  @Transactional
+  fun updateSteps(goalUuid: UUID, steps: List<Step>): List<StepEntity>? {
+    var goalEntity: GoalEntity = goalRepository.findByUuid(goalUuid)
+      ?: throw Exception("This Goal is not found: $goalUuid")
+
+    if (steps.isEmpty()) {
+      throw IllegalArgumentException("At least one Step must be provided")
+    }
+
+    checkStepsAreValid(steps)
+
+    goalEntity.steps = createStepEntitiesFromSteps(goalEntity, steps)
+    goalEntity = goalRepository.save(goalEntity)
+    return goalEntity.steps
+  }
+
+  private fun checkStepsAreValid(steps: List<Step>) {
+    steps.forEach(
+      { step ->
+        if (step.description.isEmpty() || step.actor.isEmpty() || step.status.isEmpty()) {
+          throw IllegalArgumentException("All Steps must contain all the required information")
+        }
+      },
+    )
+  }
+
+  private fun createStepEntitiesFromSteps(
+    goal: GoalEntity,
+    steps: List<Step>,
+  ): ArrayList<StepEntity> {
     val stepEntityList = ArrayList<StepEntity>()
     steps.forEach { step ->
       val stepEntity = StepEntity(
@@ -97,8 +135,7 @@ class GoalService(
       )
       stepEntityList.add(stepEntity)
     }
-    goal.steps = stepEntityList
-    return goalRepository.save(goal)
+    return stepEntityList
   }
 
   @Transactional

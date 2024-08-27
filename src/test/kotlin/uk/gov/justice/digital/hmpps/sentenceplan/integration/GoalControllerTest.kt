@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.sentenceplan.integration
 
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Assertions.fail
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
@@ -347,5 +348,26 @@ class GoalControllerTest : IntegrationTestBase() {
         .returnResult().responseBody
 
     assertThat(goalEntity?.relatedAreasOfNeed).isEmpty()
+  }
+
+  @Test
+  fun `update steps should return list of new entities`() {
+    fail<Nothing>("Not yet implemented")
+    // also check for no orphans in DB
+  }
+
+  @Test
+  fun `update steps should fail for an unknown goal`() {
+    fail<Nothing>("Not yet implemented")
+  }
+
+  @Test
+  fun `update steps should fail for a known goal when one step is incomplete`() {
+    fail<Nothing>("Not yet implemented")
+  }
+
+  @Test
+  fun `update steps should fail for a known goal when list of steps is empty`() {
+    fail<Nothing>("Not yet implemented")
   }
 }

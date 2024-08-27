@@ -10,7 +10,6 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.AreaOfNeedRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
-import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepActorEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepEntity
 import java.util.UUID
 
@@ -94,18 +93,8 @@ class GoalService(
         description = step.description,
         status = step.status,
         goal = goal,
+        actor = step.actor,
       )
-
-      val stepActorEntityList = ArrayList<StepActorEntity>()
-      step.actor.forEach {
-        val stepActorEntity = StepActorEntity(
-          step = stepEntity,
-          actor = it.actor,
-        )
-        stepActorEntityList.add(stepActorEntity)
-      }
-
-      stepEntity.actors = stepActorEntityList
       stepEntityList.add(stepEntity)
     }
     goal.steps = stepEntityList

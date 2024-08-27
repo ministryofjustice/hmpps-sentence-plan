@@ -14,7 +14,6 @@ import uk.gov.justice.digital.hmpps.sentenceplan.config.ErrorResponse
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Goal
 import uk.gov.justice.digital.hmpps.sentenceplan.data.GoalOrder
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Step
-import uk.gov.justice.digital.hmpps.sentenceplan.data.StepActor
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.AreaOfNeedRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntity
@@ -48,13 +47,13 @@ class GoalControllerTest : IntegrationTestBase() {
   private val stepOne = Step(
     description = "Step description",
     status = "incomplete",
-    actor = listOf(StepActor("actor1")),
+    actor = "actor1",
   )
 
   private val stepTwo = Step(
     description = "Step description two",
     status = "complete",
-    actor = listOf(StepActor("actor2")),
+    actor = "actor2",
   )
 
   private val stepList: List<Step> = listOf(stepOne, stepTwo)

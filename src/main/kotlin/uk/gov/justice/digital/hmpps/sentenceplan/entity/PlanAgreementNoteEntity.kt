@@ -3,6 +3,8 @@ package uk.gov.justice.digital.hmpps.sentenceplan.entity
 import com.fasterxml.jackson.annotation.JsonIgnore
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
@@ -12,15 +14,9 @@ import java.time.Instant
 import java.time.format.DateTimeFormatter
 import java.util.UUID
 
-enum class NoteIsSupportNeeded {
-  YES,
-  NO,
-  DONT_KNOW,
-}
-
-@Entity(name = "PlanProgressNote")
-@Table(name = "plan_progress_notes")
-class PlanProgressNoteEntity(
+@Entity(name = "PlanAgreementNote")
+@Table(name = "plan_agreement_notes")
+class PlanAgreementNoteEntity(
   @Id
   @Column(name = "id")
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -30,29 +26,24 @@ class PlanProgressNoteEntity(
   @Column(name = "plan_uuid")
   var planUuid: UUID,
 
-  @Column(name = "note")
-  var note: String,
+  @Column(name = "agreement_status")
+  @Enumerated(EnumType.STRING)
+  var agreementStatus: PlanStatus,
 
-  @Column(name = "is_support_needed")
-  var isSupportNeeded: NoteIsSupportNeeded,
+  @Column(name = "agreement_status_note")
+  var agreementStatusNote: String,
 
-  @Column(name = "is_support_needed_note")
-  var isSupportNeededNote: String,
-
-  @Column(name = "is_involved")
-  var isInvolved: Boolean,
-
-  @Column(name = "is_involved_note")
-  var isInvolvedNote: String,
-
-  @Column(name = "person_name")
-  var personName: String,
+  @Column(name = "optional_note")
+  var optionalNote: String,
 
   @Column(name = "practitioner_name")
   var practitionerName: String,
+
+  @Column(name = "person_name")
+  var personName: String,
 
   @Column(name = "creation_date")
   val creationDate: String = DateTimeFormatter.ISO_INSTANT.format(Instant.now()),
 )
 
-interface PlanProgressNotesRepository : JpaRepository<PlanProgressNoteEntity, Long>
+interface PlanAgreementNoteRepository : JpaRepository<PlanAgreementNoteEntity, Long>

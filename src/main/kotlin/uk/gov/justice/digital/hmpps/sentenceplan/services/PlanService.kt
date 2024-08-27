@@ -4,9 +4,9 @@ import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Agreement
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanAgreementNoteEntity
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanAgreementNoteRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntity
-import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanProgressNoteEntity
-import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanProgressNotesRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanStatus
 import uk.gov.justice.digital.hmpps.sentenceplan.exceptions.ConflictException
@@ -16,7 +16,7 @@ import java.util.UUID
 @Service
 class PlanService(
   private val planRepository: PlanRepository,
-  private val planProgressNotesRepository: PlanProgressNotesRepository,
+  private val planAgreementNoteRepository: PlanAgreementNoteRepository,
 ) {
 
   fun getPlanByUuid(planUuid: UUID): PlanEntity? = planRepository.findByUuid(planUuid)
@@ -52,7 +52,7 @@ class PlanService(
         plan.agreementDate = updatedDate
         plan.updatedDate = updatedDate
         planRepository.save(plan)
-        addPlanProgressNote(planUuid, agreement)
+        addPlanAgreementNote(planUuid, agreement)
       }
       else -> throw ConflictException("Plan $planUuid has already been agreed.")
     }
@@ -60,14 +60,16 @@ class PlanService(
     return plan
   }
 
-  fun addPlanProgressNote(planUuid: UUID, agreement: Agreement) {
-    val entity = PlanProgressNoteEntity(
+  fun addPlanAgreementNote(planUuid: UUID, agreement: Agreement) {
+    val entity = PlanAgreementNoteEntity(
       planUuid = planUuid,
-      title = agreement.title,
-      text = agreement.text,
+      agreementStatus = agreement.agreementStatus,
+      agreementStatusNote = agreement.agreementStatusNote,
+      optionalNote = agreement.optionalNote,
       practitionerName = agreement.practitionerName,
       personName = agreement.personName,
     )
-    planProgressNotesRepository.save(entity)
+
+    planAgreementNoteRepository.save(entity)
   }
 }

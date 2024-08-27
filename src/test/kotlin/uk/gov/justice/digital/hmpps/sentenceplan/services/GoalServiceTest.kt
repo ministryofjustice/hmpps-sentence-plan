@@ -12,7 +12,6 @@ import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Goal
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Step
-import uk.gov.justice.digital.hmpps.sentenceplan.data.StepActor
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.AreaOfNeedEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.AreaOfNeedRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalEntity
@@ -71,21 +70,16 @@ class GoalServiceTest {
 
   private val planEntityWithOneGoal: PlanEntity = PlanEntity(goals = goalSet)
 
-  private val actors = listOf(
-    StepActor("actor 1", 1),
-    StepActor("actor 2", 2),
-  )
-
   private val steps = listOf(
     Step(
       description = "description 1",
       status = "status 1",
-      actor = actors,
+      actor = "actor 1",
     ),
     Step(
       description = "description 2",
       status = "status 2",
-      actor = actors,
+      actor = "actor 2",
     ),
   )
 
@@ -196,9 +190,7 @@ class GoalServiceTest {
       assertThat(stepsList.first().status).isEqualTo("status 1")
       assertThat(stepsList.first().goal?.uuid).isEqualTo(goalUuid)
       assertThat(stepsList.first().description).isEqualTo("description 1")
-      assertThat(stepsList.first().actors.size).isEqualTo(2)
-      assertThat(stepsList.first().actors.first().actor).isEqualTo("actor 1")
-      assertThat(stepsList.first().actors.last().actor).isEqualTo("actor 2")
+      assertThat(stepsList.first().actor).isEqualTo("actor 1")
 
       assertThat(stepsList.last().status).isEqualTo("status 2")
       assertThat(stepsList.last().goal?.uuid).isEqualTo(goalUuid)

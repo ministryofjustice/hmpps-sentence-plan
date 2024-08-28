@@ -274,7 +274,7 @@ class GoalServiceTest {
     fun `update steps with an empty list should throw an exception`() {
       every { goalRepository.findByUuid(any()) } returns goalEntityNoSteps
 
-      val exception = assertThrows<Exception> {
+      val exception = assertThrows<IllegalArgumentException> {
         goalService.addStepsToGoal(UUID.randomUUID(), emptyList(), true)
       }
 
@@ -285,7 +285,7 @@ class GoalServiceTest {
     fun `update steps where a step is incomplete should throw an exception`() {
       every { goalRepository.findByUuid(any()) } returns goalEntityNoSteps
 
-      val exception = assertThrows<Exception> {
+      val exception = assertThrows<IllegalArgumentException> {
         goalService.addStepsToGoal(UUID.randomUUID(), incompleteSteps, true)
       }
 

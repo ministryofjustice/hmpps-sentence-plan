@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepEntity
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepRepository
 import java.util.UUID
 
 @Service
@@ -18,6 +19,7 @@ class GoalService(
   private val goalRepository: GoalRepository,
   private val areaOfNeedRepository: AreaOfNeedRepository,
   private val planRepository: PlanRepository,
+  private val stepRepository: StepRepository,
 ) {
 
   fun getGoalByUuid(goalUuid: UUID): GoalEntity? = goalRepository.findByUuid(goalUuid)
@@ -87,8 +89,8 @@ class GoalService(
     val goal: GoalEntity = goalRepository.findByUuid(goalUuid)
       ?: throw Exception("This Goal is not found: $goalUuid")
 
-    if(steps.isNotEmpty()) {
-      checkStepsAreValid(steps)
+    if (steps.isNotEmpty()) {
+      requireStepsAreValid(steps)
     }
 
     goal.steps = createStepEntitiesFromSteps(goal, steps)
@@ -100,22 +102,23 @@ class GoalService(
     var goalEntity: GoalEntity = goalRepository.findByUuid(goalUuid)
       ?: throw Exception("This Goal is not found: $goalUuid")
 
-    if (steps.isEmpty()) {
-      throw IllegalArgumentException("At least one Step must be provided")
-    }
+    require(steps.isNotEmpty()) { "At least one Step must be provided" }
 
-    checkStepsAreValid(steps)
+    requireStepsAreValid(steps)
+
+    stepRepository.deleteAll(goalEntity.steps)
 
     goalEntity.steps = createStepEntitiesFromSteps(goalEntity, steps)
+
     goalEntity = goalRepository.save(goalEntity)
     return goalEntity.steps
   }
 
-  private fun checkStepsAreValid(steps: List<Step>) {
+  private fun requireStepsAreValid(steps: List<Step>) {
     steps.forEach(
       { step ->
-        if (step.description.isEmpty() || step.actor.isEmpty() || step.status.isEmpty()) {
-          throw IllegalArgumentException("All Steps must contain all the required information")
+        require(step.description.isNotEmpty() && step.actor.isNotEmpty() && step.status.isNotEmpty()) {
+          "All Steps must contain all the required information"
         }
       },
     )

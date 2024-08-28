@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepEntity
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepRepository
 import java.util.UUID
 
 @ExtendWith(MockKExtension::class)
@@ -27,7 +28,8 @@ class GoalServiceTest {
   private val goalRepository: GoalRepository = mockk()
   private val areaOfNeedRepository: AreaOfNeedRepository = mockk()
   private val planRepository: PlanRepository = mockk()
-  private val goalService = GoalService(goalRepository, areaOfNeedRepository, planRepository)
+  private val stepRepository: StepRepository = mockk()
+  private val goalService = GoalService(goalRepository, areaOfNeedRepository, planRepository, stepRepository)
   private val goalUuid = UUID.fromString("ef74ee4b-5a0b-481b-860f-19187260f2e7")
 
   private val goal: Goal = Goal(
@@ -326,8 +328,9 @@ class GoalServiceTest {
           description = "Initial step description",
           status = "Initial status",
           actor = "Initial actor",
-          goal = goalEntityWithOneStep
-        ))
+          goal = goalEntityWithOneStep,
+        ),
+      )
 
       every { goalRepository.findByUuid(goalUuid) } returns goalEntityNoSteps
       every { goalRepository.save(capture(goalSlot)) } answers { goalSlot.captured }

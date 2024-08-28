@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.sentenceplan.integration
 
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Assertions.fail
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
@@ -242,16 +241,15 @@ class GoalControllerTest : IntegrationTestBase() {
       .expectBody<ErrorResponse>()
   }
 
-  // TODO check this test
   @Test
-  fun `create goal steps with no steps should return CREATED`() {
+  fun `create goal steps with no steps should return 500`() {
     webTestClient.post().uri("/goals/${TEST_DATA_GOAL_UUID}/steps")
       .header("Content-Type", "application/json")
       .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
       .bodyValue(emptyList<StepEntity>())
       .exchange()
-      .expectStatus().isCreated
-      .expectBodyList<StepEntity>().hasSize(0)
+      .expectStatus().is5xxServerError
+      .expectBody<ErrorResponse>()
   }
 
   @Test
@@ -369,7 +367,7 @@ class GoalControllerTest : IntegrationTestBase() {
     fun `update steps for goal with no steps should return list of new entities`() {
       val goalWithNoStepsUuid = "b9c66782-1dd0-4be5-910a-001e01313420"
 
-      val steps: List<StepEntity> = webTestClient.put().uri("/goals/$goalWithNoStepsUuid/steps")
+      val steps: List<StepEntity>? = webTestClient.put().uri("/goals/$goalWithNoStepsUuid/steps")
         .header("Content-Type", "application/json")
         .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
         .bodyValue(stepList)
@@ -378,8 +376,8 @@ class GoalControllerTest : IntegrationTestBase() {
         .expectBody<List<StepEntity>>()
         .returnResult().responseBody
 
-      assertThat(steps.size).isEqualTo(2)
-      assertThat(steps[0].actor).isEqualTo("actor1")
+      assertThat(steps?.size).isEqualTo(2)
+      assertThat(steps!![0].actor).isEqualTo("actor1")
       assertThat(steps[1].actor).isEqualTo("actor2")
     }
 
@@ -387,7 +385,7 @@ class GoalControllerTest : IntegrationTestBase() {
     fun `update steps for goal with existing step should return list of new entities`() {
       val goalWithOneStepUuid = "8b889730-ade8-4c3c-8e06-91a78b3ff3b2"
 
-      val steps: List<StepEntity> = webTestClient.put().uri("/goals/$goalWithOneStepUuid/steps")
+      val steps: List<StepEntity>? = webTestClient.put().uri("/goals/$goalWithOneStepUuid/steps")
         .header("Content-Type", "application/json")
         .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
         .bodyValue(stepList)
@@ -396,12 +394,12 @@ class GoalControllerTest : IntegrationTestBase() {
         .expectBody<List<StepEntity>>()
         .returnResult().responseBody
 
-      assertThat(steps.size).isEqualTo(2)
-      assertThat(steps[0].actor).isEqualTo("actor1")
+      assertThat(steps?.size).isEqualTo(2)
+      assertThat(steps!![0].actor).isEqualTo("actor1")
       assertThat(steps[1].actor).isEqualTo("actor2")
 
       // refetch goal to make sure there are no surprise steps still attached
-      val goal: GoalEntity = webTestClient.get().uri("/goals/$goalWithOneStepUuid")
+      val goal: GoalEntity? = webTestClient.get().uri("/goals/$goalWithOneStepUuid")
         .header("Content-Type", "application/json")
         .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
         .exchange()
@@ -409,8 +407,8 @@ class GoalControllerTest : IntegrationTestBase() {
         .expectBody<GoalEntity>()
         .returnResult().responseBody
 
-      assertThat(goal.steps.size).isEqualTo(2)
-      assertThat(goal.steps[0].actor).isEqualTo("actor1")
+      assertThat(goal?.steps?.size).isEqualTo(2)
+      assertThat(goal?.steps!![0].actor).isEqualTo("actor1")
       assertThat(goal.steps[1].actor).isEqualTo("actor2")
 
       // now make sure the original Step no longer exists
@@ -426,17 +424,49 @@ class GoalControllerTest : IntegrationTestBase() {
 
     @Test
     fun `update steps should fail for an unknown goal`() {
-      fail<Nothing>("Not yet implemented")
+      val goalUuid = UUID.randomUUID()
+
+      webTestClient.put().uri("/goals/$goalUuid/steps")
+        .header("Content-Type", "application/json")
+        .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .bodyValue(stepList)
+        .exchange()
+        .expectStatus().is5xxServerError
+        .expectBody<ErrorResponse>()
     }
 
     @Test
     fun `update steps should fail for a known goal when one step is incomplete`() {
-      fail<Nothing>("Not yet implemented")
+      val goalWithNoStepsUuid = "b9c66782-1dd0-4be5-910a-001e01313420"
+
+      val incompleteStep = Step(
+        description = "Step description",
+        status = "incomplete",
+        actor = "",
+      )
+
+      val listWithIncompleteStep: List<Step> = stepList + incompleteStep
+
+      webTestClient.put().uri("/goals/$goalWithNoStepsUuid/steps")
+        .header("Content-Type", "application/json")
+        .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .bodyValue(listWithIncompleteStep)
+        .exchange()
+        .expectStatus().is5xxServerError
+        .expectBody<ErrorResponse>()
     }
 
     @Test
     fun `update steps should fail for a known goal when list of steps is empty`() {
-      fail<Nothing>("Not yet implemented")
+      val goalWithNoStepsUuid = "b9c66782-1dd0-4be5-910a-001e01313420"
+
+      webTestClient.put().uri("/goals/$goalWithNoStepsUuid/steps")
+        .header("Content-Type", "application/json")
+        .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .bodyValue(emptyList<Step>())
+        .exchange()
+        .expectStatus().is5xxServerError
+        .expectBody<ErrorResponse>()
     }
   }
 }

@@ -58,7 +58,7 @@ class GoalController(private val service: GoalService) {
     @PathVariable goalUuid: UUID,
     @RequestBody steps: List<Step>,
   ): List<StepEntity> {
-    return service.createNewSteps(goalUuid, steps)
+    return service.addStepsToGoal(goalUuid, steps)
   }
 
   @GetMapping("/{goalUuid}/steps")
@@ -71,12 +71,12 @@ class GoalController(private val service: GoalService) {
   }
 
   @PutMapping("/{goalUuid}/steps")
+  @ResponseStatus(HttpStatus.OK)
   fun updateStep(
     @PathVariable goalUuid: UUID,
     @RequestBody steps: List<Step>,
-  ): List<StepEntity> {
-    // TODO yikes change how errors are handled: https://github.com/ministryofjustice/hmpps-sentence-plan/compare/main...goalcontroller-consistency
-    return service.updateSteps(goalUuid, steps) ?: throw NoResourceFoundException(HttpMethod.PUT, "No goal found for $goalUuid")
+  ): List<StepEntity>? {
+    return service.addStepsToGoal(goalUuid, steps, true)
   }
 
   @PostMapping("/order")

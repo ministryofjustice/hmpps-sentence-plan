@@ -85,33 +85,22 @@ class GoalService(
   }
 
   @Transactional
-  fun createNewSteps(goalUuid: UUID, steps: List<Step>): List<StepEntity> {
+  fun addStepsToGoal(goalUuid: UUID, steps: List<Step>, replaceExistingSteps: Boolean = false): List<StepEntity> {
     val goal: GoalEntity = goalRepository.findByUuid(goalUuid)
-      ?: throw Exception("This Goal is not found: $goalUuid")
-
-    if (steps.isNotEmpty()) {
-      requireStepsAreValid(steps)
-    }
-
-    goal.steps = createStepEntitiesFromSteps(goal, steps)
-    return goalRepository.save(goal).steps
-  }
-
-  @Transactional
-  fun updateSteps(goalUuid: UUID, steps: List<Step>): List<StepEntity>? {
-    var goalEntity: GoalEntity = goalRepository.findByUuid(goalUuid)
       ?: throw Exception("This Goal is not found: $goalUuid")
 
     require(steps.isNotEmpty()) { "At least one Step must be provided" }
 
     requireStepsAreValid(steps)
 
-    stepRepository.deleteAll(goalEntity.steps)
+    if (replaceExistingSteps) {
+      stepRepository.deleteAll(goal.steps)
+    }
 
-    goalEntity.steps = createStepEntitiesFromSteps(goalEntity, steps)
+    goal.steps = createStepEntitiesFromSteps(goal, steps)
 
-    goalEntity = goalRepository.save(goalEntity)
-    return goalEntity.steps
+    val savedGoal: GoalEntity = goalRepository.save(goal)
+    return savedGoal.steps
   }
 
   private fun requireStepsAreValid(steps: List<Step>) {

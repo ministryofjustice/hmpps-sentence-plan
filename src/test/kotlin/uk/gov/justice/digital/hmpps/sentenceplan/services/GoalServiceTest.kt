@@ -188,7 +188,7 @@ class GoalServiceTest {
       every { goalRepository.findByUuid(goalUuid) } returns goalEntityNoSteps
       every { goalRepository.save(capture(goalSlot)) } answers { goalSlot.captured }
 
-      val stepsList = goalService.createNewSteps(goalUuid, steps)
+      val stepsList = goalService.addStepsToGoal(goalUuid, steps)
 
       assertThat(stepsList.size).isEqualTo(2)
 
@@ -264,7 +264,7 @@ class GoalServiceTest {
       every { goalRepository.findByUuid(any()) } returns null
 
       val exception = assertThrows<Exception> {
-        goalService.updateSteps(UUID.randomUUID(), steps)
+        goalService.addStepsToGoal(UUID.randomUUID(), steps, true)
       }
 
       assertThat(exception.message).startsWith("This Goal is not found:")
@@ -275,7 +275,7 @@ class GoalServiceTest {
       every { goalRepository.findByUuid(any()) } returns goalEntityNoSteps
 
       val exception = assertThrows<Exception> {
-        goalService.updateSteps(UUID.randomUUID(), emptyList())
+        goalService.addStepsToGoal(UUID.randomUUID(), emptyList(), true)
       }
 
       assertThat(exception.message).startsWith("At least one Step must be provided")
@@ -286,7 +286,7 @@ class GoalServiceTest {
       every { goalRepository.findByUuid(any()) } returns goalEntityNoSteps
 
       val exception = assertThrows<Exception> {
-        goalService.updateSteps(UUID.randomUUID(), incompleteSteps)
+        goalService.addStepsToGoal(UUID.randomUUID(), incompleteSteps, true)
       }
 
       assertThat(exception.message).startsWith("All Steps must contain all the required information")
@@ -297,8 +297,9 @@ class GoalServiceTest {
       val goalSlot = slot<GoalEntity>()
       every { goalRepository.findByUuid(goalUuid) } returns goalEntityNoSteps
       every { goalRepository.save(capture(goalSlot)) } answers { goalSlot.captured }
+      every { stepRepository.deleteAll(any()) } returns Unit
 
-      val stepsList = goalService.updateSteps(goalUuid, steps)!!
+      val stepsList = goalService.addStepsToGoal(goalUuid, steps, true)
 
       assertThat(stepsList.size).isEqualTo(2)
 
@@ -334,8 +335,9 @@ class GoalServiceTest {
 
       every { goalRepository.findByUuid(goalUuid) } returns goalEntityNoSteps
       every { goalRepository.save(capture(goalSlot)) } answers { goalSlot.captured }
+      every { stepRepository.deleteAll(any()) } returns Unit
 
-      val stepsList = goalService.updateSteps(goalUuid, steps)!!
+      val stepsList = goalService.addStepsToGoal(goalUuid, steps, true)
 
       assertThat(stepsList.size).isEqualTo(2)
 

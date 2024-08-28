@@ -317,7 +317,7 @@ class GoalServiceTest {
     fun `update steps for goal with an existing step only returns the new steps`() {
       val goalSlot = slot<GoalEntity>()
 
-      val goalEntityWithOneStep: GoalEntity = GoalEntity(
+      val goalEntityWithOneStep = GoalEntity(
         title = "Mock Goal",
         areaOfNeed = mockk<AreaOfNeedEntity>(),
         plan = null,

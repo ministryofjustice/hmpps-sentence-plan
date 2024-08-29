@@ -3,6 +3,8 @@ package uk.gov.justice.digital.hmpps.sentenceplan.entity
 import com.fasterxml.jackson.annotation.JsonIgnore
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
 import jakarta.persistence.FetchType
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
@@ -30,7 +32,8 @@ class StepEntity(
   val description: String,
 
   @Column(name = "status")
-  val status: String,
+  @Enumerated(EnumType.STRING)
+  val status: StepStatus = StepStatus.NOT_STARTED,
 
   @Column(name = "creation_date", columnDefinition = "TIMESTAMP")
   val creationDate: LocalDateTime = LocalDateTime.now(),
@@ -44,6 +47,13 @@ class StepEntity(
   @Column(name = "actor", nullable = false)
   var actor: String,
 )
+
+enum class StepStatus {
+  NOT_STARTED,
+  IN_PROGRESS,
+  CANNOT_BE_DONE_YET,
+  COMPLETED,
+}
 
 interface StepRepository : JpaRepository<StepEntity, Long> {
   fun findByUuid(uuid: UUID): StepEntity?

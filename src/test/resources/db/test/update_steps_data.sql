@@ -36,7 +36,7 @@ INSERT INTO step (uuid, goal_id, description, status, creation_date, actor)
 SELECT 'fcf019dc-e9aa-44dd-ad9b-1f2f8ba06c99',
        goal.id,
        'Step for update steps tests',
-       'Status name',
+       'NOT_STARTED',
        '2024-06-27 16:26:38.000000',
        'actor'
 FROM goal

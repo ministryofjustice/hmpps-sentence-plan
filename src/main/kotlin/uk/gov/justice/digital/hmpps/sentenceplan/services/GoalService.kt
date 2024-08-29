@@ -12,7 +12,6 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepRepository
-import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepStatus
 import java.util.UUID
 
 @Service

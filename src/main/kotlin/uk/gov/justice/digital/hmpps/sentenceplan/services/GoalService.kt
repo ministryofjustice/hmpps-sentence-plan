@@ -104,8 +104,8 @@ class GoalService(
   }
 
   private fun requireStepsAreValid(steps: List<Step>) {
-    steps.forEach { step ->
-      require(step.description.isNotEmpty() && step.actor.isNotEmpty()) {
+    steps.forEach {
+      require(it.description.isNotEmpty() && it.actor.isNotEmpty()) {
         "All Steps must contain all the required information"
       }
     }
@@ -114,18 +114,15 @@ class GoalService(
   private fun createStepEntitiesFromSteps(
     goal: GoalEntity,
     steps: List<Step>,
-  ): ArrayList<StepEntity> {
-    val stepEntityList = ArrayList<StepEntity>()
-    steps.forEach { step ->
-      val stepEntity = StepEntity(
-        description = step.description,
-        status = step.status,
+  ): List<StepEntity> {
+    return steps.map {
+      StepEntity(
+        description = it.description,
+        status = it.status,
         goal = goal,
-        actor = step.actor,
+        actor = it.actor,
       )
-      stepEntityList.add(stepEntity)
     }
-    return stepEntityList
   }
 
   @Transactional

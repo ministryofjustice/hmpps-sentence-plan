@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepEntity
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepRepository
 import java.util.UUID
 
 @Service
@@ -18,6 +19,7 @@ class GoalService(
   private val goalRepository: GoalRepository,
   private val areaOfNeedRepository: AreaOfNeedRepository,
   private val planRepository: PlanRepository,
+  private val stepRepository: StepRepository,
 ) {
 
   fun getGoalByUuid(goalUuid: UUID): GoalEntity? = goalRepository.findByUuid(goalUuid)
@@ -83,10 +85,38 @@ class GoalService(
   }
 
   @Transactional
-  fun createNewSteps(goalUuid: UUID, steps: List<Step>): GoalEntity {
+  fun addStepsToGoal(goalUuid: UUID, steps: List<Step>, replaceExistingSteps: Boolean = false): List<StepEntity> {
     val goal: GoalEntity = goalRepository.findByUuid(goalUuid)
       ?: throw Exception("This Goal is not found: $goalUuid")
 
+    require(steps.isNotEmpty()) { "At least one Step must be provided" }
+
+    requireStepsAreValid(steps)
+
+    if (replaceExistingSteps) {
+      stepRepository.deleteAll(goal.steps)
+    }
+
+    goal.steps = createStepEntitiesFromSteps(goal, steps)
+
+    val savedGoal: GoalEntity = goalRepository.save(goal)
+    return savedGoal.steps
+  }
+
+  private fun requireStepsAreValid(steps: List<Step>) {
+    steps.forEach(
+      { step ->
+        require(step.description.isNotEmpty() && step.actor.isNotEmpty() && step.status.isNotEmpty()) {
+          "All Steps must contain all the required information"
+        }
+      },
+    )
+  }
+
+  private fun createStepEntitiesFromSteps(
+    goal: GoalEntity,
+    steps: List<Step>,
+  ): ArrayList<StepEntity> {
     val stepEntityList = ArrayList<StepEntity>()
     steps.forEach { step ->
       val stepEntity = StepEntity(
@@ -97,8 +127,7 @@ class GoalService(
       )
       stepEntityList.add(stepEntity)
     }
-    goal.steps = stepEntityList
-    return goalRepository.save(goal)
+    return stepEntityList
   }
 
   @Transactional

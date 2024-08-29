@@ -8,6 +8,9 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient
+import org.springframework.test.context.jdbc.Sql
+import org.springframework.test.context.jdbc.Sql.ExecutionPhase.AFTER_TEST_CLASS
+import org.springframework.test.context.jdbc.Sql.ExecutionPhase.BEFORE_TEST_CLASS
 import org.springframework.test.web.reactive.server.expectBody
 import org.springframework.test.web.reactive.server.expectBodyList
 import uk.gov.justice.digital.hmpps.sentenceplan.config.ErrorResponse
@@ -239,14 +242,14 @@ class GoalControllerTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `create goal steps with no steps should return CREATED`() {
+  fun `create goal steps with no steps should return 500`() {
     webTestClient.post().uri("/goals/${TEST_DATA_GOAL_UUID}/steps")
       .header("Content-Type", "application/json")
       .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
       .bodyValue(emptyList<StepEntity>())
       .exchange()
-      .expectStatus().isCreated
-      .expectBodyList<StepEntity>().hasSize(0)
+      .expectStatus().is5xxServerError
+      .expectBody<ErrorResponse>()
   }
 
   @Test
@@ -286,66 +289,184 @@ class GoalControllerTest : IntegrationTestBase() {
       .expectStatus().isNotFound
   }
 
-  @Test
-  fun `should update goal title`() {
-    val goalRequestBody = Goal(
-      title = "New Goal Title",
-      areaOfNeed = "Accommodation",
-    )
+  @Nested
+  @DisplayName("updateGoal")
+  inner class UpdateGoalTests {
 
-    val goalUuid = "070442be-f855-4eb6-af7e-72f68aab54be"
+    @Test
+    fun `should update goal title`() {
+      val goalRequestBody = Goal(
+        title = "New Goal Title",
+        areaOfNeed = "Accommodation",
+      )
 
-    val goalEntity: GoalEntity? =
-      webTestClient.patch().uri("/goals/$goalUuid").header("Content-Type", "application/json")
-        .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
-        .bodyValue(goalRequestBody)
-        .exchange()
-        .expectStatus().isOk
-        .expectBody<GoalEntity>()
-        .returnResult().responseBody
+      val goalUuid = "070442be-f855-4eb6-af7e-72f68aab54be"
 
-    assertThat(goalEntity?.title).isEqualTo("New Goal Title")
+      val goalEntity: GoalEntity? =
+        webTestClient.patch().uri("/goals/$goalUuid").header("Content-Type", "application/json")
+          .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+          .bodyValue(goalRequestBody)
+          .exchange()
+          .expectStatus().isOk
+          .expectBody<GoalEntity>()
+          .returnResult().responseBody
+
+      assertThat(goalEntity?.title).isEqualTo("New Goal Title")
+    }
+
+    @Test
+    fun `should update goal without changing area of need`() {
+      val goalRequestBody = Goal(
+        title = "Non Changing Area of Need Goal",
+        areaOfNeed = "Finance",
+      )
+
+      val goalUuid = "070442be-f855-4eb6-af7e-72f68aab54be"
+
+      val goalEntity: GoalEntity? =
+        webTestClient.patch().uri("/goals/$goalUuid").header("Content-Type", "application/json")
+          .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+          .bodyValue(goalRequestBody)
+          .exchange()
+          .expectStatus().isOk
+          .expectBody<GoalEntity>()
+          .returnResult().responseBody
+
+      assertThat(goalEntity?.areaOfNeed?.name).isEqualTo("Accommodation")
+    }
+
+    @Test
+    fun `should update goal and delete related areas of need`() {
+      val goalRequestBody = Goal(
+        title = "Non Changing Area of Need Goal",
+        areaOfNeed = "Finance",
+      )
+
+      val goalUuid = "070442be-f855-4eb6-af7e-72f68aab54be"
+
+      val goalEntity: GoalEntity? =
+        webTestClient.patch().uri("/goals/$goalUuid").header("Content-Type", "application/json")
+          .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+          .bodyValue(goalRequestBody)
+          .exchange()
+          .expectStatus().isOk
+          .expectBody<GoalEntity>()
+          .returnResult().responseBody
+
+      assertThat(goalEntity?.relatedAreasOfNeed).isEmpty()
+    }
   }
 
-  @Test
-  fun `should update goal without changing area of need`() {
-    val goalRequestBody = Goal(
-      title = "Non Changing Area of Need Goal",
-      areaOfNeed = "Finance",
-    )
+  @Nested
+  @DisplayName("updateSteps")
+  @Sql(scripts = [ "/db/test/update_steps_data.sql" ], executionPhase = BEFORE_TEST_CLASS)
+  @Sql(scripts = [ "/db/test/update_steps_cleanup.sql" ], executionPhase = AFTER_TEST_CLASS)
+  inner class UpdateStepsTests {
 
-    val goalUuid = "070442be-f855-4eb6-af7e-72f68aab54be"
+    @Test
+    fun `update steps for goal with no steps should return list of new entities`() {
+      val goalWithNoStepsUuid = "b9c66782-1dd0-4be5-910a-001e01313420"
 
-    val goalEntity: GoalEntity? =
-      webTestClient.patch().uri("/goals/$goalUuid").header("Content-Type", "application/json")
+      val steps: List<StepEntity>? = webTestClient.put().uri("/goals/$goalWithNoStepsUuid/steps")
+        .header("Content-Type", "application/json")
         .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
-        .bodyValue(goalRequestBody)
+        .bodyValue(stepList)
+        .exchange()
+        .expectStatus().isOk
+        .expectBody<List<StepEntity>>()
+        .returnResult().responseBody
+
+      assertThat(steps?.size).isEqualTo(2)
+      assertThat(steps!![0].actor).isEqualTo("actor1")
+      assertThat(steps[1].actor).isEqualTo("actor2")
+    }
+
+    @Test
+    fun `update steps for goal with existing step should return list of new entities`() {
+      val goalWithOneStepUuid = "8b889730-ade8-4c3c-8e06-91a78b3ff3b2"
+
+      val steps: List<StepEntity>? = webTestClient.put().uri("/goals/$goalWithOneStepUuid/steps")
+        .header("Content-Type", "application/json")
+        .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .bodyValue(stepList)
+        .exchange()
+        .expectStatus().isOk
+        .expectBody<List<StepEntity>>()
+        .returnResult().responseBody
+
+      assertThat(steps?.size).isEqualTo(2)
+      assertThat(steps!![0].actor).isEqualTo("actor1")
+      assertThat(steps[1].actor).isEqualTo("actor2")
+
+      // refetch goal to make sure there are no surprise steps still attached
+      val goal: GoalEntity? = webTestClient.get().uri("/goals/$goalWithOneStepUuid")
+        .header("Content-Type", "application/json")
+        .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
         .exchange()
         .expectStatus().isOk
         .expectBody<GoalEntity>()
         .returnResult().responseBody
 
-    assertThat(goalEntity?.areaOfNeed?.name).isEqualTo("Accommodation")
-  }
+      assertThat(goal?.steps?.size).isEqualTo(2)
+      assertThat(goal?.steps!![0].actor).isEqualTo("actor1")
+      assertThat(goal.steps[1].actor).isEqualTo("actor2")
 
-  @Test
-  fun `should update goal and delete related areas of need`() {
-    val goalRequestBody = Goal(
-      title = "Non Changing Area of Need Goal",
-      areaOfNeed = "Finance",
-    )
+      // now make sure the original Step no longer exists
+      val originalGoalStepUuid = "fcf019dc-e9aa-44dd-ad9b-1f2f8ba06c99"
 
-    val goalUuid = "070442be-f855-4eb6-af7e-72f68aab54be"
-
-    val goalEntity: GoalEntity? =
-      webTestClient.patch().uri("/goals/$goalUuid").header("Content-Type", "application/json")
+      webTestClient.get().uri("/steps/$originalGoalStepUuid")
+        .header("Content-Type", "application/json")
         .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
-        .bodyValue(goalRequestBody)
         .exchange()
-        .expectStatus().isOk
-        .expectBody<GoalEntity>()
-        .returnResult().responseBody
+        .expectStatus().isNotFound
+        .expectBody<ErrorResponse>()
+    }
 
-    assertThat(goalEntity?.relatedAreasOfNeed).isEmpty()
+    @Test
+    fun `update steps should fail for an unknown goal`() {
+      val goalUuid = UUID.randomUUID()
+
+      webTestClient.put().uri("/goals/$goalUuid/steps")
+        .header("Content-Type", "application/json")
+        .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .bodyValue(stepList)
+        .exchange()
+        .expectStatus().is5xxServerError
+        .expectBody<ErrorResponse>()
+    }
+
+    @Test
+    fun `update steps should fail for a known goal when one step is incomplete`() {
+      val goalWithNoStepsUuid = "b9c66782-1dd0-4be5-910a-001e01313420"
+
+      val incompleteStep = Step(
+        description = "Step description",
+        status = "incomplete",
+        actor = "",
+      )
+
+      val listWithIncompleteStep: List<Step> = stepList + incompleteStep
+
+      webTestClient.put().uri("/goals/$goalWithNoStepsUuid/steps")
+        .header("Content-Type", "application/json")
+        .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .bodyValue(listWithIncompleteStep)
+        .exchange()
+        .expectStatus().is5xxServerError
+        .expectBody<ErrorResponse>()
+    }
+
+    @Test
+    fun `update steps should fail for a known goal when list of steps is empty`() {
+      val goalWithNoStepsUuid = "b9c66782-1dd0-4be5-910a-001e01313420"
+
+      webTestClient.put().uri("/goals/$goalWithNoStepsUuid/steps")
+        .header("Content-Type", "application/json")
+        .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .bodyValue(emptyList<Step>())
+        .exchange()
+        .expectStatus().is5xxServerError
+        .expectBody<ErrorResponse>()
+    }
   }
 }

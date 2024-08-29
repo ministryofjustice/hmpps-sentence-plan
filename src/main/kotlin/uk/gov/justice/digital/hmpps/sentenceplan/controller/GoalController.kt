@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.ResponseStatus
@@ -57,8 +58,7 @@ class GoalController(private val service: GoalService) {
     @PathVariable goalUuid: UUID,
     @RequestBody steps: List<Step>,
   ): List<StepEntity> {
-    val goal: GoalEntity = service.createNewSteps(goalUuid, steps)
-    return goal.steps
+    return service.addStepsToGoal(goalUuid, steps)
   }
 
   @GetMapping("/{goalUuid}/steps")
@@ -68,6 +68,15 @@ class GoalController(private val service: GoalService) {
   ): List<StepEntity> {
     val goal: GoalEntity = service.getGoalByUuid(goalUuid) ?: throw NoResourceFoundException(HttpMethod.GET, "No goal found for $goalUuid")
     return goal.steps
+  }
+
+  @PutMapping("/{goalUuid}/steps")
+  @ResponseStatus(HttpStatus.OK)
+  fun updateStep(
+    @PathVariable goalUuid: UUID,
+    @RequestBody steps: List<Step>,
+  ): List<StepEntity>? {
+    return service.addStepsToGoal(goalUuid, steps, true)
   }
 
   @PostMapping("/order")

@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepEntity
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepStatus
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -49,13 +50,13 @@ class GoalControllerTest : IntegrationTestBase() {
 
   private val stepOne = Step(
     description = "Step description",
-    status = "incomplete",
+    status = StepStatus.IN_PROGRESS,
     actor = "actor1",
   )
 
   private val stepTwo = Step(
     description = "Step description two",
-    status = "complete",
+    status = StepStatus.COMPLETED,
     actor = "actor2",
   )
 
@@ -441,7 +442,7 @@ class GoalControllerTest : IntegrationTestBase() {
 
       val incompleteStep = Step(
         description = "Step description",
-        status = "incomplete",
+        status = StepStatus.NOT_STARTED,
         actor = "",
       )
 

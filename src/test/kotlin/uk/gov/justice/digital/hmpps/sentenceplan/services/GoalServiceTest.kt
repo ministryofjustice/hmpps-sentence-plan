@@ -20,6 +20,7 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepRepository
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepStatus
 import java.util.UUID
 
 @ExtendWith(MockKExtension::class)
@@ -76,17 +77,17 @@ class GoalServiceTest {
   private val steps = listOf(
     Step(
       description = "description 1",
-      status = "status 1",
+      status = StepStatus.CANNOT_BE_DONE_YET,
       actor = "actor 1",
     ),
     Step(
       description = "description 2",
-      status = "status 2",
+      status = StepStatus.NOT_STARTED,
       actor = "actor 2",
     ),
   )
 
-  private val incompleteSteps = steps + Step("This is a step with no actor", status = "status", actor = "")
+  private val incompleteSteps = steps + Step("This is a step with no actor", status = StepStatus.NOT_STARTED, actor = "")
 
   @Nested
   @DisplayName("createNewGoal")
@@ -192,12 +193,12 @@ class GoalServiceTest {
 
       assertThat(stepsList.size).isEqualTo(2)
 
-      assertThat(stepsList.first().status).isEqualTo("status 1")
+      assertThat(stepsList.first().status).isEqualTo(StepStatus.CANNOT_BE_DONE_YET)
       assertThat(stepsList.first().goal?.uuid).isEqualTo(goalUuid)
       assertThat(stepsList.first().description).isEqualTo("description 1")
       assertThat(stepsList.first().actor).isEqualTo("actor 1")
 
-      assertThat(stepsList.last().status).isEqualTo("status 2")
+      assertThat(stepsList.last().status).isEqualTo(StepStatus.NOT_STARTED)
       assertThat(stepsList.last().goal?.uuid).isEqualTo(goalUuid)
       assertThat(stepsList.last().description).isEqualTo("description 2")
     }
@@ -303,12 +304,12 @@ class GoalServiceTest {
 
       assertThat(stepsList.size).isEqualTo(2)
 
-      assertThat(stepsList.first().status).isEqualTo("status 1")
+      assertThat(stepsList.first().status).isEqualTo(StepStatus.CANNOT_BE_DONE_YET)
       assertThat(stepsList.first().goal?.uuid).isEqualTo(goalUuid)
       assertThat(stepsList.first().description).isEqualTo("description 1")
       assertThat(stepsList.first().actor).isEqualTo("actor 1")
 
-      assertThat(stepsList.last().status).isEqualTo("status 2")
+      assertThat(stepsList.last().status).isEqualTo(StepStatus.NOT_STARTED)
       assertThat(stepsList.last().goal?.uuid).isEqualTo(goalUuid)
       assertThat(stepsList.last().description).isEqualTo("description 2")
     }
@@ -327,7 +328,7 @@ class GoalServiceTest {
       goalEntityWithOneStep.steps = listOf(
         StepEntity(
           description = "Initial step description",
-          status = "Initial status",
+          status = StepStatus.NOT_STARTED,
           actor = "Initial actor",
           goal = goalEntityWithOneStep,
         ),
@@ -341,12 +342,12 @@ class GoalServiceTest {
 
       assertThat(stepsList.size).isEqualTo(2)
 
-      assertThat(stepsList.first().status).isEqualTo("status 1")
+      assertThat(stepsList.first().status).isEqualTo(StepStatus.CANNOT_BE_DONE_YET)
       assertThat(stepsList.first().goal?.uuid).isEqualTo(goalUuid)
       assertThat(stepsList.first().description).isEqualTo("description 1")
       assertThat(stepsList.first().actor).isEqualTo("actor 1")
 
-      assertThat(stepsList.last().status).isEqualTo("status 2")
+      assertThat(stepsList.last().status).isEqualTo(StepStatus.NOT_STARTED)
       assertThat(stepsList.last().goal?.uuid).isEqualTo(goalUuid)
       assertThat(stepsList.last().description).isEqualTo("description 2")
     }

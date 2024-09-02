@@ -321,7 +321,7 @@ class GoalControllerTest : IntegrationTestBase() {
       val goalRequestBody = Goal(
         title = "New Goal Title",
         areaOfNeed = "Accommodation",
-        targetDate = "2024-06-25 10:00:00"
+        targetDate = "2024-06-25 10:00:00",
       )
 
       val goalUuid = "070442be-f855-4eb6-af7e-72f68aab54be"
@@ -344,7 +344,7 @@ class GoalControllerTest : IntegrationTestBase() {
       val goalRequestBody = Goal(
         title = "New Goal Title",
         areaOfNeed = "Accommodation",
-        targetDate = null
+        targetDate = null,
       )
 
       val goalUuid = "070442be-f855-4eb6-af7e-72f68aab54be"

@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.sentenceplan.data.Agreement
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Goal
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.AreaOfNeedEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalEntity
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalStatus
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanStatus
 import java.time.LocalDateTime
@@ -168,6 +169,22 @@ class PlanControllerTest : IntegrationTestBase() {
           .returnResult().responseBody
 
       assertThat(goalEntity?.targetDate).isNull()
+      assertThat(goalEntity?.goalStatus).isEqualTo(GoalStatus.FUTURE)
+    }
+
+    @Test
+    fun `should create goal with a target date`() {
+      val goalEntity: GoalEntity? =
+        webTestClient.post().uri("/plans/$mutablePlanUuid/goals").header("Content-Type", "application/json")
+          .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+          .bodyValue(goalRequestBody)
+          .exchange()
+          .expectStatus().isCreated
+          .expectBody<GoalEntity>()
+          .returnResult().responseBody
+
+      assertThat(goalEntity?.targetDate).isNotNull()
+      assertThat(goalEntity?.goalStatus).isEqualTo(GoalStatus.ACTIVE)
     }
 
     @Test

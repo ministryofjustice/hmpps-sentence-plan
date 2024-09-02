@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore
 import jakarta.persistence.CascadeType
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
 import jakarta.persistence.FetchType
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
@@ -48,6 +50,13 @@ class GoalEntity(
   @Column(name = "creation_date")
   val creationDate: String = DateTimeFormatter.ISO_INSTANT.format(Instant.now()),
 
+  @Column(name = "goal_status")
+  @Enumerated(EnumType.STRING)
+  var goalStatus: GoalStatus? = null,
+
+  @Column(name = "status_date")
+  var statusDate: String? = null,
+
   @Column(name = "goal_order")
   val goalOrder: Int = 0,
 
@@ -70,6 +79,13 @@ class GoalEntity(
   )
   var relatedAreasOfNeed: MutableList<AreaOfNeedEntity>? = mutableListOf(),
 )
+
+enum class GoalStatus {
+  ACTIVE,
+  FUTURE,
+  COMPLETED,
+  REMOVED,
+}
 
 interface GoalRepository : JpaRepository<GoalEntity, Long> {
   fun findByUuid(uuid: UUID): GoalEntity?

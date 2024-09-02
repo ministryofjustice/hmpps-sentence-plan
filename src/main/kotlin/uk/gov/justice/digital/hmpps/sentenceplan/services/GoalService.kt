@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.AreaOfNeedEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.AreaOfNeedRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalRepository
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalStatus
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepRepository
@@ -49,6 +50,8 @@ class GoalService(
       title = goal.title,
       areaOfNeed = areaOfNeedEntity,
       targetDate = goal.targetDate,
+      goalStatus = if (goal.targetDate != null) GoalStatus.ACTIVE else GoalStatus.FUTURE,
+      statusDate = null,
       plan = planEntity,
       relatedAreasOfNeed = relatedAreasOfNeedEntity.toMutableList(),
       goalOrder = highestGoalOrder + 1,
@@ -61,12 +64,13 @@ class GoalService(
   @Transactional
   fun updateGoalByUuid(goalUuid: UUID, goal: Goal): GoalEntity {
     val goalEntity = goalRepository.findByUuid(goalUuid)
-      ?: throw Exception("This Goal is not found: $goalUuid")
+      ?: throw Exception("This Goal was not found: $goalUuid")
 
     goalEntity.title = goal.title
     goalEntity.targetDate = goal.targetDate
+    goalEntity.goalStatus = if (goal.targetDate != null) GoalStatus.ACTIVE else GoalStatus.FUTURE
 
-    var relatedAreasOfNeedEntity: List<AreaOfNeedEntity> = emptyList()
+    var relatedAreasOfNeedEntity = emptyList<AreaOfNeedEntity>()
 
     if (goal.relatedAreasOfNeed.isNotEmpty()) {
       relatedAreasOfNeedEntity = areaOfNeedRepository.findAllByNames(goal.relatedAreasOfNeed)
@@ -87,7 +91,7 @@ class GoalService(
   @Transactional
   fun addStepsToGoal(goalUuid: UUID, steps: List<Step>, replaceExistingSteps: Boolean = false): List<StepEntity> {
     val goal: GoalEntity = goalRepository.findByUuid(goalUuid)
-      ?: throw Exception("This Goal is not found: $goalUuid")
+      ?: throw Exception("This Goal was not found: $goalUuid")
 
     require(steps.isNotEmpty()) { "At least one Step must be provided" }
 

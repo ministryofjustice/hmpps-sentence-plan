@@ -169,7 +169,7 @@ class PlanControllerTest : IntegrationTestBase() {
           .returnResult().responseBody
 
       assertThat(goalEntity?.targetDate).isNull()
-      assertThat(goalEntity?.goalStatus).isEqualTo(GoalStatus.FUTURE)
+      assertThat(goalEntity?.status).isEqualTo(GoalStatus.FUTURE)
     }
 
     @Test
@@ -184,7 +184,7 @@ class PlanControllerTest : IntegrationTestBase() {
           .returnResult().responseBody
 
       assertThat(goalEntity?.targetDate).isNotNull()
-      assertThat(goalEntity?.goalStatus).isEqualTo(GoalStatus.ACTIVE)
+      assertThat(goalEntity?.status).isEqualTo(GoalStatus.ACTIVE)
     }
 
     @Test

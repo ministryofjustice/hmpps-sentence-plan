@@ -52,7 +52,7 @@ class GoalEntity(
 
   @Column(name = "goal_status")
   @Enumerated(EnumType.STRING)
-  var goalStatus: GoalStatus? = null,
+  var status: GoalStatus? = null,
 
   @Column(name = "status_date")
   var statusDate: String? = null,

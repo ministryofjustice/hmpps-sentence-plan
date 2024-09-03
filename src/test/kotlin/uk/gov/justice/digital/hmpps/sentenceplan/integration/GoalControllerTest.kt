@@ -336,11 +336,11 @@ class GoalControllerTest : IntegrationTestBase() {
           .returnResult().responseBody
 
       assertThat(goalEntity?.title).isEqualTo("New Goal Title")
-      assertThat(goalEntity?.goalStatus).isEqualTo(GoalStatus.ACTIVE)
+      assertThat(goalEntity?.status).isEqualTo(GoalStatus.ACTIVE)
     }
 
     @Test
-    fun `should update make a future goal`() {
+    fun `should update and make a future goal`() {
       val goalRequestBody = Goal(
         title = "New Goal Title",
         areaOfNeed = "Accommodation",
@@ -359,7 +359,7 @@ class GoalControllerTest : IntegrationTestBase() {
           .returnResult().responseBody
 
       assertThat(goalEntity?.title).isEqualTo("New Goal Title")
-      assertThat(goalEntity?.goalStatus).isEqualTo(GoalStatus.FUTURE)
+      assertThat(goalEntity?.status).isEqualTo(GoalStatus.FUTURE)
     }
 
     @Test

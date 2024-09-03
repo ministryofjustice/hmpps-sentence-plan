@@ -50,7 +50,7 @@ class GoalService(
       title = goal.title,
       areaOfNeed = areaOfNeedEntity,
       targetDate = goal.targetDate,
-      goalStatus = if (goal.targetDate != null) GoalStatus.ACTIVE else GoalStatus.FUTURE,
+      status = if (goal.targetDate != null) GoalStatus.ACTIVE else GoalStatus.FUTURE,
       statusDate = null,
       plan = planEntity,
       relatedAreasOfNeed = relatedAreasOfNeedEntity.toMutableList(),
@@ -68,7 +68,7 @@ class GoalService(
 
     goalEntity.title = goal.title
     goalEntity.targetDate = goal.targetDate
-    goalEntity.goalStatus = if (goal.targetDate != null) GoalStatus.ACTIVE else GoalStatus.FUTURE
+    goalEntity.status = if (goal.targetDate != null) GoalStatus.ACTIVE else GoalStatus.FUTURE
 
     var relatedAreasOfNeedEntity = emptyList<AreaOfNeedEntity>()
 

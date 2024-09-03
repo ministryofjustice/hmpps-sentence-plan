@@ -216,7 +216,7 @@ class GoalServiceTest {
         goalService.updateGoalByUuid(UUID.randomUUID(), goal)
       }
 
-      assertThat(exception.message).startsWith("This Goal is not found:")
+      assertThat(exception.message).startsWith("This Goal was not found:")
     }
 
     @Test
@@ -268,7 +268,7 @@ class GoalServiceTest {
         goalService.addStepsToGoal(UUID.randomUUID(), steps, true)
       }
 
-      assertThat(exception.message).startsWith("This Goal is not found:")
+      assertThat(exception.message).startsWith("This Goal was not found:")
     }
 
     @Test

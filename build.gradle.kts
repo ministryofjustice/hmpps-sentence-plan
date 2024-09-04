@@ -3,7 +3,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.springframework.boot.gradle.tasks.run.BootRun
 
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "6.0.3"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "6.0.4"
   kotlin("plugin.spring") version "2.0.20"
   kotlin("plugin.jpa") version "2.0.20"
   kotlin("jvm") version "2.0.20"
@@ -31,8 +31,8 @@ dependencies {
   }
   implementation("org.springframework.cloud:spring-cloud-dependencies:2023.0.3")
   implementation("com.vladmihalcea:hibernate-types-60:2.21.1")
-  implementation("org.flywaydb:flyway-core:10.17.1")
-  runtimeOnly("org.flywaydb:flyway-database-postgresql:10.17.1")
+  implementation("org.flywaydb:flyway-core:10.17.3")
+  runtimeOnly("org.flywaydb:flyway-database-postgresql:10.17.3")
   runtimeOnly("org.postgresql:postgresql")
 
   // Test dependencies

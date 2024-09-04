@@ -1,11 +1,13 @@
 package uk.gov.justice.digital.hmpps.sentenceplan.stub
 
-import com.google.gson.Gson
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import uk.gov.justice.digital.hmpps.sentenceplan.data.CaseDetail
 import uk.gov.justice.digital.hmpps.sentenceplan.data.RiskAssessment
 
 class StubData {
   companion object {
+    val objectMapper = jacksonObjectMapper()
     fun getRiskScoreInfoByCrn(crn: String): RiskAssessment {
       val jsonString = """{
              "riskToSelf":{
@@ -73,9 +75,7 @@ class StubData {
              "assessedOn":"2024-04-11T14:29:00"
           }
       """
-      var gson = Gson()
-      var riskAssessment = gson.fromJson(jsonString, RiskAssessment::class.java)
-      return riskAssessment
+      return objectMapper.readValue<RiskAssessment>(jsonString)
     }
 
     fun getCaseDetail(crn: String): CaseDetail {
@@ -100,9 +100,7 @@ class StubData {
        },
        "inCustody": false
       }"""
-      var gson = Gson()
-      var caseDetail = gson.fromJson(jsonString, CaseDetail::class.java)
-      return caseDetail
+      return objectMapper.readValue<CaseDetail>(jsonString)
     }
   }
 }

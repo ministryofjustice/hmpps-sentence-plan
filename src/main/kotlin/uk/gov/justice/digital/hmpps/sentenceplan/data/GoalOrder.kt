@@ -1,9 +1,8 @@
 package uk.gov.justice.digital.hmpps.sentenceplan.data
 
-import com.google.gson.annotations.SerializedName
 import java.util.UUID
 
 data class GoalOrder(
-  @SerializedName("goalUuid") var goalUuid: UUID,
-  @SerializedName("goalOrder") var goalOrder: Int? = null,
+  var goalUuid: UUID,
+  var goalOrder: Int? = null,
 )

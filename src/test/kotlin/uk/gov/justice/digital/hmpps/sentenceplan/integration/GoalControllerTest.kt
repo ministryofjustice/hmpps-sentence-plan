@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.sentenceplan.data.GoalOrder
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Step
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.AreaOfNeedRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalEntity
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalStatus
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepEntity
@@ -313,6 +314,52 @@ class GoalControllerTest : IntegrationTestBase() {
           .returnResult().responseBody
 
       assertThat(goalEntity?.title).isEqualTo("New Goal Title")
+    }
+
+    @Test
+    fun `should update and make a current goal`() {
+      val goalRequestBody = Goal(
+        title = "New Goal Title",
+        areaOfNeed = "Accommodation",
+        targetDate = "2024-06-25 10:00:00",
+      )
+
+      val goalUuid = "070442be-f855-4eb6-af7e-72f68aab54be"
+
+      val goalEntity: GoalEntity? =
+        webTestClient.patch().uri("/goals/$goalUuid").header("Content-Type", "application/json")
+          .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+          .bodyValue(goalRequestBody)
+          .exchange()
+          .expectStatus().isOk
+          .expectBody<GoalEntity>()
+          .returnResult().responseBody
+
+      assertThat(goalEntity?.title).isEqualTo("New Goal Title")
+      assertThat(goalEntity?.status).isEqualTo(GoalStatus.ACTIVE)
+    }
+
+    @Test
+    fun `should update and make a future goal`() {
+      val goalRequestBody = Goal(
+        title = "New Goal Title",
+        areaOfNeed = "Accommodation",
+        targetDate = null,
+      )
+
+      val goalUuid = "070442be-f855-4eb6-af7e-72f68aab54be"
+
+      val goalEntity: GoalEntity? =
+        webTestClient.patch().uri("/goals/$goalUuid").header("Content-Type", "application/json")
+          .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+          .bodyValue(goalRequestBody)
+          .exchange()
+          .expectStatus().isOk
+          .expectBody<GoalEntity>()
+          .returnResult().responseBody
+
+      assertThat(goalEntity?.title).isEqualTo("New Goal Title")
+      assertThat(goalEntity?.status).isEqualTo(GoalStatus.FUTURE)
     }
 
     @Test

@@ -5,7 +5,7 @@ feature_branch: &feature_branch
 version: 2.1
 
 orbs:
-  hmpps: ministryofjustice/hmpps@8
+  hmpps: ministryofjustice/hmpps@10
 
 _db_docker_config: &db_docker_config
   - image: cimg/openjdk:21.0

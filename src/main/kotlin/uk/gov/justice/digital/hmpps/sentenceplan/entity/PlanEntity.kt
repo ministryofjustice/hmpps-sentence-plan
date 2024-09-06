@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.sentenceplan.entity
 import com.fasterxml.jackson.annotation.JsonIgnore
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
+import jakarta.persistence.EntityListeners
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
 import jakarta.persistence.GeneratedValue
@@ -12,6 +13,8 @@ import jakarta.persistence.OneToMany
 import jakarta.persistence.OrderBy
 import jakarta.persistence.Table
 import jakarta.transaction.Transactional
+import org.springframework.data.annotation.LastModifiedBy
+import org.springframework.data.jpa.domain.support.AuditingEntityListener
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
@@ -21,6 +24,7 @@ import java.util.UUID
 
 @Entity(name = "Plan")
 @Table(name = "plan")
+@EntityListeners(AuditingEntityListener::class)
 class PlanEntity(
   @Id
   @Column(name = "id")
@@ -45,9 +49,9 @@ class PlanEntity(
   @Column(name = "updated_date")
   var updatedDate: Instant = Instant.now(),
 
-// TODO
-//  @Column(name = "updated_by")
-//  var updatedBy: String,
+  @LastModifiedBy
+  @Column(name = "updated_by")
+  var updatedBy: String = "",
 
   @Column(name = "agreement_date")
   var agreementDate: Instant? = null,

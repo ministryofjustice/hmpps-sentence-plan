@@ -45,6 +45,10 @@ class PlanEntity(
   @Column(name = "updated_date")
   var updatedDate: Instant = Instant.now(),
 
+// TODO
+//  @Column(name = "updated_by")
+//  var updatedBy: String,
+
   @Column(name = "agreement_date")
   var agreementDate: Instant? = null,
 

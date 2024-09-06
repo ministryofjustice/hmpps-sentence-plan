@@ -11,6 +11,7 @@ class AuthAwareTokenConverter() : Converter<Jwt, AbstractAuthenticationToken> {
   override fun convert(jwt: Jwt): AbstractAuthenticationToken {
     val clientId: Any? = jwt.claims["client_id"]
     val clientOnly: Boolean = jwt.subject.equals(clientId)
+    val username = jwt.claims["user_name"]
     return AuthAwareAuthenticationToken(jwt, clientOnly, extractAuthorities(jwt))
   }
 

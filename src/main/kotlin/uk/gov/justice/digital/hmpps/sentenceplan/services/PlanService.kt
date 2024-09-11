@@ -1,8 +1,6 @@
 package uk.gov.justice.digital.hmpps.sentenceplan.services
 
 import org.springframework.http.HttpStatus
-import org.springframework.security.core.Authentication
-import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Agreement
@@ -32,9 +30,6 @@ class PlanService(
     }
 
     val plan = PlanEntity()
-    val authentication: Authentication = SecurityContextHolder.getContext().authentication
-    val currentPrincipalName: String = authentication.getName()
-
     planRepository.save(plan)
     planRepository.createOasysAssessmentPk(oasysAssessmentPk, plan.uuid)
     return plan
@@ -55,7 +50,6 @@ class PlanService(
         val updatedDate = Instant.now()
         plan.agreementStatus = agreement.agreementStatus
         plan.agreementDate = updatedDate
-        plan.updatedDate = updatedDate
         planRepository.save(plan)
         addPlanAgreementNote(planUuid, agreement)
       }

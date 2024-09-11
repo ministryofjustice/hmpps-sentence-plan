@@ -6,9 +6,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
 import org.springframework.security.web.SecurityFilterChain
 
-
 @Configuration
-//@EnableJpaAuditing
 @EnableWebSecurity
 class SecurityConfiguration {
 
@@ -34,9 +32,4 @@ class SecurityConfiguration {
 
     return http.build()
   }
-
-//  @Bean
-//  fun auditorProvider(): AuditorAware<String> {
-//    return AuditorAwareImpl()
-//  }
 }

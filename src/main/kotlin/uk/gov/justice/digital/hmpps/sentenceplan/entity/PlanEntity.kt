@@ -13,7 +13,9 @@ import jakarta.persistence.OneToMany
 import jakarta.persistence.OrderBy
 import jakarta.persistence.Table
 import jakarta.transaction.Transactional
+import org.springframework.data.annotation.CreatedDate
 import org.springframework.data.annotation.LastModifiedBy
+import org.springframework.data.annotation.LastModifiedDate
 import org.springframework.data.jpa.domain.support.AuditingEntityListener
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
@@ -43,15 +45,21 @@ class PlanEntity(
   @Enumerated(EnumType.STRING)
   var agreementStatus: PlanStatus = PlanStatus.DRAFT,
 
+  @CreatedDate
   @Column(name = "creation_date")
   val creationDate: Instant = Instant.now(),
 
+  @LastModifiedDate
   @Column(name = "updated_date")
   var updatedDate: Instant = Instant.now(),
 
   @LastModifiedBy
-  @Column(name = "updated_by")
-  var updatedBy: String = "",
+  @Column(name = "updated_by_name")
+  var updatedByName: String? = null,
+
+  @Column(name = "updated_by_id")
+  @JsonIgnore
+  var updatedById: String = "",
 
   @Column(name = "agreement_date")
   var agreementDate: Instant? = null,

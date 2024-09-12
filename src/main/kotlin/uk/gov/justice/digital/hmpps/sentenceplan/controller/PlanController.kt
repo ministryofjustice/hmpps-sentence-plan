@@ -18,7 +18,6 @@ import uk.gov.justice.digital.hmpps.sentenceplan.services.GoalService
 import uk.gov.justice.digital.hmpps.sentenceplan.services.PlanService
 import java.util.UUID
 
-
 @RestController
 @RequestMapping("/plans")
 class PlanController(

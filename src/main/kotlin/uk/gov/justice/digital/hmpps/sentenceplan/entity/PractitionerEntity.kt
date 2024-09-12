@@ -33,5 +33,5 @@ interface PractitionerRepository : JpaRepository<PractitionerEntity, Long> {
   fun findByUsername(username: String): PractitionerEntity
 
   @Transactional(propagation = Propagation.REQUIRES_NEW)
-  override fun <S : PractitionerEntity?> save(entity: S): S
+  override fun <S : PractitionerEntity> save(entity: S): S
 }

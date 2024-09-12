@@ -9,6 +9,8 @@ import jakarta.persistence.Enumerated
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
+import jakarta.persistence.JoinColumn
+import jakarta.persistence.ManyToOne
 import jakarta.persistence.OneToMany
 import jakarta.persistence.OrderBy
 import jakarta.persistence.Table
@@ -54,12 +56,9 @@ class PlanEntity(
   var updatedDate: Instant = Instant.now(),
 
   @LastModifiedBy
-  @Column(name = "updated_by_name")
-  var updatedByName: String? = null,
-
-  @Column(name = "updated_by_id")
-  @JsonIgnore
-  var updatedById: String = "",
+  @ManyToOne
+  @JoinColumn(name = "updated_by_id", nullable = false)
+  var updatedBy: PractitionerEntity? = null,
 
   @Column(name = "agreement_date")
   var agreementDate: Instant? = null,

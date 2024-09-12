@@ -26,6 +26,8 @@ class OasysControllerTest : IntegrationTestBase() {
   lateinit var planRepository: PlanRepository
   lateinit var planUuid: UUID
 
+  var authUuid = UUID.randomUUID().toString()
+
   @BeforeAll
   fun setup() {
     val plan: PlanEntity = planRepository.findAll().first()
@@ -47,7 +49,7 @@ class OasysControllerTest : IntegrationTestBase() {
     @Test
     fun `should return created`() {
       webTestClient.post().uri("/oasys/plans").header("Content-Type", "application/json")
-        .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .headers(setAuthorisation(user = authUuid + "|Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
         .bodyValue(planRequestBody)
         .exchange()
         .expectStatus().isCreated
@@ -59,7 +61,7 @@ class OasysControllerTest : IntegrationTestBase() {
       planRepository.createOasysAssessmentPk(planRequestBody.oasysAssessmentPk, plan.uuid)
 
       val response = webTestClient.post().uri("/oasys/plans").header("Content-Type", "application/json")
-        .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .headers(setAuthorisation(user = authUuid + "|Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
         .bodyValue(planRequestBody)
         .exchange()
         .expectStatus().isEqualTo(HttpStatus.CONFLICT)
@@ -78,7 +80,7 @@ class OasysControllerTest : IntegrationTestBase() {
     fun `get plan by existing Oasys Assessment PK should return OK`() {
       val oasysAssessmentPk = "1"
       webTestClient.get().uri("/oasys/plans/$oasysAssessmentPk")
-        .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .headers(setAuthorisation(user = authUuid + "|Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
         .exchange()
         .expectStatus().isOk
     }
@@ -87,7 +89,7 @@ class OasysControllerTest : IntegrationTestBase() {
     fun `get plan by non-existent Oasys Assessment PK should return not found`() {
       val oasysAssessmentPk = "2"
       webTestClient.get().uri("/oasys/plans/$oasysAssessmentPk")
-        .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .headers(setAuthorisation(user = authUuid + "|Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
         .exchange()
         .expectStatus().isNotFound
     }

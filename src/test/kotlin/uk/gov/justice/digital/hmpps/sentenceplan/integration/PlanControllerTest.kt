@@ -24,6 +24,7 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalStatus
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanStatus
+import java.time.Instant
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -32,6 +33,7 @@ import java.util.UUID
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class PlanControllerTest : IntegrationTestBase() {
 
+  var authUuid = UUID.randomUUID().toString()
   val staticPlanUuid = "556db5c8-a1eb-4064-986b-0740d6a83c33"
   val mutablePlanUuid = "4fe411e3-820d-4198-8400-ab4268208641"
 
@@ -41,7 +43,7 @@ class PlanControllerTest : IntegrationTestBase() {
     @Test
     fun `should create a new plan`() {
       webTestClient.post().uri("/plans").header("Content-Type", "application/json")
-        .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .headers(setAuthorisation(user = authUuid + "|Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
         .exchange()
         .expectStatus().isCreated
         .expectBody<PlanEntity>()
@@ -54,7 +56,7 @@ class PlanControllerTest : IntegrationTestBase() {
     @Test
     fun `should return OK when getting plan by existing UUID `() {
       val planEntity: PlanEntity? = webTestClient.get().uri("/plans/$staticPlanUuid")
-        .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .headers(setAuthorisation(user = authUuid + "|Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
         .exchange()
         .expectStatus().isOk
         .expectBody<PlanEntity>()
@@ -67,7 +69,7 @@ class PlanControllerTest : IntegrationTestBase() {
     fun `should return not found when getting plan by non-existent UUID`() {
       val randomPlanUuid = UUID.randomUUID()
       webTestClient.get().uri("/plans/$randomPlanUuid")
-        .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .headers(setAuthorisation(user = authUuid + "|Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
         .exchange()
         .expectStatus().isNotFound
     }
@@ -81,7 +83,7 @@ class PlanControllerTest : IntegrationTestBase() {
       val goalsMap: Map<String, List<GoalEntity>>? =
         webTestClient.get().uri("/plans/$staticPlanUuid/goals")
           .header("Content-Type", "application/json")
-          .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+          .headers(setAuthorisation(user = authUuid + "|Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
           .exchange()
           .expectStatus().isOk
           .expectBody<Map<String, List<GoalEntity>>>()
@@ -98,7 +100,7 @@ class PlanControllerTest : IntegrationTestBase() {
       val randomPlanUuid = UUID.randomUUID()
       webTestClient.get().uri("/plans/$randomPlanUuid/goals")
         .header("Content-Type", "application/json")
-        .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .headers(setAuthorisation(user = authUuid + "|Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
         .exchange()
         .expectStatus().isNotFound
         .expectBodyList<ErrorResponse>()
@@ -127,7 +129,7 @@ class PlanControllerTest : IntegrationTestBase() {
         targetDate = LocalDateTime.now().toString(),
       )
       webTestClient.post().uri("/plans/$staticPlanUuid/goals").header("Content-Type", "application/json")
-        .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .headers(setAuthorisation(user = authUuid + "|Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
         .bodyValue(goalRequestBodyBadAreaOfNeed)
         .exchange()
         .expectStatus().is5xxServerError
@@ -143,7 +145,7 @@ class PlanControllerTest : IntegrationTestBase() {
       )
       val randomUuid = UUID.randomUUID()
       val errorResponse: ErrorResponse? = webTestClient.post().uri("/plans/$randomUuid/goals").header("Content-Type", "application/json")
-        .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .headers(setAuthorisation(user = authUuid + "|Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
         .bodyValue(goalRequestBodyBadAreaOfNeed)
         .exchange()
         .expectStatus().is5xxServerError
@@ -161,7 +163,7 @@ class PlanControllerTest : IntegrationTestBase() {
       )
       val goalEntity: GoalEntity? =
         webTestClient.post().uri("/plans/$mutablePlanUuid/goals").header("Content-Type", "application/json")
-          .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+          .headers(setAuthorisation(user = authUuid + "|Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
           .bodyValue(goalRequestBodyWithNoTargetDate)
           .exchange()
           .expectStatus().isCreated
@@ -176,7 +178,7 @@ class PlanControllerTest : IntegrationTestBase() {
     fun `should create goal with a target date`() {
       val goalEntity: GoalEntity? =
         webTestClient.post().uri("/plans/$mutablePlanUuid/goals").header("Content-Type", "application/json")
-          .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+          .headers(setAuthorisation(user = authUuid + "|Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
           .bodyValue(goalRequestBody)
           .exchange()
           .expectStatus().isCreated
@@ -196,7 +198,7 @@ class PlanControllerTest : IntegrationTestBase() {
       )
       val goalEntity: GoalEntity? =
         webTestClient.post().uri("/plans/$mutablePlanUuid/goals").header("Content-Type", "application/json")
-          .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+          .headers(setAuthorisation(user = authUuid + "|Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
           .bodyValue(goalRequestBodyUppercaseAreaOfNeed)
           .exchange()
           .expectStatus().isCreated
@@ -210,7 +212,7 @@ class PlanControllerTest : IntegrationTestBase() {
     fun `should return created when creating goal with no related areas of need`() {
       val goalEntity: GoalEntity? =
         webTestClient.post().uri("/plans/$mutablePlanUuid/goals").header("Content-Type", "application/json")
-          .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+          .headers(setAuthorisation(user = authUuid + "|Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
           .bodyValue(goalRequestBody)
           .exchange()
           .expectStatus().isCreated
@@ -232,7 +234,7 @@ class PlanControllerTest : IntegrationTestBase() {
       )
       val goalEntity: GoalEntity? =
         webTestClient.post().uri("/plans/$mutablePlanUuid/goals").header("Content-Type", "application/json")
-          .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+          .headers(setAuthorisation(user = authUuid + "|Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
           .bodyValue(goalRequestBody)
           .exchange()
           .expectStatus().isCreated
@@ -248,7 +250,7 @@ class PlanControllerTest : IntegrationTestBase() {
     fun `should return server error when creating goal with invalid Plan UUID`() {
       val randomPlanUuid = UUID.randomUUID()
       webTestClient.post().uri("/plans/$randomPlanUuid/goals").header("Content-Type", "application/json")
-        .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .headers(setAuthorisation(user = authUuid + "|Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
         .bodyValue(goalRequestBody)
         .exchange()
         .expectStatus().is5xxServerError
@@ -273,9 +275,11 @@ class PlanControllerTest : IntegrationTestBase() {
     @Test
     @Order(1)
     fun `agree plan`() {
+      val testStartTime = Instant.now()
+
       val planEntity: PlanEntity? = webTestClient.post().uri("/plans/650df4b2-f74d-4ab7-85a1-143d2a7d8cfe/agree")
         .header("Content-Type", "application/json")
-        .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .headers(setAuthorisation(user = authUuid + "|Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
         .bodyValue(agreePlanBody)
         .exchange()
         .expectStatus().isAccepted
@@ -283,7 +287,8 @@ class PlanControllerTest : IntegrationTestBase() {
         .returnResult().responseBody
 
       assertThat(planEntity?.agreementDate).isNotNull()
-      assertThat(planEntity?.agreementDate).isEqualTo(planEntity?.updatedDate)
+      assertThat(planEntity?.updatedDate).isAfter(testStartTime)
+      assertThat(planEntity?.agreementDate).isBefore(planEntity?.updatedDate)
     }
 
     @Test
@@ -291,7 +296,7 @@ class PlanControllerTest : IntegrationTestBase() {
     fun `plan has already been agreed`() {
       webTestClient.post().uri("/plans/650df4b2-f74d-4ab7-85a1-143d2a7d8cfe/agree")
         .header("Content-Type", "application/json")
-        .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .headers(setAuthorisation(user = authUuid + "|Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
         .bodyValue(agreePlanBody)
         .exchange()
         .expectStatus().isEqualTo(HttpStatus.CONFLICT)
@@ -301,7 +306,7 @@ class PlanControllerTest : IntegrationTestBase() {
     fun `plan not found`() {
       webTestClient.post().uri("/plans/e0b7707e-a9da-4574-b97f-ea84e402baf6/agree")
         .header("Content-Type", "application/json")
-        .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .headers(setAuthorisation(user = authUuid + "|Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
         .bodyValue(agreePlanBody)
         .exchange()
         .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)

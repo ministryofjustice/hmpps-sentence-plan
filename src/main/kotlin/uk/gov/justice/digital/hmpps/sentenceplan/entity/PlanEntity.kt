@@ -57,7 +57,7 @@ class PlanEntity(
 
   @LastModifiedBy
   @ManyToOne
-  @JoinColumn(name = "updated_by_id", nullable = false)
+  @JoinColumn(name = "updated_by_id")
   var updatedBy: PractitionerEntity? = null,
 
   @Column(name = "agreement_date")

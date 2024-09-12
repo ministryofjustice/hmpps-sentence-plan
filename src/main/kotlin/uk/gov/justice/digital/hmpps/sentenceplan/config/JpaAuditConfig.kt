@@ -18,22 +18,27 @@ class JpaAuditConfig(private val practitionerRepository: PractitionerRepository)
   @Bean
   fun auditorProvider(): AuditorAware<PractitionerEntity> {
     return AuditorAware<PractitionerEntity> {
+      var practitionerEntity: PractitionerEntity
+
       if (SecurityContextHolder.getContext().authentication != null) {
-        val username = SecurityContextHolder.getContext().authentication.name
-        var practitionerEntity: PractitionerEntity
+        val usernameParts = SecurityContextHolder.getContext().authentication.name.split('|')
+        val uuid = usernameParts[0]
+        val username = usernameParts[1]
+
         try {
           practitionerEntity = practitionerRepository.findByUsername(username)
         } catch (e: Exception) {
           val practitioner = PractitionerEntity(
-            uuid = "identifier",
-            username = SecurityContextHolder.getContext().authentication.name,
+            uuid = uuid,
+            username = username,
           )
           practitionerEntity = practitionerRepository.save(practitioner)
         }
-        Optional.of(practitionerEntity)
       } else {
-        Optional.of(practitionerRepository.findByUsername(usernameAuthenticationNotAvailable))
+        practitionerEntity = practitionerRepository.findByUsername(usernameAuthenticationNotAvailable)
       }
+
+      Optional.of(practitionerEntity)
     }
   }
 }

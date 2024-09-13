@@ -1,5 +1,5 @@
 do $$ begin
-    create type goal_status_type as enum ('ACTIVE', 'FUTURE', 'COMPLETED', 'REMOVED');
+    create type goal_status_type as enum ('ACTIVE', 'FUTURE', 'ACHIEVED', 'REMOVED');
 exception
     when duplicate_object then null;
 end $$;

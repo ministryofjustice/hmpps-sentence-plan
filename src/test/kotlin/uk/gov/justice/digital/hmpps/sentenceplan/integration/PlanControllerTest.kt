@@ -42,11 +42,17 @@ class PlanControllerTest : IntegrationTestBase() {
   inner class CreatePlan {
     @Test
     fun `should create a new plan`() {
-      webTestClient.post().uri("/plans").header("Content-Type", "application/json")
+      val testStartTime = Instant.now()
+
+      val planEntity: PlanEntity? = webTestClient.post().uri("/plans").header("Content-Type", "application/json")
         .headers(setAuthorisation(user = authUuid + "|Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
         .exchange()
         .expectStatus().isCreated
         .expectBody<PlanEntity>()
+        .returnResult().responseBody
+
+      assertThat(planEntity?.updatedBy?.username).isEqualTo("Tom C")
+      assertThat(planEntity?.updatedDate).isAfter(testStartTime)
     }
   }
 
@@ -287,6 +293,7 @@ class PlanControllerTest : IntegrationTestBase() {
         .returnResult().responseBody
 
       assertThat(planEntity?.agreementDate).isNotNull()
+      assertThat(planEntity?.updatedBy?.username).isEqualTo("Tom C")
       assertThat(planEntity?.updatedDate).isAfter(testStartTime)
       assertThat(planEntity?.agreementDate).isBefore(planEntity?.updatedDate)
     }

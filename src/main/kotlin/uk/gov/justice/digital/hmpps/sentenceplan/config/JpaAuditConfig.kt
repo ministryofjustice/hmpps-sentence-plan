@@ -26,7 +26,7 @@ class JpaAuditConfig(private val practitionerRepository: PractitionerRepository)
         val username = usernameParts[1]
 
         try {
-          practitionerEntity = practitionerRepository.findByUsername(username)
+          practitionerEntity = practitionerRepository.findByUuid(uuid)
         } catch (e: Exception) {
           val practitioner = PractitionerEntity(
             uuid = uuid,
@@ -35,7 +35,7 @@ class JpaAuditConfig(private val practitionerRepository: PractitionerRepository)
           practitionerEntity = practitionerRepository.save(practitioner)
         }
       } else {
-        practitionerEntity = practitionerRepository.findByUsername(usernameAuthenticationNotAvailable)
+        practitionerEntity = practitionerRepository.findByUuid(usernameAuthenticationNotAvailable)
       }
 
       Optional.of(practitionerEntity)

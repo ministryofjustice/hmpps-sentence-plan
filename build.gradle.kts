@@ -39,6 +39,7 @@ dependencies {
   testImplementation("com.ninja-squad:springmockk:4.0.2")
   testImplementation("io.jsonwebtoken:jjwt-impl:0.12.6")
   testImplementation("io.jsonwebtoken:jjwt-jackson:0.12.6")
+  testImplementation("org.springframework.security:spring-security-test")
 
   // Dev dependencies
   developmentOnly("org.springframework.boot:spring-boot-devtools")

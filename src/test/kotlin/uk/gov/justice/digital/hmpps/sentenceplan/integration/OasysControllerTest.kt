@@ -10,6 +10,7 @@ import org.junit.jupiter.api.TestInstance
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient
 import org.springframework.http.HttpStatus
+import org.springframework.security.test.context.support.WithMockUser
 import org.springframework.test.web.reactive.server.expectBody
 import uk.gov.justice.digital.hmpps.sentenceplan.config.ErrorResponse
 import uk.gov.justice.digital.hmpps.sentenceplan.data.CreatePlanWithOasysAssesmentPkRequest
@@ -56,6 +57,7 @@ class OasysControllerTest : IntegrationTestBase() {
     }
 
     @Test
+    @WithMockUser(username = "SYSTEM|OASTUB")
     fun `should return conflict when oasys_assessment_PK has existing association`() {
       val plan = planRepository.save(PlanEntity())
       planRepository.createOasysAssessmentPk(planRequestBody.oasysAssessmentPk, plan.uuid)

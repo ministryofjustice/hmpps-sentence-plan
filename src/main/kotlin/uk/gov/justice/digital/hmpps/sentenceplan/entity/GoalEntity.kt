@@ -83,7 +83,7 @@ class GoalEntity(
 enum class GoalStatus {
   ACTIVE,
   FUTURE,
-  COMPLETED,
+  ACHIEVED,
   REMOVED,
 }
 

@@ -5,8 +5,6 @@ create table if not exists practitioner
     username     varchar(255)     NOT NULL
 );
 
-INSERT INTO practitioner (external_id, username) VALUES ('Not set', 'Not set');
-
 ALTER TABLE plan
 ADD COLUMN updated_by_id integer;
 

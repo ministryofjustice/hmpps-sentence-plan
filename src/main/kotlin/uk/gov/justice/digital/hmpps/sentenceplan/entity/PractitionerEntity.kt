@@ -20,8 +20,8 @@ class PractitionerEntity(
   @JsonIgnore
   val id: Long? = null,
 
-  @Column(name = "uuid")
-  val uuid: String,
+  @Column(name = "external_id")
+  val externalId: String,
 
   @Column(name = "username")
   val username: String,
@@ -30,7 +30,7 @@ class PractitionerEntity(
 interface PractitionerRepository : JpaRepository<PractitionerEntity, Long> {
 
   @Transactional(propagation = Propagation.REQUIRES_NEW)
-  fun findByUuid(uuid: String): PractitionerEntity
+  fun findByExternalId(externalId: String): PractitionerEntity
 
   @Transactional(propagation = Propagation.REQUIRES_NEW)
   override fun <S : PractitionerEntity> save(entity: S): S

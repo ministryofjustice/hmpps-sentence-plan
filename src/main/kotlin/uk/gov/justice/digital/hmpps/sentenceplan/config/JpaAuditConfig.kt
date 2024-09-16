@@ -22,20 +22,20 @@ class JpaAuditConfig(private val practitionerRepository: PractitionerRepository)
 
       if (SecurityContextHolder.getContext().authentication != null) {
         val usernameParts = SecurityContextHolder.getContext().authentication.name.split('|')
-        val uuid = usernameParts[0]
+        val externalId = usernameParts[0]
         val username = usernameParts[1]
 
         try {
-          practitionerEntity = practitionerRepository.findByUuid(uuid)
+          practitionerEntity = practitionerRepository.findByExternalId(externalId)
         } catch (e: Exception) {
           val practitioner = PractitionerEntity(
-            uuid = uuid,
+            externalId = externalId,
             username = username,
           )
           practitionerEntity = practitionerRepository.save(practitioner)
         }
       } else {
-        practitionerEntity = practitionerRepository.findByUuid(usernameAuthenticationNotAvailable)
+        practitionerEntity = practitionerRepository.findByExternalId(usernameAuthenticationNotAvailable)
       }
 
       Optional.of(practitionerEntity)

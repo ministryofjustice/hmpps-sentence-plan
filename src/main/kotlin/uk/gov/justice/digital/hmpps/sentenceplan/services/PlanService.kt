@@ -50,7 +50,6 @@ class PlanService(
         val updatedDate = Instant.now()
         plan.agreementStatus = agreement.agreementStatus
         plan.agreementDate = updatedDate
-        plan.updatedDate = updatedDate
         planRepository.save(plan)
         addPlanAgreementNote(planUuid, agreement)
       }

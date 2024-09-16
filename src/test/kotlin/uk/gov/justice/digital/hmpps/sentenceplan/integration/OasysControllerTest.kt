@@ -10,6 +10,7 @@ import org.junit.jupiter.api.TestInstance
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient
 import org.springframework.http.HttpStatus
+import org.springframework.security.test.context.support.WithMockUser
 import org.springframework.test.web.reactive.server.expectBody
 import uk.gov.justice.digital.hmpps.sentenceplan.config.ErrorResponse
 import uk.gov.justice.digital.hmpps.sentenceplan.data.CreatePlanWithOasysAssesmentPkRequest
@@ -25,6 +26,8 @@ class OasysControllerTest : IntegrationTestBase() {
   @Autowired
   lateinit var planRepository: PlanRepository
   lateinit var planUuid: UUID
+
+  var authUuid = UUID.randomUUID().toString()
 
   @BeforeAll
   fun setup() {
@@ -47,19 +50,20 @@ class OasysControllerTest : IntegrationTestBase() {
     @Test
     fun `should return created`() {
       webTestClient.post().uri("/oasys/plans").header("Content-Type", "application/json")
-        .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .headers(setAuthorisation(user = authUuid + "|Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
         .bodyValue(planRequestBody)
         .exchange()
         .expectStatus().isCreated
     }
 
     @Test
+    @WithMockUser(username = "SYSTEM|OASTUB")
     fun `should return conflict when oasys_assessment_PK has existing association`() {
       val plan = planRepository.save(PlanEntity())
       planRepository.createOasysAssessmentPk(planRequestBody.oasysAssessmentPk, plan.uuid)
 
       val response = webTestClient.post().uri("/oasys/plans").header("Content-Type", "application/json")
-        .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .headers(setAuthorisation(user = authUuid + "|Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
         .bodyValue(planRequestBody)
         .exchange()
         .expectStatus().isEqualTo(HttpStatus.CONFLICT)
@@ -78,7 +82,7 @@ class OasysControllerTest : IntegrationTestBase() {
     fun `get plan by existing Oasys Assessment PK should return OK`() {
       val oasysAssessmentPk = "1"
       webTestClient.get().uri("/oasys/plans/$oasysAssessmentPk")
-        .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .headers(setAuthorisation(user = authUuid + "|Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
         .exchange()
         .expectStatus().isOk
     }
@@ -87,7 +91,7 @@ class OasysControllerTest : IntegrationTestBase() {
     fun `get plan by non-existent Oasys Assessment PK should return not found`() {
       val oasysAssessmentPk = "2"
       webTestClient.get().uri("/oasys/plans/$oasysAssessmentPk")
-        .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .headers(setAuthorisation(user = authUuid + "|Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
         .exchange()
         .expectStatus().isNotFound
     }

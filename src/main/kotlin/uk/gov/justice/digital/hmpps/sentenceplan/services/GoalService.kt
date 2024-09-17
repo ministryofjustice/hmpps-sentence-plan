@@ -30,6 +30,8 @@ class GoalService(
     val planEntity = planRepository.findByUuid(planUuid)
       ?: throw Exception("A Plan with this UUID was not found: $planUuid")
 
+    require(goal.areaOfNeed != null && goal.title != null)
+
     val areaOfNeedEntity = areaOfNeedRepository.findByNameIgnoreCase(goal.areaOfNeed)
       ?: throw Exception("An Area of Need with this name was not found: ${goal.areaOfNeed}")
 
@@ -66,9 +68,24 @@ class GoalService(
     val goalEntity = goalRepository.findByUuid(goalUuid)
       ?: throw Exception("This Goal was not found: $goalUuid")
 
-    goalEntity.title = goal.title
-    goalEntity.targetDate = goal.targetDate
-    goalEntity.status = if (goal.targetDate != null) GoalStatus.ACTIVE else GoalStatus.FUTURE
+    if (goal.title != null) {
+      goalEntity.title = goal.title
+    }
+
+    if (goal.targetDate != null) {
+      goalEntity.targetDate = goal.targetDate
+      if (goalEntity.status == GoalStatus.FUTURE) {
+        goalEntity.status = GoalStatus.ACTIVE
+      }
+    }
+
+    if (goal.targetDate == null && goal.status == GoalStatus.FUTURE) {
+      goalEntity.targetDate = null
+    }
+
+    if (goal.status != null) {
+      goalEntity.status = goal.status
+    }
 
     var relatedAreasOfNeedEntity = emptyList<AreaOfNeedEntity>()
 
@@ -118,15 +135,13 @@ class GoalService(
   private fun createStepEntitiesFromSteps(
     goal: GoalEntity,
     steps: List<Step>,
-  ): List<StepEntity> {
-    return steps.map {
-      StepEntity(
-        description = it.description,
-        status = it.status,
-        goal = goal,
-        actor = it.actor,
-      )
-    }
+  ): List<StepEntity> = steps.map {
+    StepEntity(
+      description = it.description,
+      status = it.status,
+      goal = goal,
+      actor = it.actor,
+    )
   }
 
   @Transactional

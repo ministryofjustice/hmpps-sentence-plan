@@ -295,6 +295,8 @@ class GoalControllerTest : IntegrationTestBase() {
 
   @Nested
   @DisplayName("updateGoal")
+  @Sql(scripts = ["/db/test/update_goals_data.sql"], executionPhase = BEFORE_TEST_CLASS)
+  @Sql(scripts = ["/db/test/update_goals_cleanup.sql"], executionPhase = AFTER_TEST_CLASS)
   inner class UpdateGoalTests {
 
     @Test
@@ -342,11 +344,12 @@ class GoalControllerTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `should update and make a future goal`() {
+    fun `should update a future goal`() {
       val goalRequestBody = Goal(
         title = "New Goal Title",
         areaOfNeed = "Accommodation",
         targetDate = null,
+        status = GoalStatus.FUTURE,
       )
 
       val goalUuid = "070442be-f855-4eb6-af7e-72f68aab54be"
@@ -361,6 +364,30 @@ class GoalControllerTest : IntegrationTestBase() {
           .returnResult().responseBody
 
       assertThat(goalEntity?.title).isEqualTo("New Goal Title")
+      assertThat(goalEntity?.targetDate).isNull()
+      assertThat(goalEntity?.status).isEqualTo(GoalStatus.FUTURE)
+    }
+
+    @Test
+    fun `should update an active goal into a future goal`() {
+      val goalRequestBody = Goal(
+        targetDate = null,
+        status = GoalStatus.FUTURE,
+      )
+
+      val goalUuid = "379f986a-c4f8-4c27-bdda-2ccb0aebb6a6"
+
+      val goalEntity: GoalEntity? =
+        webTestClient.patch().uri("/goals/$goalUuid").header("Content-Type", "application/json")
+          .headers(setAuthorisation(user = authUuid + "|Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+          .bodyValue(goalRequestBody)
+          .exchange()
+          .expectStatus().isOk
+          .expectBody<GoalEntity>()
+          .returnResult().responseBody
+
+      assertThat(goalEntity?.title).isEqualTo("Active Goal For Updating")
+      assertThat(goalEntity?.targetDate).isNull()
       assertThat(goalEntity?.status).isEqualTo(GoalStatus.FUTURE)
     }
 

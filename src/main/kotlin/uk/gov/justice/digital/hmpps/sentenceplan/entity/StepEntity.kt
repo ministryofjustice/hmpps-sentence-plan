@@ -51,8 +51,9 @@ class StepEntity(
 enum class StepStatus {
   NOT_STARTED,
   IN_PROGRESS,
-  CANNOT_BE_DONE_YET,
   COMPLETED,
+  CANNOT_BE_DONE_YET,
+  NO_LONGER_REQUIRED,
 }
 
 interface StepRepository : JpaRepository<StepEntity, Long> {

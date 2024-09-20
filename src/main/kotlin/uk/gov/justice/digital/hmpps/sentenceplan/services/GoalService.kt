@@ -35,16 +35,7 @@ class GoalService(
     val areaOfNeedEntity = areaOfNeedRepository.findByNameIgnoreCase(goal.areaOfNeed)
       ?: throw Exception("An Area of Need with this name was not found: ${goal.areaOfNeed}")
 
-    var relatedAreasOfNeedEntity: List<AreaOfNeedEntity> = emptyList()
-
-    if (goal.relatedAreasOfNeed.isNotEmpty()) {
-      relatedAreasOfNeedEntity = areaOfNeedRepository.findAllByNames(goal.relatedAreasOfNeed)
-        ?: throw Exception("One or more of the Related Areas of Need was not found: ${goal.relatedAreasOfNeed}")
-
-      if (goal.relatedAreasOfNeed.size != relatedAreasOfNeedEntity.size) {
-        throw Exception("One or more of the Related Areas of Need was not found")
-      }
-    }
+    val relatedAreasOfNeedEntity = getAreasOfNeedByNames(goal)
 
     val highestGoalOrder = planEntity.goals.maxByOrNull { g -> g.goalOrder }?.goalOrder ?: 0
 
@@ -63,44 +54,28 @@ class GoalService(
     return savedGoalEntity
   }
 
+  private fun getAreasOfNeedByNames(goal: Goal): List<AreaOfNeedEntity> {
+    var relatedAreasOfNeedList: List<AreaOfNeedEntity> = emptyList()
+    if (goal.relatedAreasOfNeed.isNotEmpty()) {
+      relatedAreasOfNeedList = areaOfNeedRepository.findAllByNames(goal.relatedAreasOfNeed)
+        ?: throw Exception("One or more of the Related Areas of Need was not found: ${goal.relatedAreasOfNeed}")
+
+      // findAllByNames doesn't throw an exception if a subset of goal.relatedAreasOfNeed is not found, so we
+      // do a hard check on the count of returned items here
+      if (goal.relatedAreasOfNeed.size != relatedAreasOfNeedList.size) {
+        throw Exception("One or more of the Related Areas of Need was not found")
+      }
+    }
+    return relatedAreasOfNeedList
+  }
+
   @Transactional
   fun updateGoalByUuid(goalUuid: UUID, goal: Goal): GoalEntity {
     val goalEntity = goalRepository.findByUuid(goalUuid)
       ?: throw Exception("This Goal was not found: $goalUuid")
 
-    if (goal.title != null) {
-      goalEntity.title = goal.title
-    }
-
-    if (goal.targetDate != null) {
-      goalEntity.targetDate = goal.targetDate
-      if (goalEntity.status == GoalStatus.FUTURE) {
-        goalEntity.status = GoalStatus.ACTIVE
-      }
-    }
-
-    if (goal.targetDate == null && goal.status == GoalStatus.FUTURE) {
-      goalEntity.targetDate = null
-    }
-
-    if (goal.status != null) {
-      goalEntity.status = goal.status
-    }
-
-    var relatedAreasOfNeedEntity = emptyList<AreaOfNeedEntity>()
-
-    if (goal.relatedAreasOfNeed.isNotEmpty()) {
-      relatedAreasOfNeedEntity = areaOfNeedRepository.findAllByNames(goal.relatedAreasOfNeed)
-        ?: throw Exception("One or more of the Related Areas of Need was not found: ${goal.relatedAreasOfNeed}")
-
-      // findAllByNames doesn't throw an exception if a subset of goal.relatedAreasOfNeed is not found, so we
-      // do a hard check on the count of returned items here
-      if (goal.relatedAreasOfNeed.size != relatedAreasOfNeedEntity.size) {
-        throw Exception("One or more of the Related Areas of Need was not found")
-      }
-    }
-
-    goalEntity.relatedAreasOfNeed = relatedAreasOfNeedEntity.toMutableList()
+    val relatedAreasOfNeedList: List<AreaOfNeedEntity> = getAreasOfNeedByNames(goal)
+    goalEntity.merge(goal, relatedAreasOfNeedList)
 
     return goalRepository.save(goalEntity)
   }

@@ -90,6 +90,7 @@ class GoalEntity(
       this.targetDate = goal.targetDate
       if (this.status == GoalStatus.FUTURE) {
         this.status = GoalStatus.ACTIVE
+        this.statusDate = DateTimeFormatter.ISO_INSTANT.format(Instant.now())
       }
     }
 
@@ -99,6 +100,7 @@ class GoalEntity(
 
     if (goal.status != null) {
       this.status = goal.status
+      this.statusDate = DateTimeFormatter.ISO_INSTANT.format(Instant.now())
     }
 
     this.relatedAreasOfNeed = relatedAreasOfNeedList.toMutableList()

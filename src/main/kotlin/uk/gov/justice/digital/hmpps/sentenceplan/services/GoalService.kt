@@ -13,6 +13,8 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalStatus
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepRepository
+import java.time.Instant
+import java.time.format.DateTimeFormatter
 import java.util.UUID
 
 @Service
@@ -44,7 +46,7 @@ class GoalService(
       areaOfNeed = areaOfNeedEntity,
       targetDate = goal.targetDate,
       status = if (goal.targetDate != null) GoalStatus.ACTIVE else GoalStatus.FUTURE,
-      statusDate = null,
+      statusDate = DateTimeFormatter.ISO_INSTANT.format(Instant.now()),
       plan = planEntity,
       relatedAreasOfNeed = relatedAreasOfNeedEntity.toMutableList(),
       goalOrder = highestGoalOrder + 1,

@@ -1,5 +1,5 @@
 do $$ begin
-    create type step_status_type as enum ('NOT_STARTED', 'IN_PROGRESS', 'CANNOT_BE_DONE_YET', 'COMPLETED');
+    create type step_status_type as enum ('NOT_STARTED', 'IN_PROGRESS', 'COMPLETED', 'CANNOT_BE_DONE_YET', 'NO_LONGER_REQUIRED');
 exception
     when duplicate_object then null;
 end $$;

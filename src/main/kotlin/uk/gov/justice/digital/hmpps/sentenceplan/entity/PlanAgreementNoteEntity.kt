@@ -1,18 +1,21 @@
 package uk.gov.justice.digital.hmpps.sentenceplan.entity
 
 import com.fasterxml.jackson.annotation.JsonIgnore
+import jakarta.persistence.CascadeType
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
+import jakarta.persistence.FetchType
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
+import jakarta.persistence.JoinColumn
+import jakarta.persistence.OneToOne
 import jakarta.persistence.Table
 import org.springframework.data.jpa.repository.JpaRepository
 import java.time.Instant
 import java.time.format.DateTimeFormatter
-import java.util.UUID
 
 @Entity(name = "PlanAgreementNote")
 @Table(name = "plan_agreement_notes")
@@ -23,8 +26,10 @@ class PlanAgreementNoteEntity(
   @JsonIgnore
   val id: Long? = null,
 
-  @Column(name = "plan_uuid")
-  var planUuid: UUID,
+  @OneToOne(cascade = [CascadeType.ALL], fetch = FetchType.LAZY)
+  @JoinColumn(name = "plan_id", referencedColumnName = "id")
+  @JsonIgnore
+  val plan: PlanEntity = PlanEntity(),
 
   @Column(name = "agreement_status")
   @Enumerated(EnumType.STRING)

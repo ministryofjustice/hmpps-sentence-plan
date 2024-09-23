@@ -13,6 +13,8 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalStatus
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepRepository
+import java.time.Instant
+import java.time.format.DateTimeFormatter
 import java.util.UUID
 
 @Service
@@ -30,19 +32,12 @@ class GoalService(
     val planEntity = planRepository.findByUuid(planUuid)
       ?: throw Exception("A Plan with this UUID was not found: $planUuid")
 
+    require(goal.areaOfNeed != null && goal.title != null)
+
     val areaOfNeedEntity = areaOfNeedRepository.findByNameIgnoreCase(goal.areaOfNeed)
       ?: throw Exception("An Area of Need with this name was not found: ${goal.areaOfNeed}")
 
-    var relatedAreasOfNeedEntity: List<AreaOfNeedEntity> = emptyList()
-
-    if (goal.relatedAreasOfNeed.isNotEmpty()) {
-      relatedAreasOfNeedEntity = areaOfNeedRepository.findAllByNames(goal.relatedAreasOfNeed)
-        ?: throw Exception("One or more of the Related Areas of Need was not found: ${goal.relatedAreasOfNeed}")
-
-      if (goal.relatedAreasOfNeed.size != relatedAreasOfNeedEntity.size) {
-        throw Exception("One or more of the Related Areas of Need was not found")
-      }
-    }
+    val relatedAreasOfNeedEntity = getAreasOfNeedByNames(goal)
 
     val highestGoalOrder = planEntity.goals.maxByOrNull { g -> g.goalOrder }?.goalOrder ?: 0
 
@@ -51,7 +46,7 @@ class GoalService(
       areaOfNeed = areaOfNeedEntity,
       targetDate = goal.targetDate,
       status = if (goal.targetDate != null) GoalStatus.ACTIVE else GoalStatus.FUTURE,
-      statusDate = null,
+      statusDate = DateTimeFormatter.ISO_INSTANT.format(Instant.now()),
       plan = planEntity,
       relatedAreasOfNeed = relatedAreasOfNeedEntity.toMutableList(),
       goalOrder = highestGoalOrder + 1,
@@ -61,29 +56,28 @@ class GoalService(
     return savedGoalEntity
   }
 
+  private fun getAreasOfNeedByNames(goal: Goal): List<AreaOfNeedEntity> {
+    var relatedAreasOfNeedList: List<AreaOfNeedEntity> = emptyList()
+    if (goal.relatedAreasOfNeed.isNotEmpty()) {
+      relatedAreasOfNeedList = areaOfNeedRepository.findAllByNames(goal.relatedAreasOfNeed)
+        ?: throw Exception("One or more of the Related Areas of Need was not found: ${goal.relatedAreasOfNeed}")
+
+      // findAllByNames doesn't throw an exception if a subset of goal.relatedAreasOfNeed is not found, so we
+      // do a hard check on the count of returned items here
+      if (goal.relatedAreasOfNeed.size != relatedAreasOfNeedList.size) {
+        throw Exception("One or more of the Related Areas of Need was not found")
+      }
+    }
+    return relatedAreasOfNeedList
+  }
+
   @Transactional
   fun updateGoalByUuid(goalUuid: UUID, goal: Goal): GoalEntity {
     val goalEntity = goalRepository.findByUuid(goalUuid)
       ?: throw Exception("This Goal was not found: $goalUuid")
 
-    goalEntity.title = goal.title
-    goalEntity.targetDate = goal.targetDate
-    goalEntity.status = if (goal.targetDate != null) GoalStatus.ACTIVE else GoalStatus.FUTURE
-
-    var relatedAreasOfNeedEntity = emptyList<AreaOfNeedEntity>()
-
-    if (goal.relatedAreasOfNeed.isNotEmpty()) {
-      relatedAreasOfNeedEntity = areaOfNeedRepository.findAllByNames(goal.relatedAreasOfNeed)
-        ?: throw Exception("One or more of the Related Areas of Need was not found: ${goal.relatedAreasOfNeed}")
-
-      // findAllByNames doesn't throw an exception if a subset of goal.relatedAreasOfNeed is not found, so we
-      // do a hard check on the count of returned items here
-      if (goal.relatedAreasOfNeed.size != relatedAreasOfNeedEntity.size) {
-        throw Exception("One or more of the Related Areas of Need was not found")
-      }
-    }
-
-    goalEntity.relatedAreasOfNeed = relatedAreasOfNeedEntity.toMutableList()
+    val relatedAreasOfNeedList: List<AreaOfNeedEntity> = getAreasOfNeedByNames(goal)
+    goalEntity.merge(goal, relatedAreasOfNeedList)
 
     return goalRepository.save(goalEntity)
   }
@@ -118,15 +112,13 @@ class GoalService(
   private fun createStepEntitiesFromSteps(
     goal: GoalEntity,
     steps: List<Step>,
-  ): List<StepEntity> {
-    return steps.map {
-      StepEntity(
-        description = it.description,
-        status = it.status,
-        goal = goal,
-        actor = it.actor,
-      )
-    }
+  ): List<StepEntity> = steps.map {
+    StepEntity(
+      description = it.description,
+      status = it.status,
+      goal = goal,
+      actor = it.actor,
+    )
   }
 
   @Transactional

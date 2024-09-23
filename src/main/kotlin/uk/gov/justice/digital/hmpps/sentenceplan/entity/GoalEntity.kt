@@ -21,6 +21,7 @@ import jakarta.persistence.UniqueConstraint
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
+import uk.gov.justice.digital.hmpps.sentenceplan.data.Goal
 import java.time.Instant
 import java.time.format.DateTimeFormatter
 import java.util.UUID
@@ -78,7 +79,35 @@ class GoalEntity(
     uniqueConstraints = [UniqueConstraint(columnNames = ["goal_id", "area_of_need_id"])],
   )
   var relatedAreasOfNeed: MutableList<AreaOfNeedEntity>? = mutableListOf(),
-)
+) {
+
+  fun merge(goal: Goal, relatedAreasOfNeedList: List<AreaOfNeedEntity>): GoalEntity {
+    if (goal.title != null) {
+      this.title = goal.title
+    }
+
+    if (goal.targetDate != null) {
+      this.targetDate = goal.targetDate
+      if (this.status == GoalStatus.FUTURE) {
+        this.status = GoalStatus.ACTIVE
+        this.statusDate = DateTimeFormatter.ISO_INSTANT.format(Instant.now())
+      }
+    }
+
+    if (goal.targetDate == null && goal.status == GoalStatus.FUTURE) {
+      this.targetDate = null
+    }
+
+    if (goal.status != null) {
+      this.status = goal.status
+      this.statusDate = DateTimeFormatter.ISO_INSTANT.format(Instant.now())
+    }
+
+    this.relatedAreasOfNeed = relatedAreasOfNeedList.toMutableList()
+
+    return this
+  }
+}
 
 enum class GoalStatus {
   ACTIVE,

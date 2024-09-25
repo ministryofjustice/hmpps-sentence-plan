@@ -102,7 +102,7 @@ class PlanController(
       ),
       ApiResponse(
         responseCode = "409",
-        description = "The plan could not be signed. See details in error message.",
+        description = "The plan could not be cloned. See details in error message.",
         content = arrayOf(Content(schema = Schema(implementation = ErrorResponse::class))),
       ),
       ApiResponse(

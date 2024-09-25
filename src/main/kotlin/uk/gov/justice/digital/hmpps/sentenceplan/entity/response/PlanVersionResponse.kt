@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.sentenceplan.entity.reponse
+package uk.gov.justice.digital.hmpps.sentenceplan.entity.response
 
 import java.util.UUID
 

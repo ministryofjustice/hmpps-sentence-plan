@@ -14,8 +14,8 @@ import org.springframework.security.test.context.support.WithMockUser
 import org.springframework.test.web.reactive.server.expectBody
 import uk.gov.justice.digital.hmpps.sentenceplan.config.ErrorResponse
 import uk.gov.justice.digital.hmpps.sentenceplan.data.CreatePlanWithOasysAssesmentPkRequest
-import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionEntity
 import java.util.UUID
 
 @AutoConfigureWebTestClient(timeout = "5s")
@@ -31,7 +31,7 @@ class OasysControllerTest : IntegrationTestBase() {
 
   @BeforeAll
   fun setup() {
-    val plan: PlanEntity = planRepository.findAll().first()
+    val plan: PlanVersionEntity = planRepository.findAll().first()
     planUuid = plan.uuid
   }
 
@@ -59,8 +59,8 @@ class OasysControllerTest : IntegrationTestBase() {
     @Test
     @WithMockUser(username = "SYSTEM|OASTUB")
     fun `should return conflict when oasys_assessment_PK has existing association`() {
-      val plan = planRepository.save(PlanEntity())
-      planRepository.createOasysAssessmentPk(planRequestBody.oasysAssessmentPk, plan.uuid)
+      val planVersionEntity = planRepository.save(PlanVersionEntity())
+      planRepository.createOasysAssessmentPk(planRequestBody.oasysAssessmentPk, planVersionEntity.id!!)
 
       val response = webTestClient.post().uri("/oasys/plans").header("Content-Type", "application/json")
         .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))

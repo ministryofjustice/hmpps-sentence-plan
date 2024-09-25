@@ -65,7 +65,7 @@ class GoalEntity(
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "plan_id", nullable = false)
   @JsonIgnore
-  val plan: PlanEntity?,
+  val plan: PlanVersionEntity?,
 
   @OneToMany(mappedBy = "goal", cascade = [CascadeType.ALL])
   @OrderBy("creationDate ASC")
@@ -119,7 +119,7 @@ enum class GoalStatus {
 interface GoalRepository : JpaRepository<GoalEntity, Long> {
   fun findByUuid(uuid: UUID): GoalEntity?
 
-  fun findByPlan(plan: PlanEntity): List<GoalEntity>
+  fun findByPlan(plan: PlanVersionEntity): List<GoalEntity>
 
   @Modifying
   @Query("update Goal g set g.goalOrder = ?1 where g.uuid = ?2")

@@ -12,5 +12,6 @@ create table if not exists step
     description           varchar(256)     NOT NULL,
     status                step_status_type NOT NULL,
     creation_date         timestamp        NOT NULL,
+    actor                 varchar          NOT NULL,
     FOREIGN KEY (goal_id) REFERENCES goal (id) ON DELETE CASCADE
 );

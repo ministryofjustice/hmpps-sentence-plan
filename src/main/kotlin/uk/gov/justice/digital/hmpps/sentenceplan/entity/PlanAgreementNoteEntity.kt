@@ -29,7 +29,7 @@ class PlanAgreementNoteEntity(
   @OneToOne(cascade = [CascadeType.ALL], fetch = FetchType.LAZY)
   @JoinColumn(name = "plan_id", referencedColumnName = "id")
   @JsonIgnore
-  val plan: PlanEntity = PlanEntity(),
+  val plan: PlanVersionEntity = PlanVersionEntity(),
 
   @Column(name = "agreement_status")
   @Enumerated(EnumType.STRING)

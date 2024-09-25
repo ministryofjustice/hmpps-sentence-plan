@@ -32,7 +32,7 @@ class PlanProgressNoteEntity(
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "plan_id", referencedColumnName = "id")
   @JsonIgnore
-  val plan: PlanEntity = PlanEntity(),
+  val plan: PlanVersionEntity = PlanVersionEntity(),
 
   @Column(name = "note")
   var note: String,

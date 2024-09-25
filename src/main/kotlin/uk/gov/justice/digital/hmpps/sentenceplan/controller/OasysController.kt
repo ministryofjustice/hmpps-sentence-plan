@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.servlet.resource.NoResourceFoundException
 import uk.gov.justice.digital.hmpps.sentenceplan.data.CreatePlanWithOasysAssesmentPkRequest
-import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntity
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.services.PlanService
 
 @RestController
@@ -22,7 +22,7 @@ class OasysController(private val service: PlanService) {
   @ResponseStatus(HttpStatus.OK)
   fun getPlan(
     @PathVariable oasysAssessmentPk: String,
-  ): PlanEntity {
+  ): PlanVersionEntity {
     return service.getPlanByOasysAssessmentPk(oasysAssessmentPk) ?: throw NoResourceFoundException(HttpMethod.GET, "No resource found for $oasysAssessmentPk")
   }
 
@@ -30,7 +30,7 @@ class OasysController(private val service: PlanService) {
   @ResponseStatus(HttpStatus.CREATED)
   fun createPlan(
     @RequestBody requestBody: CreatePlanWithOasysAssesmentPkRequest,
-  ): PlanEntity {
+  ): PlanVersionEntity {
     return service.createPlanByOasysAssessmentPk(requestBody.oasysAssessmentPk)
   }
 }

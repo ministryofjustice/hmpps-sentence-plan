@@ -20,8 +20,8 @@ import uk.gov.justice.digital.hmpps.sentenceplan.data.Step
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.AreaOfNeedRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalStatus
-import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepStatus
 import java.time.LocalDateTime
@@ -65,7 +65,7 @@ class GoalControllerTest : IntegrationTestBase() {
 
   private val stepList: List<Step> = listOf(stepOne, stepTwo)
 
-  private lateinit var plan: PlanEntity
+  private lateinit var plan: PlanVersionEntity
 
   private var areaOfNeedName: String = ""
 

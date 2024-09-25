@@ -32,7 +32,7 @@ import java.util.UUID
 @Entity(name = "Plan")
 @Table(name = "plan")
 @EntityListeners(AuditingEntityListener::class)
-class PlanEntity(
+class PlanVersionEntity(
   @Id
   @Column(name = "id")
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -91,14 +91,14 @@ enum class PlanStatus {
   COULD_NOT_ANSWER,
 }
 
-interface PlanRepository : JpaRepository<PlanEntity, Long> {
-  fun findByUuid(uuid: UUID): PlanEntity?
+interface PlanRepository : JpaRepository<PlanVersionEntity, Long> {
+  fun findByUuid(uuid: UUID): PlanVersionEntity?
 
-  @Query("select p.* from plan p inner join oasys_pk_to_plan o on p.uuid = o.plan_uuid and o.oasys_assessment_pk = :oasysAssessmentPk", nativeQuery = true)
-  fun findByOasysAssessmentPk(@Param("oasysAssessmentPk") oasysAssessmentPk: String): PlanEntity?
+  @Query("select p.* from plan p inner join oasys_pk_to_plan o on p.id = o.plan_id and o.oasys_assessment_pk = :oasysAssessmentPk", nativeQuery = true)
+  fun findByOasysAssessmentPk(@Param("oasysAssessmentPk") oasysAssessmentPk: String): PlanVersionEntity?
 
   @Modifying
   @Transactional
-  @Query("insert into oasys_pk_to_plan(oasys_assessment_pk, plan_uuid) values (:oasysAssessmentPk, :planUuid)", nativeQuery = true)
-  fun createOasysAssessmentPk(@Param("oasysAssessmentPk") oasysAssessmentPk: String, @Param("planUuid") planUuid: UUID)
+  @Query("insert into oasys_pk_to_plan(oasys_assessment_pk, plan_id) values (:oasysAssessmentPk, :planId)", nativeQuery = true)
+  fun createOasysAssessmentPk(@Param("oasysAssessmentPk") oasysAssessmentPk: String, @Param("planId") planId: Long)
 }

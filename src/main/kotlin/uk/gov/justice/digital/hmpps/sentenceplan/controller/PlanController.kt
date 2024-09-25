@@ -20,7 +20,7 @@ import uk.gov.justice.digital.hmpps.sentenceplan.config.ErrorResponse
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Agreement
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Goal
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalEntity
-import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntity
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.CounterSignPlanRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.RollbackPlanRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.response.PlanVersionResponse
@@ -37,7 +37,7 @@ class PlanController(
 
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
-  fun createPlan(): PlanEntity {
+  fun createPlan(): PlanVersionEntity {
     return planService.createPlan()
   }
 
@@ -75,7 +75,7 @@ class PlanController(
      *  - Handle any exceptions or edge cases (i.e plan not found).
      */
     @PathVariable planUuid: UUID,
-  ): PlanEntity {
+  ): PlanVersionEntity {
     return planService.getPlanByUuid(planUuid) ?: throw NoResourceFoundException(HttpMethod.GET, "No Plan found for $planUuid")
   }
 
@@ -103,7 +103,7 @@ class PlanController(
   fun agreePlan(
     @PathVariable planUuid: UUID,
     @RequestBody agreement: Agreement,
-  ): PlanEntity {
+  ): PlanVersionEntity {
     return planService.agreePlan(planUuid, agreement)
   }
 

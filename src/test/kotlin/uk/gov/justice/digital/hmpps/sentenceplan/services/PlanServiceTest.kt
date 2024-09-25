@@ -13,9 +13,9 @@ import org.mockito.kotlin.any
 import org.springframework.web.server.ResponseStatusException
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Agreement
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanAgreementNoteRepository
-import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanStatus
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.exceptions.ConflictException
 import java.util.UUID
 
@@ -32,12 +32,12 @@ class PlanServiceTest {
     @Test
     fun `should return plan when plan exists with given UUID`() {
       val planUuid = UUID.randomUUID()
-      val planEntity = PlanEntity()
-      every { planRepository.findByUuid(planUuid) } returns planEntity
+      val planVersionEntity = PlanVersionEntity()
+      every { planRepository.findByUuid(planUuid) } returns planVersionEntity
 
       val result = planService.getPlanByUuid(planUuid)
 
-      assertEquals(planEntity, result)
+      assertEquals(planVersionEntity, result)
     }
 
     @Test
@@ -58,12 +58,12 @@ class PlanServiceTest {
     @Test
     fun `should return plan when plan exists with given oasys assessment pk`() {
       val oasysAssessmentPk = "123456"
-      val planEntity = PlanEntity()
-      every { planRepository.findByOasysAssessmentPk(oasysAssessmentPk) } returns planEntity
+      val planVersionEntity = PlanVersionEntity()
+      every { planRepository.findByOasysAssessmentPk(oasysAssessmentPk) } returns planVersionEntity
 
       val result = planService.getPlanByOasysAssessmentPk(oasysAssessmentPk)
 
-      assertEquals(planEntity, result)
+      assertEquals(planVersionEntity, result)
     }
 
     @Test
@@ -84,10 +84,10 @@ class PlanServiceTest {
     @Test
     fun `should create and return plan when no plan exists with given oasys assessment pk`() {
       val oasysAssessmentPk = "123456"
-      val planEntity = PlanEntity()
+      val planVersionEntity = PlanVersionEntity()
 
       every { planRepository.findByOasysAssessmentPk(oasysAssessmentPk) } returns null
-      every { planRepository.save(any()) } returns planEntity
+      every { planRepository.save(any()) } returns planVersionEntity
       every { planRepository.createOasysAssessmentPk(oasysAssessmentPk, any()) } returns Unit
 
       val result = planService.createPlanByOasysAssessmentPk(oasysAssessmentPk)
@@ -103,7 +103,7 @@ class PlanServiceTest {
       verify {
         planRepository.createOasysAssessmentPk(
           withArg { assertEquals(oasysAssessmentPk, it) },
-          withArg { assertEquals(result.uuid, it) },
+          withArg { assertEquals(result.id, it) },
         )
       }
     }
@@ -111,7 +111,7 @@ class PlanServiceTest {
     @Test
     fun `should throw ConflictException when plan already exists with given oasys assessment PK`() {
       val oasysAssessmentPk = "123456"
-      val existingPlan = PlanEntity()
+      val existingPlan = PlanVersionEntity()
       every { planRepository.findByOasysAssessmentPk(oasysAssessmentPk) } returns existingPlan
 
       val exception = assertThrows(ConflictException::class.java) {
@@ -150,7 +150,7 @@ class PlanServiceTest {
     @Test
     fun `should agree plan`() {
       every { planRepository.save(any()) } returns any()
-      every { planRepository.findByUuid(any()) } returns PlanEntity()
+      every { planRepository.findByUuid(any()) } returns PlanVersionEntity()
       every { planAgreementNoteRepository.save(any()) } returns any()
 
       val result = planService.agreePlan(UUID.randomUUID(), agreement)
@@ -161,8 +161,8 @@ class PlanServiceTest {
 
     @Test
     fun `should throw exception when plan already agreed`() {
-      val planEntity: PlanEntity = PlanEntity(agreementStatus = PlanStatus.AGREED)
-      every { planRepository.findByUuid(any()) } returns planEntity
+      val planVersionEntity: PlanVersionEntity = PlanVersionEntity(agreementStatus = PlanStatus.AGREED)
+      every { planRepository.findByUuid(any()) } returns planVersionEntity
 
       val exception = assertThrows(ConflictException::class.java) {
         planService.agreePlan(UUID.fromString("559a2111-832c-4652-a99f-eec9e570640f"), agreement)

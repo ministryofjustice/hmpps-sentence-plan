@@ -16,8 +16,8 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.AreaOfNeedEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.AreaOfNeedRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalRepository
-import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepStatus
@@ -68,11 +68,11 @@ class GoalServiceTest {
     relatedAreasOfNeed = mockk<MutableList<AreaOfNeedEntity>>(),
   )
 
-  private val planEntity: PlanEntity = PlanEntity()
+  private val planVersionEntity: PlanVersionEntity = PlanVersionEntity()
 
   private val goalSet = setOf(goalEntityNoSteps)
 
-  private val planEntityWithOneGoal: PlanEntity = PlanEntity(goals = goalSet)
+  private val planVersionEntityWithOneGoal: PlanVersionEntity = PlanVersionEntity(goals = goalSet)
 
   private val steps = listOf(
     Step(
@@ -106,14 +106,14 @@ class GoalServiceTest {
 
     @Test
     fun `create new goal with Area Of Need that doesn't exist should throw Exception`() {
-      every { planRepository.findByUuid(any()) } returns planEntity
+      every { planRepository.findByUuid(any()) } returns planVersionEntity
       every { areaOfNeedRepository.findByNameIgnoreCase(any()) } returns null
 
       var exception: Exception? = null
       var goalEntity: GoalEntity? = null
 
       try {
-        goalEntity = goalService.createNewGoal(planEntity.uuid, goal)
+        goalEntity = goalService.createNewGoal(planVersionEntity.uuid, goal)
       } catch (e: Exception) {
         exception = e
       }
@@ -125,7 +125,7 @@ class GoalServiceTest {
 
     @Test
     fun `create new goal with Related Areas Of Need that don't exist should throw Exception`() {
-      every { planRepository.findByUuid(any()) } returns planEntity
+      every { planRepository.findByUuid(any()) } returns planVersionEntity
       every { areaOfNeedRepository.findByNameIgnoreCase(any()) } returns areaOfNeedEntity
       every { areaOfNeedRepository.findAllByNames(any()) } returns null
 
@@ -133,7 +133,7 @@ class GoalServiceTest {
       var goalEntity: GoalEntity? = null
 
       try {
-        goalEntity = goalService.createNewGoal(planEntity.uuid, goal)
+        goalEntity = goalService.createNewGoal(planVersionEntity.uuid, goal)
       } catch (e: Exception) {
         exception = e
       }
@@ -145,14 +145,14 @@ class GoalServiceTest {
 
     @Test
     fun `create new goal with no Related Areas of Need should call save`() {
-      every { planRepository.findByUuid(any()) } returns planEntity
+      every { planRepository.findByUuid(any()) } returns planVersionEntity
       every { areaOfNeedRepository.findByNameIgnoreCase(any()) } returns areaOfNeedEntity
       every { areaOfNeedRepository.findAllByNames(any()) } returns null
 
       val goalSlot = slot<GoalEntity>()
       every { goalRepository.save(capture(goalSlot)) } answers { goalSlot.captured }
 
-      val goalEntity = goalService.createNewGoal(planEntity.uuid, goalWithNoRelatedAreasOfNeed)
+      val goalEntity = goalService.createNewGoal(planVersionEntity.uuid, goalWithNoRelatedAreasOfNeed)
 
       assertThat(goalEntity).isNotNull()
       assertThat(goalEntity.relatedAreasOfNeed).isEmpty()
@@ -160,20 +160,20 @@ class GoalServiceTest {
 
     @Test
     fun `creating two goals should set incrementing goal order values`() {
-      every { planRepository.findByUuid(any()) } returns planEntity
+      every { planRepository.findByUuid(any()) } returns planVersionEntity
       every { areaOfNeedRepository.findByNameIgnoreCase(any()) } returns areaOfNeedEntity
       every { areaOfNeedRepository.findAllByNames(any()) } returns null
 
       val goalSlot = slot<GoalEntity>()
       every { goalRepository.save(capture(goalSlot)) } answers { goalSlot.captured }
 
-      val goalEntityOne = goalService.createNewGoal(planEntity.uuid, goalWithNoRelatedAreasOfNeed)
+      val goalEntityOne = goalService.createNewGoal(planVersionEntity.uuid, goalWithNoRelatedAreasOfNeed)
       assertThat(goalEntityOne).isNotNull()
       assertThat(goalEntityOne.goalOrder).isEqualTo(1)
 
-      every { planRepository.findByUuid(any()) } returns planEntityWithOneGoal
+      every { planRepository.findByUuid(any()) } returns planVersionEntityWithOneGoal
 
-      val goalEntityTwo = goalService.createNewGoal(planEntity.uuid, goalWithNoRelatedAreasOfNeed)
+      val goalEntityTwo = goalService.createNewGoal(planVersionEntity.uuid, goalWithNoRelatedAreasOfNeed)
       assertThat(goalEntityTwo).isNotNull()
       assertThat(goalEntityTwo.goalOrder).isEqualTo(2)
     }

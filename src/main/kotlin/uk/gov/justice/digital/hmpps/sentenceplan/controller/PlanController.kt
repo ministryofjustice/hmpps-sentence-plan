@@ -46,6 +46,26 @@ class PlanController(
     description = "Gets the latest sentence plan, or a specific version if specified.",
     tags = ["Integrations"],
   )
+  @ApiResponses(
+    value = [
+      ApiResponse(responseCode = "200", description = "Plan retrieved successfully"),
+      ApiResponse(
+        responseCode = "404",
+        description = "Plan or plan version not found",
+        content = arrayOf(Content(schema = Schema(implementation = ErrorResponse::class))),
+      ),
+      ApiResponse(
+        responseCode = "409",
+        description = "Plan could not be loaded. See details in error message.",
+        content = arrayOf(Content(schema = Schema(implementation = ErrorResponse::class))),
+      ),
+      ApiResponse(
+        responseCode = "500",
+        description = "Unexpected error",
+        content = arrayOf(Content(schema = Schema(implementation = ErrorResponse::class))),
+      ),
+    ],
+  )
   @ResponseStatus(HttpStatus.OK)
   fun getPlan(
     /**

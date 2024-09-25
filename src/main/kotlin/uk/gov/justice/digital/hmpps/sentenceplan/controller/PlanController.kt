@@ -36,8 +36,32 @@ class PlanController(
 ) {
 
   @PostMapping
+  @Operation(
+    description = "Create a new sentence plan",
+    tags = ["Integrations"],
+  )
+  @ApiResponses(
+    value = [
+      ApiResponse(responseCode = "200", description = "Plan created successfully"),
+      ApiResponse(
+        responseCode = "409",
+        description = "Plan could not be created. See details in error message.",
+        content = arrayOf(Content(schema = Schema(implementation = ErrorResponse::class))),
+      ),
+      ApiResponse(
+        responseCode = "500",
+        description = "Unexpected error",
+        content = arrayOf(Content(schema = Schema(implementation = ErrorResponse::class))),
+      ),
+    ],
+  )
   @ResponseStatus(HttpStatus.CREATED)
-  fun createPlan(): PlanEntity {
+  fun createPlan(): PlanVersionResponse {
+    /** TODO: Create a new plan
+     *   - Create a new plan
+     *   - Set it's version number to 0
+     *   - Return UUID and version number
+     */
     return planService.createPlan()
   }
 

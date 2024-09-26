@@ -10,20 +10,24 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
+import org.springframework.dao.EmptyResultDataAccessException
 import org.springframework.web.server.ResponseStatusException
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Agreement
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanAgreementNoteRepository
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanAgreementStatus
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
-import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanStatus
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionEntity
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.exceptions.ConflictException
 import java.util.UUID
 
 class PlanServiceTest {
-
   private val planRepository: PlanRepository = mockk()
+  private val planVersionRepository: PlanVersionRepository = mockk()
   private val planAgreementNoteRepository: PlanAgreementNoteRepository = mockk()
-  private val planService = PlanService(planRepository, planAgreementNoteRepository)
+  private val planService = PlanService(planRepository, planVersionRepository, planAgreementNoteRepository)
+  private val plan: PlanEntity = mockk()
 
   @Nested
   @DisplayName("gePlayByUuid")
@@ -32,18 +36,18 @@ class PlanServiceTest {
     @Test
     fun `should return plan when plan exists with given UUID`() {
       val planUuid = UUID.randomUUID()
-      val planEntity = PlanEntity()
-      every { planRepository.findByUuid(planUuid) } returns planEntity
+      val planVersionEntity = PlanVersionEntity(plan = plan)
+      every { planVersionRepository.findByUuid(planUuid) } returns planVersionEntity
 
       val result = planService.getPlanByUuid(planUuid)
 
-      assertEquals(planEntity, result)
+      assertEquals(planVersionEntity, result)
     }
 
     @Test
     fun `should return null when no plan exists with given UUID`() {
       val planUuid = UUID.randomUUID()
-      every { planRepository.findByUuid(planUuid) } returns null
+      every { planVersionRepository.findByUuid(planUuid) } throws EmptyResultDataAccessException(1)
 
       val result = planService.getPlanByUuid(planUuid)
 
@@ -69,7 +73,7 @@ class PlanServiceTest {
     @Test
     fun `should return null when no plan exists with given oasys assessment pk`() {
       val oasysAssessmentPk = "123456"
-      every { planRepository.findByOasysAssessmentPk(oasysAssessmentPk) } returns null
+      every { planRepository.findByOasysAssessmentPk(oasysAssessmentPk) } throws EmptyResultDataAccessException(1)
 
       val result = planService.getPlanByOasysAssessmentPk(oasysAssessmentPk)
 
@@ -84,16 +88,16 @@ class PlanServiceTest {
     @Test
     fun `should create and return plan when no plan exists with given oasys assessment pk`() {
       val oasysAssessmentPk = "123456"
-      val planEntity = PlanEntity()
+      val planVersionEntity = PlanVersionEntity(plan = plan)
 
       every { planRepository.findByOasysAssessmentPk(oasysAssessmentPk) } returns null
-      every { planRepository.save(any()) } returns planEntity
+      every { planVersionRepository.save(any()) } returns planVersionEntity
       every { planRepository.createOasysAssessmentPk(oasysAssessmentPk, any()) } returns Unit
 
       val result = planService.createPlanByOasysAssessmentPk(oasysAssessmentPk)
 
       verify {
-        planRepository.save(
+        planVersionRepository.save(
           withArg {
             assertEquals(result.uuid, it.uuid)
           },
@@ -103,7 +107,7 @@ class PlanServiceTest {
       verify {
         planRepository.createOasysAssessmentPk(
           withArg { assertEquals(oasysAssessmentPk, it) },
-          withArg { assertEquals(result.uuid, it) },
+          withArg { assertEquals(result.id, it) },
         )
       }
     }
@@ -128,11 +132,11 @@ class PlanServiceTest {
 
     @Test
     fun `should create and return a new plan`() {
-      every { planRepository.save(any()) } returns any()
+      every { planVersionRepository.save(any()) } returns any()
 
       val result = planService.createPlan()
 
-      verify { planRepository.save(withArg { assertEquals(result, it) }) }
+      verify { planVersionRepository.save(withArg { assertEquals(result, it) }) }
     }
   }
 
@@ -140,7 +144,7 @@ class PlanServiceTest {
   @DisplayName("agreePlan")
   inner class AgreePlan {
     private val agreement = Agreement(
-      PlanStatus.AGREED,
+      PlanAgreementStatus.AGREED,
       "Agree",
       "Agreed",
       "Tom C",
@@ -148,24 +152,24 @@ class PlanServiceTest {
     )
 
     @Test
-    fun `should agree plan`() {
-      every { planRepository.save(any()) } returns any()
-      every { planRepository.findByUuid(any()) } returns PlanEntity()
+    fun `should agree plan version`() {
+      every { planVersionRepository.save(any()) } returns any()
+      every { planVersionRepository.findByUuid(any()) } returns PlanVersionEntity(plan = plan)
       every { planAgreementNoteRepository.save(any()) } returns any()
 
-      val result = planService.agreePlan(UUID.randomUUID(), agreement)
+      val result = planService.agreePlanVersion(UUID.randomUUID(), agreement)
 
-      verify(exactly = 1) { planRepository.save(withArg { assertEquals(result, it) }) }
+      verify(exactly = 1) { planVersionRepository.save(withArg { assertEquals(result, it) }) }
       verify(exactly = 1) { planAgreementNoteRepository.save(any()) }
     }
 
     @Test
     fun `should throw exception when plan already agreed`() {
-      val planEntity: PlanEntity = PlanEntity(agreementStatus = PlanStatus.AGREED)
-      every { planRepository.findByUuid(any()) } returns planEntity
+      val planVersionEntity: PlanVersionEntity = PlanVersionEntity(plan = plan, agreementStatus = PlanAgreementStatus.AGREED)
+      every { planVersionRepository.findByUuid(any()) } returns planVersionEntity
 
       val exception = assertThrows(ConflictException::class.java) {
-        planService.agreePlan(UUID.fromString("559a2111-832c-4652-a99f-eec9e570640f"), agreement)
+        planService.agreePlanVersion(UUID.fromString("559a2111-832c-4652-a99f-eec9e570640f"), agreement)
       }
 
       assertEquals("Plan 559a2111-832c-4652-a99f-eec9e570640f has already been agreed.", exception.message)
@@ -173,10 +177,10 @@ class PlanServiceTest {
 
     @Test
     fun `should throw exception when plan not found`() {
-      every { planRepository.findByUuid(any()) } returns any()
+      every { planVersionRepository.findByUuid(any()) } returns any()
 
       val exception = assertThrows(ResponseStatusException::class.java) {
-        planService.agreePlan(UUID.fromString("1c93ebe7-1d8d-4fcc-aef2-f97c4c983a6b"), agreement)
+        planService.agreePlanVersion(UUID.fromString("1c93ebe7-1d8d-4fcc-aef2-f97c4c983a6b"), agreement)
       }
 
       assertEquals("422 UNPROCESSABLE_ENTITY \"Plan 1c93ebe7-1d8d-4fcc-aef2-f97c4c983a6b was not found.\"", exception.message)

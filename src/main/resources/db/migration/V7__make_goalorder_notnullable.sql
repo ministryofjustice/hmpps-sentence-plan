@@ -1,2 +1,0 @@
-ALTER TABLE goal
-ALTER COLUMN goal_order SET NOT NULL

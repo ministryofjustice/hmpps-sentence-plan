@@ -87,7 +87,7 @@ enum class PlanType {
   REVIEW,
   TERMINATE,
   TRANSFER,
-  OTHER
+  OTHER,
 }
 
 interface PlanRepository : JpaRepository<PlanEntity, Long> {

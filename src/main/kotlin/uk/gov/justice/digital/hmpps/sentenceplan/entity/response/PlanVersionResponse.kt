@@ -8,10 +8,11 @@ data class PlanVersionResponse(
   val planVersion: Long,
 ) {
   companion object {
-    fun from(planEntity: PlanEntity) : PlanVersionResponse {
+    fun from(planEntity: PlanEntity): PlanVersionResponse {
       return PlanVersionResponse(
         planUuid = planEntity.uuid,
-        planVersion = 0L // Set proper version later
+        // Set proper version later
+        planVersion = 0L,
       )
     }
   }

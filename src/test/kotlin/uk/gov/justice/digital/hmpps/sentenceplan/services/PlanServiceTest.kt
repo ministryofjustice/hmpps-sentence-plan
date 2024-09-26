@@ -17,6 +17,8 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanAgreementNoteReposit
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanAgreementStatus
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionEntity
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanStatus
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanType
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionEntity
@@ -138,7 +140,7 @@ class PlanServiceTest {
 
       val result = planService.createPlan(PlanType.INITIAL)
 
-      verify { planRepository.save(withArg { assertEquals(result, it) }) }
+      verify { planVersionRepository.save(withArg { assertEquals(result, it) }) }
     }
   }
 

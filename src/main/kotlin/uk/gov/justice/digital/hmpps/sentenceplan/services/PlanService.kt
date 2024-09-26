@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanAgreementNoteReposit
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanStatus
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanType
 import uk.gov.justice.digital.hmpps.sentenceplan.exceptions.ConflictException
 import java.time.Instant
 import java.util.UUID
@@ -35,10 +36,10 @@ class PlanService(
     return plan
   }
 
-  fun createPlan(): PlanEntity {
+  fun createPlan(planType: PlanType): PlanEntity {
     val plan = PlanEntity()
-    planRepository.save(plan)
-    return plan
+    // TODO: Set planType & planVersion
+    return planRepository.save(plan)
   }
 
   fun agreePlan(planUuid: UUID, agreement: Agreement): PlanEntity {

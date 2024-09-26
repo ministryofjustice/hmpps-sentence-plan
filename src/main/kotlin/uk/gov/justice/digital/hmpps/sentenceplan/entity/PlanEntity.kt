@@ -82,6 +82,14 @@ enum class PlanStatus {
   COULD_NOT_ANSWER,
 }
 
+enum class PlanType {
+  INITIAL,
+  REVIEW,
+  TERMINATE,
+  TRANSFER,
+  OTHER
+}
+
 interface PlanRepository : JpaRepository<PlanEntity, Long> {
   fun findByUuid(uuid: UUID): PlanEntity?
 

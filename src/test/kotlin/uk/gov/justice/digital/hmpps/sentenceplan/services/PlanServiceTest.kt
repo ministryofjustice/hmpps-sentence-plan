@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanAgreementNoteReposit
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanStatus
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanType
 import uk.gov.justice.digital.hmpps.sentenceplan.exceptions.ConflictException
 import java.util.UUID
 
@@ -26,7 +27,7 @@ class PlanServiceTest {
   private val planService = PlanService(planRepository, planAgreementNoteRepository)
 
   @Nested
-  @DisplayName("gePlayByUuid")
+  @DisplayName("getPlanByUuid")
   inner class GetPlanByUuid {
 
     @Test
@@ -128,9 +129,9 @@ class PlanServiceTest {
 
     @Test
     fun `should create and return a new plan`() {
-      every { planRepository.save(any()) } returns any()
+      every { planRepository.save(any()) } returnsArgument 0
 
-      val result = planService.createPlan()
+      val result = planService.createPlan(PlanType.INITIAL)
 
       verify { planRepository.save(withArg { assertEquals(result, it) }) }
     }

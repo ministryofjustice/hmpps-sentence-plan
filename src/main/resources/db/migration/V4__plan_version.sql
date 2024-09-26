@@ -33,7 +33,6 @@ create table if not exists plan_version
     agreement_date        timestamp                  NULL,
     read_only             boolean                    NOT NULL,
     checksum              varchar                    NULL,
-    FOREIGN KEY (plan_id) references plan (id),
     FOREIGN KEY (created_by_id) references practitioner (id),
     FOREIGN KEY (last_updated_by_id) references practitioner (id)
 );

@@ -17,6 +17,7 @@ import jakarta.persistence.OneToMany
 import jakarta.persistence.OneToOne
 import jakarta.persistence.OrderBy
 import jakarta.persistence.Table
+import org.springframework.dao.EmptyResultDataAccessException
 import org.springframework.data.annotation.CreatedBy
 import org.springframework.data.annotation.CreatedDate
 import org.springframework.data.annotation.LastModifiedBy
@@ -26,8 +27,8 @@ import org.springframework.data.jpa.repository.JpaRepository
 import java.time.LocalDateTime
 import java.util.UUID
 
-@Entity(name = "Plan")
-@Table(name = "plan")
+@Entity(name = "PlanVersion")
+@Table(name = "plan_version")
 @EntityListeners(AuditingEntityListener::class)
 class PlanVersionEntity(
   @Id
@@ -113,5 +114,6 @@ enum class PlanAgreementStatus {
 }
 
 interface PlanVersionRepository : JpaRepository<PlanVersionEntity, Long> {
+  @Throws(EmptyResultDataAccessException::class)
   fun findByUuid(planVersionUuid: UUID): PlanVersionEntity
 }

@@ -22,9 +22,8 @@ import uk.gov.justice.digital.hmpps.sentenceplan.data.Goal
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.AreaOfNeedEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalStatus
-import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntity
-import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanStatus
-import java.time.Instant
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanAgreementStatus
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionEntity
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -42,17 +41,17 @@ class PlanControllerTest : IntegrationTestBase() {
   inner class CreatePlan {
     @Test
     fun `should create a new plan`() {
-      val testStartTime = Instant.now()
+      val testStartTime = LocalDateTime.now()
 
-      val planEntity: PlanEntity? = webTestClient.post().uri("/plans").header("Content-Type", "application/json")
+      val planVersionEntity: PlanVersionEntity? = webTestClient.post().uri("/plans").header("Content-Type", "application/json")
         .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
         .exchange()
         .expectStatus().isCreated
-        .expectBody<PlanEntity>()
+        .expectBody<PlanVersionEntity>()
         .returnResult().responseBody
 
-      assertThat(planEntity?.updatedBy?.username).isEqualTo("Tom C")
-      assertThat(planEntity?.updatedDate).isAfter(testStartTime)
+      assertThat(planVersionEntity?.updatedBy?.username).isEqualTo("Tom C")
+      assertThat(planVersionEntity?.updatedDate).isAfter(testStartTime)
     }
   }
 
@@ -61,14 +60,14 @@ class PlanControllerTest : IntegrationTestBase() {
   inner class GetPlan {
     @Test
     fun `should return OK when getting plan by existing UUID `() {
-      val planEntity: PlanEntity? = webTestClient.get().uri("/plans/$staticPlanUuid")
+      val planVersionEntity: PlanVersionEntity? = webTestClient.get().uri("/plans/$staticPlanUuid")
         .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
         .exchange()
         .expectStatus().isOk
-        .expectBody<PlanEntity>()
+        .expectBody<PlanVersionEntity>()
         .returnResult().responseBody
 
-      assertThat(planEntity?.goals?.size).isEqualTo(2)
+      assertThat(planVersionEntity?.goals?.size).isEqualTo(2)
     }
 
     @Test
@@ -271,7 +270,7 @@ class PlanControllerTest : IntegrationTestBase() {
   @Sql(scripts = [ "/db/test/agree_plan_cleanup.sql" ], executionPhase = AFTER_TEST_CLASS)
   inner class AgreePlan {
     private val agreePlanBody = Agreement(
-      PlanStatus.AGREED,
+      PlanAgreementStatus.AGREED,
       "Agreed",
       "Note",
       "Sarah B",
@@ -281,21 +280,21 @@ class PlanControllerTest : IntegrationTestBase() {
     @Test
     @Order(1)
     fun `agree plan`() {
-      val testStartTime = Instant.now()
+      val testStartTime = LocalDateTime.now()
 
-      val planEntity: PlanEntity? = webTestClient.post().uri("/plans/650df4b2-f74d-4ab7-85a1-143d2a7d8cfe/agree")
+      val planVersionEntity: PlanVersionEntity? = webTestClient.post().uri("/plans/650df4b2-f74d-4ab7-85a1-143d2a7d8cfe/agree")
         .header("Content-Type", "application/json")
         .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
         .bodyValue(agreePlanBody)
         .exchange()
         .expectStatus().isAccepted
-        .expectBody<PlanEntity>()
+        .expectBody<PlanVersionEntity>()
         .returnResult().responseBody
 
-      assertThat(planEntity?.agreementDate).isNotNull()
-      assertThat(planEntity?.updatedBy?.username).isEqualTo("Tom C")
-      assertThat(planEntity?.updatedDate).isAfter(testStartTime)
-      assertThat(planEntity?.agreementDate).isBefore(planEntity?.updatedDate)
+      assertThat(planVersionEntity?.agreementDate).isNotNull()
+      assertThat(planVersionEntity?.updatedBy?.username).isEqualTo("Tom C")
+      assertThat(planVersionEntity?.updatedDate).isAfter(testStartTime)
+      assertThat(planVersionEntity?.agreementDate).isBefore(planVersionEntity?.updatedDate)
     }
 
     @Test

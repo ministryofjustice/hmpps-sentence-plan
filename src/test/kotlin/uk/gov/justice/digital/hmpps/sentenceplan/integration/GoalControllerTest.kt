@@ -20,8 +20,8 @@ import uk.gov.justice.digital.hmpps.sentenceplan.data.Step
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.AreaOfNeedRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalStatus
-import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntity
-import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionEntity
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepStatus
 import java.time.LocalDateTime
@@ -35,7 +35,7 @@ private const val TEST_DATA_GOAL_UUID = "31d7e986-4078-4f5c-af1d-115f9ba3722d"
 class GoalControllerTest : IntegrationTestBase() {
 
   @Autowired
-  lateinit var planRepository: PlanRepository
+  lateinit var planVersionRepository: PlanVersionRepository
 
   @Autowired
   lateinit var areaOfNeedRepository: AreaOfNeedRepository
@@ -65,13 +65,13 @@ class GoalControllerTest : IntegrationTestBase() {
 
   private val stepList: List<Step> = listOf(stepOne, stepTwo)
 
-  private lateinit var plan: PlanEntity
+  private lateinit var plan: PlanVersionEntity
 
   private var areaOfNeedName: String = ""
 
   @BeforeAll
   fun setup() {
-    plan = planRepository.findAll().first()
+    plan = planVersionRepository.findAll().first()
 
     areaOfNeedName = areaOfNeedRepository.findAll().first().name
 

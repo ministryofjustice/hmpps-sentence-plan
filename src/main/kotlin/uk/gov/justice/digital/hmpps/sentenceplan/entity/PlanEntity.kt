@@ -1,17 +1,20 @@
 package uk.gov.justice.digital.hmpps.sentenceplan.entity
 
 import com.fasterxml.jackson.annotation.JsonIgnore
+import jakarta.persistence.CascadeType
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.EntityListeners
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
+import jakarta.persistence.FetchType
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.OneToMany
+import jakarta.persistence.OneToOne
 import jakarta.persistence.OrderBy
 import jakarta.persistence.Table
 import jakarta.transaction.Transactional
@@ -62,6 +65,12 @@ class PlanEntity(
 
   @Column(name = "agreement_date")
   var agreementDate: Instant? = null,
+
+  @OneToOne(mappedBy = "plan", cascade = [CascadeType.ALL], fetch = FetchType.LAZY)
+  val agreementNote: PlanAgreementNoteEntity? = null,
+
+  @OneToMany(mappedBy = "plan", cascade = [CascadeType.ALL], fetch = FetchType.LAZY)
+  val planProgressNotes: Set<PlanProgressNoteEntity> = emptySet(),
 
   @OneToMany(mappedBy = "plan")
   @OrderBy("goalOrder ASC")

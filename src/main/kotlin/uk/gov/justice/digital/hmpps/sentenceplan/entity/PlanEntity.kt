@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.sentenceplan.entity
 import com.fasterxml.jackson.annotation.JsonIgnore
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
+import jakarta.persistence.EntityListeners
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
 import jakarta.persistence.GeneratedValue
@@ -17,15 +18,17 @@ import org.springframework.data.annotation.CreatedBy
 import org.springframework.data.annotation.CreatedDate
 import org.springframework.data.annotation.LastModifiedBy
 import org.springframework.data.annotation.LastModifiedDate
+import org.springframework.data.jpa.domain.support.AuditingEntityListener
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
-import java.time.Instant
+import java.time.LocalDateTime
 import java.util.UUID
 
 @Entity
 @Table(name = "plan")
+@EntityListeners(AuditingEntityListener::class)
 class PlanEntity(
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -42,7 +45,7 @@ class PlanEntity(
 
   @CreatedDate
   @Column(name = "created_date")
-  var createdDate: Instant? = Instant.now(),
+  var createdDate: LocalDateTime = LocalDateTime.now(),
 
   @CreatedBy
   @ManyToOne
@@ -51,7 +54,7 @@ class PlanEntity(
 
   @LastModifiedDate
   @Column(name = "last_updated_date", nullable = false)
-  var lastUpdatedDate: Instant? = Instant.now(),
+  var lastUpdatedDate: LocalDateTime = LocalDateTime.now(),
 
   @LastModifiedBy
   @ManyToOne
@@ -69,6 +72,7 @@ enum class PublishState {
 }
 
 interface PlanRepository : JpaRepository<PlanEntity, Long> {
+  fun findByUuid(planUuid: UUID): PlanEntity
 
   @Query("select p.* from plan p inner join oasys_pk_to_plan o on p.id = o.plan_id and o.oasys_assessment_pk = :oasysAssessmentPk", nativeQuery = true)
   fun findByOasysAssessmentPk(@Param("oasysAssessmentPk") oasysAssessmentPk: String): PlanEntity?

@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.sentenceplan.data.CreatePlanRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Goal
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntity
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.CounterSignPlanRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.RollbackPlanRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.response.PlanVersionResponse
@@ -101,7 +102,7 @@ class PlanController(
      *  - Handle any exceptions or edge cases (i.e plan not found).
      */
     @PathVariable planUuid: UUID,
-  ): PlanEntity {
+  ): PlanVersionEntity {
     return planService.getPlanByUuid(planUuid) ?: throw NoResourceFoundException(HttpMethod.GET, "No Plan found for $planUuid")
   }
 
@@ -126,11 +127,11 @@ class PlanController(
 
   @PostMapping("/{planUuid}/agree")
   @ResponseStatus(HttpStatus.ACCEPTED)
-  fun agreePlan(
+  fun agreePlanVersion(
     @PathVariable planUuid: UUID,
     @RequestBody agreement: Agreement,
-  ): PlanEntity {
-    return planService.agreePlan(planUuid, agreement)
+  ): PlanVersionEntity {
+    return planService.agreePlanVersion(planUuid, agreement)
   }
 
   @PostMapping("/{planUuid}/clone")

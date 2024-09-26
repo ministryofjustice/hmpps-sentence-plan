@@ -12,7 +12,7 @@ data class PlanVersionResponse(
       return PlanVersionResponse(
         planUuid = planEntity.uuid,
         // Set proper version later
-        planVersion = 0L,
+        planVersion = planEntity.currentVersion.version,
       )
     }
   }

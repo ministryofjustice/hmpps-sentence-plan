@@ -59,8 +59,8 @@ class OasysControllerTest : IntegrationTestBase() {
     @Test
     @WithMockUser(username = "SYSTEM|OASTUB")
     fun `should return conflict when oasys_assessment_PK has existing association`() {
-      val plan = planRepository.save(PlanEntity())
-      planRepository.createOasysAssessmentPk(planRequestBody.oasysAssessmentPk, plan.uuid)
+      val planVersionEntity = planRepository.save(PlanEntity())
+      planRepository.createOasysAssessmentPk(planRequestBody.oasysAssessmentPk, planVersionEntity.id!!)
 
       val response = webTestClient.post().uri("/oasys/plans").header("Content-Type", "application/json")
         .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))

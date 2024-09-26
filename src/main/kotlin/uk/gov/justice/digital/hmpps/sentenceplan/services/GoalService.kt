@@ -10,18 +10,17 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.AreaOfNeedRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalStatus
-import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepRepository
-import java.time.Instant
-import java.time.format.DateTimeFormatter
+import java.time.LocalDateTime
 import java.util.UUID
 
 @Service
 class GoalService(
   private val goalRepository: GoalRepository,
   private val areaOfNeedRepository: AreaOfNeedRepository,
-  private val planRepository: PlanRepository,
+  private val planVersionRepository: PlanVersionRepository,
   private val stepRepository: StepRepository,
 ) {
 
@@ -29,7 +28,7 @@ class GoalService(
 
   @Transactional
   fun createNewGoal(planUuid: UUID, goal: Goal): GoalEntity {
-    val planEntity = planRepository.findByUuid(planUuid)
+    val planVersionEntity = planVersionRepository.findByUuid(planUuid)
       ?: throw Exception("A Plan with this UUID was not found: $planUuid")
 
     require(goal.areaOfNeed != null && goal.title != null)
@@ -39,15 +38,15 @@ class GoalService(
 
     val relatedAreasOfNeedEntity = getAreasOfNeedByNames(goal)
 
-    val highestGoalOrder = planEntity.goals.maxByOrNull { g -> g.goalOrder }?.goalOrder ?: 0
+    val highestGoalOrder = planVersionEntity.goals.maxByOrNull { g -> g.goalOrder }?.goalOrder ?: 0
 
     val goalEntity = GoalEntity(
       title = goal.title,
       areaOfNeed = areaOfNeedEntity,
-      targetDate = goal.targetDate,
+      targetDate = LocalDateTime.parse(goal.targetDate),
       status = if (goal.targetDate != null) GoalStatus.ACTIVE else GoalStatus.FUTURE,
-      statusDate = DateTimeFormatter.ISO_INSTANT.format(Instant.now()),
-      planVersion = planEntity,
+      statusDate = LocalDateTime.now(),
+      planVersion = planVersionEntity,
       relatedAreasOfNeed = relatedAreasOfNeedEntity.toMutableList(),
       goalOrder = highestGoalOrder + 1,
     )

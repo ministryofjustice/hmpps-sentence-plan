@@ -12,10 +12,15 @@ import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.OneToOne
 import jakarta.persistence.Table
+import jakarta.transaction.Transactional
 import org.springframework.data.annotation.CreatedBy
 import org.springframework.data.annotation.CreatedDate
 import org.springframework.data.annotation.LastModifiedBy
 import org.springframework.data.annotation.LastModifiedDate
+import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Modifying
+import org.springframework.data.jpa.repository.Query
+import org.springframework.data.repository.query.Param
 import java.time.Instant
 import java.util.UUID
 
@@ -61,4 +66,15 @@ enum class PublishState {
   UNPUBLISHED,
   PUBLISHED,
   ARCHIVED,
+}
+
+interface PlanRepository : JpaRepository<PlanEntity, Long> {
+
+  @Query("select p.* from plan p inner join oasys_pk_to_plan o on p.id = o.plan_id and o.oasys_assessment_pk = :oasysAssessmentPk", nativeQuery = true)
+  fun findByOasysAssessmentPk(@Param("oasysAssessmentPk") oasysAssessmentPk: String): PlanEntity?
+
+  @Modifying
+  @Transactional
+  @Query("insert into oasys_pk_to_plan(oasys_assessment_pk, plan_id) values (:oasysAssessmentPk, :planId)", nativeQuery = true)
+  fun createOasysAssessmentPk(@Param("oasysAssessmentPk") oasysAssessmentPk: String, @Param("planId") planId: Long)
 }

@@ -20,6 +20,7 @@ import uk.gov.justice.digital.hmpps.sentenceplan.config.ErrorResponse
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Agreement
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Goal
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalEntity
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.CounterSignPlanRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.RollbackPlanRequest
@@ -37,7 +38,7 @@ class PlanController(
 
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
-  fun createPlan(): PlanVersionEntity {
+  fun createPlan(): PlanEntity {
     return planService.createPlan()
   }
 
@@ -100,11 +101,11 @@ class PlanController(
 
   @PostMapping("/{planUuid}/agree")
   @ResponseStatus(HttpStatus.ACCEPTED)
-  fun agreePlan(
+  fun agreePlanVersion(
     @PathVariable planUuid: UUID,
     @RequestBody agreement: Agreement,
   ): PlanVersionEntity {
-    return planService.agreePlan(planUuid, agreement)
+    return planService.agreePlanVersion(planUuid, agreement)
   }
 
   @PostMapping("/{planUuid}/clone")

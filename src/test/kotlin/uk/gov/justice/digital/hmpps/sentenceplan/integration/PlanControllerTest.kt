@@ -24,7 +24,6 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalStatus
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanAgreementStatus
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionEntity
-import java.time.Instant
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -42,7 +41,7 @@ class PlanControllerTest : IntegrationTestBase() {
   inner class CreatePlan {
     @Test
     fun `should create a new plan`() {
-      val testStartTime = Instant.now()
+      val testStartTime = LocalDateTime.now()
 
       val planVersionEntity: PlanVersionEntity? = webTestClient.post().uri("/plans").header("Content-Type", "application/json")
         .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
@@ -281,7 +280,7 @@ class PlanControllerTest : IntegrationTestBase() {
     @Test
     @Order(1)
     fun `agree plan`() {
-      val testStartTime = Instant.now()
+      val testStartTime = LocalDateTime.now()
 
       val planVersionEntity: PlanVersionEntity? = webTestClient.post().uri("/plans/650df4b2-f74d-4ab7-85a1-143d2a7d8cfe/agree")
         .header("Content-Type", "application/json")

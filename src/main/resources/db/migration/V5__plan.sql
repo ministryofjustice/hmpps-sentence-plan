@@ -1,7 +1,7 @@
 create table if not exists plan
 (
     id                 serial       PRIMARY KEY,
-    publish_status     publish_type NOT NULL,
+    published_state    publish_type NOT NULL,
     uuid               uuid         NOT NULL UNIQUE,
     created_date       timestamp    NOT NULL,
     created_by_id      integer      NOT NULL,

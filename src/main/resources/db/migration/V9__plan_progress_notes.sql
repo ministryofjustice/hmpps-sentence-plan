@@ -10,7 +10,7 @@ $$;
 create table if not exists plan_progress_notes
 (
     id                     serial PRIMARY KEY,
-    plan_id                integer                NOT NULL,
+    plan_version_id        integer                NOT NULL,
     note                   varchar(512)           NOT NULL,
     is_support_needed      note_is_support_needed NOT NULL,
     is_support_needed_note varchar(512),
@@ -19,5 +19,6 @@ create table if not exists plan_progress_notes
     person_name            varchar(128)           NOT NULL,
     practitioner_name      varchar(128)           NOT NULL,
     creation_date          timestamp              NOT NULL,
-    FOREIGN KEY (plan_id) REFERENCES plan (id) ON DELETE CASCADE
+    FOREIGN KEY (plan_version_id) REFERENCES plan_version (id) ON DELETE CASCADE
 );
+

@@ -12,6 +12,7 @@ import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
+import org.springframework.data.annotation.CreatedBy
 import org.springframework.data.jpa.repository.JpaRepository
 import java.time.LocalDateTime
 import java.util.UUID
@@ -28,6 +29,12 @@ class StepEntity(
   @Column(name = "uuid")
   val uuid: UUID = UUID.randomUUID(),
 
+  // this is nullable in the declaration to enable ignoring the field in JSON serialisation
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "goal_id", nullable = false)
+  @JsonIgnore
+  val goal: GoalEntity? = null,
+
   @Column(name = "description")
   val description: String,
 
@@ -35,14 +42,13 @@ class StepEntity(
   @Enumerated(EnumType.STRING)
   val status: StepStatus = StepStatus.NOT_STARTED,
 
-  @Column(name = "creation_date", columnDefinition = "TIMESTAMP")
-  val creationDate: LocalDateTime = LocalDateTime.now(),
+  @Column(name = "created_date", columnDefinition = "TIMESTAMP")
+  val createdDate: LocalDateTime = LocalDateTime.now(),
 
-  // this is nullable in the declaration to enable ignoring the field in JSON serialisation
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "goal_id", nullable = false)
-  @JsonIgnore
-  val goal: GoalEntity? = null,
+  @CreatedBy
+  @ManyToOne
+  @JoinColumn(name = "created_by_id")
+  var createdBy: PractitionerEntity? = null,
 
   @Column(name = "actor", nullable = false)
   var actor: String,

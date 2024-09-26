@@ -18,6 +18,7 @@ import jakarta.persistence.OneToOne
 import jakarta.persistence.OrderBy
 import jakarta.persistence.Table
 import jakarta.transaction.Transactional
+import org.springframework.data.annotation.CreatedBy
 import org.springframework.data.annotation.CreatedDate
 import org.springframework.data.annotation.LastModifiedBy
 import org.springframework.data.annotation.LastModifiedDate
@@ -26,7 +27,7 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
-import java.time.Instant
+import java.time.LocalDateTime
 import java.util.UUID
 
 @Entity(name = "Plan")
@@ -42,49 +43,73 @@ class PlanVersionEntity(
   @Column(name = "uuid")
   val uuid: UUID = UUID.randomUUID(),
 
+  @Column(name = "version")
+  val version: Int = 0,
+
+  @OneToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "plan_id", nullable = false)
+  @JsonIgnore
+  val plan: PlanEntity,
+
   @Column(name = "countersigning_status")
   @Enumerated(EnumType.STRING)
-  val status: CountersigningStatus = CountersigningStatus.INCOMPLETE,
+  val status: CountersigningStatus = CountersigningStatus.UNSIGNED,
 
   @Column(name = "agreement_status")
   @Enumerated(EnumType.STRING)
-  var agreementStatus: PlanStatus = PlanStatus.DRAFT,
+  var agreementStatus: PlanAgreementStatus = PlanAgreementStatus.DRAFT,
 
   @CreatedDate
-  @Column(name = "creation_date")
-  val creationDate: Instant = Instant.now(),
+  @Column(name = "created_date")
+  val createdDate: LocalDateTime = LocalDateTime.now(),
+
+  @CreatedBy
+  @ManyToOne
+  @JoinColumn(name = "created_by_id")
+  var createdBy: PractitionerEntity? = null,
 
   @LastModifiedDate
-  @Column(name = "updated_date")
-  var updatedDate: Instant = Instant.now(),
+  @Column(name = "last_updated_date")
+  var updatedDate: LocalDateTime = LocalDateTime.now(),
 
   @LastModifiedBy
   @ManyToOne
-  @JoinColumn(name = "updated_by_id")
+  @JoinColumn(name = "last_updated_by_id")
   var updatedBy: PractitionerEntity? = null,
 
   @Column(name = "agreement_date")
-  var agreementDate: Instant? = null,
+  var agreementDate: LocalDateTime? = null,
 
-  @OneToOne(mappedBy = "plan", cascade = [CascadeType.ALL], fetch = FetchType.LAZY)
+  @Column(name = "read_only")
+  var readOnly: Boolean = false,
+
+  @Column(name = "checksum")
+  var checksum: String? = null,
+
+  @OneToOne(mappedBy = "planVersion", cascade = [CascadeType.ALL], fetch = FetchType.LAZY)
   val agreementNote: PlanAgreementNoteEntity? = null,
 
-  @OneToMany(mappedBy = "plan", cascade = [CascadeType.ALL], fetch = FetchType.LAZY)
+  @OneToMany(mappedBy = "planVersion", cascade = [CascadeType.ALL], fetch = FetchType.LAZY)
   val planProgressNotes: Set<PlanProgressNoteEntity> = emptySet(),
 
-  @OneToMany(mappedBy = "plan")
+  @OneToMany(mappedBy = "planVersion")
   @OrderBy("goalOrder ASC")
   val goals: Set<GoalEntity> = emptySet(),
 )
 
 enum class CountersigningStatus {
-  INCOMPLETE,
-  COMPLETE,
-  LOCKED,
-  SIGNED,
+  AWAITING_COUNTERSIGN,
+  AWAITING_DOUBLE_COUNTERSIGN,
+  COUNTERSIGNED,
+  DOUBLE_COUNTERSIGNED,
+  LOCKED_INCOMPLETE,
+  REJECTED,
+  ROLLED_BACK,
+  SELF_SIGNED,
+  UNSIGNED,
 }
 
-enum class PlanStatus {
+enum class PlanAgreementStatus {
   DRAFT,
   AGREED,
   DO_NOT_AGREE,

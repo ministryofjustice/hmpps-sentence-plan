@@ -47,7 +47,7 @@ class GoalService(
       targetDate = goal.targetDate,
       status = if (goal.targetDate != null) GoalStatus.ACTIVE else GoalStatus.FUTURE,
       statusDate = DateTimeFormatter.ISO_INSTANT.format(Instant.now()),
-      plan = planEntity,
+      planVersion = planEntity,
       relatedAreasOfNeed = relatedAreasOfNeedEntity.toMutableList(),
       goalOrder = highestGoalOrder + 1,
     )

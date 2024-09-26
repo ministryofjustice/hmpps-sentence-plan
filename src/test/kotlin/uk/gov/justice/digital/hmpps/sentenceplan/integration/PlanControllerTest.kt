@@ -22,7 +22,7 @@ import uk.gov.justice.digital.hmpps.sentenceplan.data.Goal
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.AreaOfNeedEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalStatus
-import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanStatus
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanAgreementStatus
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionEntity
 import java.time.Instant
 import java.time.LocalDateTime
@@ -271,7 +271,7 @@ class PlanControllerTest : IntegrationTestBase() {
   @Sql(scripts = [ "/db/test/agree_plan_cleanup.sql" ], executionPhase = AFTER_TEST_CLASS)
   inner class AgreePlan {
     private val agreePlanBody = Agreement(
-      PlanStatus.AGREED,
+      PlanAgreementStatus.AGREED,
       "Agreed",
       "Note",
       "Sarah B",

@@ -54,7 +54,7 @@ class GoalServiceTest {
   private val goalEntityNoSteps: GoalEntity = GoalEntity(
     title = "Mock Goal",
     areaOfNeed = mockk<AreaOfNeedEntity>(),
-    plan = null,
+    planVersion = null,
     uuid = goalUuid,
     goalOrder = 1,
   )
@@ -62,7 +62,7 @@ class GoalServiceTest {
   private val goalEntityWithRelatedAreasOfNeed: GoalEntity = GoalEntity(
     title = "Mock Goal with Related Areas of Need",
     areaOfNeed = mockk<AreaOfNeedEntity>(),
-    plan = null,
+    planVersion = null,
     uuid = goalUuid,
     goalOrder = 1,
     relatedAreasOfNeed = mockk<MutableList<AreaOfNeedEntity>>(),
@@ -321,7 +321,7 @@ class GoalServiceTest {
       val goalEntityWithOneStep = GoalEntity(
         title = "Mock Goal",
         areaOfNeed = mockk<AreaOfNeedEntity>(),
-        plan = null,
+        planVersion = null,
         uuid = goalUuid,
         goalOrder = 1,
       )

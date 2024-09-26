@@ -18,12 +18,15 @@ import jakarta.persistence.OneToMany
 import jakarta.persistence.OrderBy
 import jakarta.persistence.Table
 import jakarta.persistence.UniqueConstraint
+import org.springframework.data.annotation.CreatedBy
+import org.springframework.data.annotation.LastModifiedBy
+import org.springframework.data.annotation.LastModifiedDate
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Goal
 import java.time.Instant
-import java.time.format.DateTimeFormatter
+import java.time.LocalDateTime
 import java.util.UUID
 
 @Entity(name = "Goal")
@@ -46,26 +49,40 @@ class GoalEntity(
   val areaOfNeed: AreaOfNeedEntity,
 
   @Column(name = "target_date")
-  var targetDate: String? = null,
+  var targetDate: LocalDateTime? = null,
 
-  @Column(name = "creation_date")
-  val creationDate: String = DateTimeFormatter.ISO_INSTANT.format(Instant.now()),
+  @Column(name = "created_date")
+  val createdDate: LocalDateTime = LocalDateTime.now(),
+
+  @CreatedBy
+  @ManyToOne
+  @JoinColumn(name = "created_by_id")
+  var createdBy: PractitionerEntity? = null,
+
+  @LastModifiedDate
+  @Column(name = "last_updated_date")
+  var updatedDate: Instant = Instant.now(),
+
+  @LastModifiedBy
+  @ManyToOne
+  @JoinColumn(name = "last_updated_by_id")
+  var updatedBy: PractitionerEntity? = null,
 
   @Column(name = "goal_status")
   @Enumerated(EnumType.STRING)
   var status: GoalStatus? = null,
 
   @Column(name = "status_date")
-  var statusDate: String? = null,
-
-  @Column(name = "goal_order")
-  val goalOrder: Int = 0,
+  var statusDate: LocalDateTime? = null,
 
   // this is nullable in the declaration to enable ignoring the field in JSON serialisation
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "plan_id", nullable = false)
+  @JoinColumn(name = "plan_version_id", nullable = false)
   @JsonIgnore
-  val plan: PlanVersionEntity?,
+  val planVersion: PlanVersionEntity?,
+
+  @Column(name = "goal_order")
+  val goalOrder: Int = 0,
 
   @OneToMany(mappedBy = "goal", cascade = [CascadeType.ALL])
   @OrderBy("creationDate ASC")
@@ -87,10 +104,10 @@ class GoalEntity(
     }
 
     if (goal.targetDate != null) {
-      this.targetDate = goal.targetDate
+      this.targetDate = LocalDateTime.parse(goal.targetDate)
       if (this.status == GoalStatus.FUTURE) {
         this.status = GoalStatus.ACTIVE
-        this.statusDate = DateTimeFormatter.ISO_INSTANT.format(Instant.now())
+        this.statusDate = LocalDateTime.now()
       }
     }
 
@@ -100,7 +117,7 @@ class GoalEntity(
 
     if (goal.status != null) {
       this.status = goal.status
-      this.statusDate = DateTimeFormatter.ISO_INSTANT.format(Instant.now())
+      this.statusDate = LocalDateTime.now()
     }
 
     this.relatedAreasOfNeed = relatedAreasOfNeedList.toMutableList()
@@ -118,8 +135,6 @@ enum class GoalStatus {
 
 interface GoalRepository : JpaRepository<GoalEntity, Long> {
   fun findByUuid(uuid: UUID): GoalEntity?
-
-  fun findByPlan(plan: PlanVersionEntity): List<GoalEntity>
 
   @Modifying
   @Query("update Goal g set g.goalOrder = ?1 where g.uuid = ?2")

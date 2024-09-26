@@ -13,8 +13,8 @@ import org.mockito.kotlin.any
 import org.springframework.web.server.ResponseStatusException
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Agreement
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanAgreementNoteRepository
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanAgreementStatus
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
-import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanStatus
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.exceptions.ConflictException
 import java.util.UUID
@@ -140,7 +140,7 @@ class PlanServiceTest {
   @DisplayName("agreePlan")
   inner class AgreePlan {
     private val agreement = Agreement(
-      PlanStatus.AGREED,
+      PlanAgreementStatus.AGREED,
       "Agree",
       "Agreed",
       "Tom C",
@@ -161,7 +161,7 @@ class PlanServiceTest {
 
     @Test
     fun `should throw exception when plan already agreed`() {
-      val planVersionEntity: PlanVersionEntity = PlanVersionEntity(agreementStatus = PlanStatus.AGREED)
+      val planVersionEntity: PlanVersionEntity = PlanVersionEntity(agreementStatus = PlanAgreementStatus.AGREED)
       every { planRepository.findByUuid(any()) } returns planVersionEntity
 
       val exception = assertThrows(ConflictException::class.java) {

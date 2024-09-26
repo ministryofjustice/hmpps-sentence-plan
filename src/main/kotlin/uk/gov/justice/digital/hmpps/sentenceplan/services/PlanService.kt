@@ -6,8 +6,8 @@ import org.springframework.web.server.ResponseStatusException
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Agreement
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanAgreementNoteEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanAgreementNoteRepository
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanAgreementStatus
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
-import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanStatus
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.exceptions.ConflictException
 import java.time.Instant
@@ -46,7 +46,7 @@ class PlanService(
       ?: throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Plan $planUuid was not found.")
 
     when (plan.agreementStatus) {
-      PlanStatus.DRAFT -> {
+      PlanAgreementStatus.DRAFT -> {
         val updatedDate = Instant.now()
         plan.agreementStatus = agreement.agreementStatus
         plan.agreementDate = updatedDate

@@ -6,10 +6,10 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient
 import org.springframework.test.context.jdbc.Sql
 import org.springframework.test.context.jdbc.Sql.ExecutionPhase.AFTER_TEST_CLASS
+import org.springframework.test.context.jdbc.Sql.ExecutionPhase.AFTER_TEST_METHOD
 import org.springframework.test.context.jdbc.Sql.ExecutionPhase.BEFORE_TEST_CLASS
 import org.springframework.test.context.jdbc.Sql.ExecutionPhase.BEFORE_TEST_METHOD
 import org.springframework.test.web.reactive.server.expectBody
@@ -18,10 +18,8 @@ import uk.gov.justice.digital.hmpps.sentenceplan.config.ErrorResponse
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Goal
 import uk.gov.justice.digital.hmpps.sentenceplan.data.GoalOrder
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Step
-import uk.gov.justice.digital.hmpps.sentenceplan.entity.AreaOfNeedRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalStatus
-import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepStatus
 import java.time.LocalDate
@@ -33,12 +31,6 @@ private const val TEST_DATA_GOAL_UUID = "31d7e986-4078-4f5c-af1d-115f9ba3722d"
 @DisplayName("Goal Controller Tests")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class GoalControllerTest : IntegrationTestBase() {
-
-  @Autowired
-  lateinit var planVersionRepository: PlanVersionRepository
-
-  @Autowired
-  lateinit var areaOfNeedRepository: AreaOfNeedRepository
 
   lateinit var goalRequestBody: Goal
 
@@ -460,13 +452,13 @@ class GoalControllerTest : IntegrationTestBase() {
 
   @Nested
   @DisplayName("updateSteps")
-  @Sql(scripts = ["/db/test/update_steps_data.sql"], executionPhase = BEFORE_TEST_CLASS)
-  @Sql(scripts = ["/db/test/update_steps_cleanup.sql"], executionPhase = AFTER_TEST_CLASS)
+  @Sql(scripts = [ "/db/test/oasys_assessment_pk_data.sql", "/db/test/goals_data.sql" ], executionPhase = BEFORE_TEST_CLASS)
+  @Sql(scripts = [ "/db/test/goals_cleanup.sql", "/db/test/oasys_assessment_pk_cleanup.sql" ], executionPhase = AFTER_TEST_CLASS)
   inner class UpdateStepsTests {
 
     @Test
     fun `update steps for goal with no steps should return list of new entities`() {
-      val goalWithNoStepsUuid = "b9c66782-1dd0-4be5-910a-001e01313420"
+      val goalWithNoStepsUuid = "31d7e986-4078-4f5c-af1d-115f9ba3722d"
 
       val steps: List<StepEntity>? = webTestClient.put().uri("/goals/$goalWithNoStepsUuid/steps")
         .header("Content-Type", "application/json")
@@ -483,8 +475,10 @@ class GoalControllerTest : IntegrationTestBase() {
     }
 
     @Test
+    @Sql(scripts = [ "/db/test/step_data.sql" ], executionPhase = BEFORE_TEST_METHOD)
+    @Sql(scripts = [ "/db/test/step_cleanup.sql" ], executionPhase = AFTER_TEST_METHOD)
     fun `update steps for goal with existing step should return list of new entities`() {
-      val goalWithOneStepUuid = "8b889730-ade8-4c3c-8e06-91a78b3ff3b2"
+      val goalWithOneStepUuid = "31d7e986-4078-4f5c-af1d-115f9ba3722d"
 
       val steps: List<StepEntity>? = webTestClient.put().uri("/goals/$goalWithOneStepUuid/steps")
         .header("Content-Type", "application/json")
@@ -538,7 +532,7 @@ class GoalControllerTest : IntegrationTestBase() {
 
     @Test
     fun `update steps should fail for a known goal when one step is incomplete`() {
-      val goalWithNoStepsUuid = "b9c66782-1dd0-4be5-910a-001e01313420"
+      val goalWithNoStepsUuid = "31d7e986-4078-4f5c-af1d-115f9ba3722d"
 
       val incompleteStep = Step(
         description = "Step description",
@@ -559,7 +553,7 @@ class GoalControllerTest : IntegrationTestBase() {
 
     @Test
     fun `update steps should fail for a known goal when list of steps is empty`() {
-      val goalWithNoStepsUuid = "b9c66782-1dd0-4be5-910a-001e01313420"
+      val goalWithNoStepsUuid = "31d7e986-4078-4f5c-af1d-115f9ba3722d"
 
       webTestClient.put().uri("/goals/$goalWithNoStepsUuid/steps")
         .header("Content-Type", "application/json")

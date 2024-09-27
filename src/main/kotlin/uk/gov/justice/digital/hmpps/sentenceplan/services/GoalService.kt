@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepRepository
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -57,7 +58,7 @@ class GoalService(
     val goalEntity = GoalEntity(
       title = goal.title,
       areaOfNeed = areaOfNeedEntity,
-      targetDate = goal.targetDate?.let { LocalDateTime.parse(it) },
+      targetDate = goal.targetDate?.let { LocalDate.parse(it) },
       status = if (goal.targetDate != null) GoalStatus.ACTIVE else GoalStatus.FUTURE,
       statusDate = LocalDateTime.now(),
       planVersion = planVersionEntity,

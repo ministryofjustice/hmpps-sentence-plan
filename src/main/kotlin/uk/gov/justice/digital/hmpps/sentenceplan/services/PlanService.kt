@@ -24,6 +24,11 @@ class PlanService(
 
   fun getPlanByUuid(planUuid: UUID): PlanVersionEntity? = planVersionRepository.findByUuid(planUuid)
 
+  fun getPlanVersionByPlanUuid(planUuid: UUID): PlanVersionEntity {
+    val planEntity = planRepository.findByUuid(planUuid)
+    return planVersionRepository.findByUuid(planEntity.currentVersion?.uuid!!)
+  }
+
   fun getPlanByOasysAssessmentPk(oasysAssessmentPk: String): PlanEntity? =
     planRepository.findByOasysAssessmentPk(oasysAssessmentPk)
 
@@ -34,15 +39,15 @@ class PlanService(
 
     val plan = PlanEntity()
     val planEntity = planRepository.save(plan)
-    planRepository.createOasysAssessmentPk(oasysAssessmentPk, planEntity.id!!)
-    return plan
-  }
 
-  // todo where is this used and for what
-  fun createPlan(): PlanEntity {
-    val plan = PlanEntity()
-    planRepository.save(plan)
-    return plan
+    val planVersion = PlanVersionEntity(plan = planEntity)
+    val planVersionEntity = planVersionRepository.save(planVersion)
+
+    planEntity.currentVersion = planVersionEntity
+    planRepository.save(planEntity)
+
+    planRepository.createOasysAssessmentPk(oasysAssessmentPk, planEntity.id!!)
+    return planEntity
   }
 
   fun agreePlanVersion(planUuid: UUID, agreement: Agreement): PlanVersionEntity {

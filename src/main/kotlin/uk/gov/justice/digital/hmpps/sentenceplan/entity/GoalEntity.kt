@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore
 import jakarta.persistence.CascadeType
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
+import jakarta.persistence.EntityListeners
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
 import jakarta.persistence.FetchType
@@ -21,16 +22,17 @@ import jakarta.persistence.UniqueConstraint
 import org.springframework.data.annotation.CreatedBy
 import org.springframework.data.annotation.LastModifiedBy
 import org.springframework.data.annotation.LastModifiedDate
+import org.springframework.data.jpa.domain.support.AuditingEntityListener
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Goal
-import java.time.Instant
 import java.time.LocalDateTime
 import java.util.UUID
 
 @Entity(name = "Goal")
 @Table(name = "goal")
+@EntityListeners(AuditingEntityListener::class)
 class GoalEntity(
   @Id
   @Column(name = "id")
@@ -61,7 +63,7 @@ class GoalEntity(
 
   @LastModifiedDate
   @Column(name = "last_updated_date")
-  var updatedDate: Instant = Instant.now(),
+  var updatedDate: LocalDateTime = LocalDateTime.now(),
 
   @LastModifiedBy
   @ManyToOne

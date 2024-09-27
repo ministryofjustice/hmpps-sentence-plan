@@ -20,17 +20,14 @@ class OasysController(private val service: PlanService) {
 
   @GetMapping("/plans/{oasysAssessmentPk}")
   @ResponseStatus(HttpStatus.OK)
-  fun getPlan(
-    @PathVariable oasysAssessmentPk: String,
-  ): PlanEntity {
-    return service.getPlanByOasysAssessmentPk(oasysAssessmentPk) ?: throw NoResourceFoundException(HttpMethod.GET, "No resource found for $oasysAssessmentPk")
-  }
+  fun getPlan(@PathVariable oasysAssessmentPk: String): PlanEntity =
+    service.getPlanByOasysAssessmentPk(oasysAssessmentPk) ?: throw NoResourceFoundException(
+      HttpMethod.GET,
+      "No resource found for $oasysAssessmentPk",
+    )
 
   @PostMapping("/plans")
   @ResponseStatus(HttpStatus.CREATED)
-  fun createPlan(
-    @RequestBody requestBody: CreatePlanWithOasysAssesmentPkRequest,
-  ): PlanEntity {
-    return service.createPlanByOasysAssessmentPk(requestBody.oasysAssessmentPk)
-  }
+  fun createPlan(@RequestBody requestBody: CreatePlanWithOasysAssesmentPkRequest): PlanEntity =
+    service.createPlanByOasysAssessmentPk(requestBody.oasysAssessmentPk)
 }

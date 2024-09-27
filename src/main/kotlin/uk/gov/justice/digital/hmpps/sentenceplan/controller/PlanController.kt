@@ -20,7 +20,6 @@ import uk.gov.justice.digital.hmpps.sentenceplan.config.ErrorResponse
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Agreement
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Goal
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalEntity
-import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.CounterSignPlanRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.RollbackPlanRequest
@@ -35,12 +34,6 @@ class PlanController(
   private val planService: PlanService,
   private val goalService: GoalService,
 ) {
-
-  @PostMapping
-  @ResponseStatus(HttpStatus.CREATED)
-  fun createPlan(): PlanEntity {
-    return planService.createPlan()
-  }
 
   @GetMapping("/{planUuid}")
   @Operation(
@@ -77,7 +70,7 @@ class PlanController(
      */
     @PathVariable planUuid: UUID,
   ): PlanVersionEntity {
-    return planService.getPlanByUuid(planUuid) ?: throw NoResourceFoundException(HttpMethod.GET, "No Plan found for $planUuid")
+    return planService.getPlanVersionByPlanUuid(planUuid) ?: throw NoResourceFoundException(HttpMethod.GET, "No Plan found for $planUuid")
   }
 
   @GetMapping("/{planUuid}/goals")

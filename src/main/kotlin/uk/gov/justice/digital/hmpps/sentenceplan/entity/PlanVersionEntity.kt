@@ -17,7 +17,6 @@ import jakarta.persistence.OneToMany
 import jakarta.persistence.OneToOne
 import jakarta.persistence.OrderBy
 import jakarta.persistence.Table
-import org.springframework.dao.EmptyResultDataAccessException
 import org.springframework.data.annotation.CreatedBy
 import org.springframework.data.annotation.CreatedDate
 import org.springframework.data.annotation.LastModifiedBy
@@ -114,6 +113,5 @@ enum class PlanAgreementStatus {
 }
 
 interface PlanVersionRepository : JpaRepository<PlanVersionEntity, Long> {
-  @Throws(EmptyResultDataAccessException::class)
   fun findByUuid(planVersionUuid: UUID): PlanVersionEntity
 }

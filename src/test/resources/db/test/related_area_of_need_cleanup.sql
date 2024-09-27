@@ -1,0 +1,1 @@
+DELETE FROM related_area_of_need;

@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.sentenceplan.services
 
+import org.springframework.dao.EmptyResultDataAccessException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Goal
@@ -10,6 +11,8 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.AreaOfNeedRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalStatus
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepRepository
@@ -22,19 +25,30 @@ class GoalService(
   private val areaOfNeedRepository: AreaOfNeedRepository,
   private val planVersionRepository: PlanVersionRepository,
   private val stepRepository: StepRepository,
+  private val planRepository: PlanRepository,
 ) {
 
   fun getGoalByUuid(goalUuid: UUID): GoalEntity? = goalRepository.findByUuid(goalUuid)
 
   @Transactional
   fun createNewGoal(planUuid: UUID, goal: Goal): GoalEntity {
-    val planVersionEntity = planVersionRepository.findByUuid(planUuid)
-      ?: throw Exception("A Plan with this UUID was not found: $planUuid")
+    var planVersionEntity: PlanVersionEntity
+
+    try {
+      planVersionEntity = planRepository.findByUuid(planUuid).currentVersion!!
+    } catch (e: EmptyResultDataAccessException) {
+      throw Exception("A Plan with this UUID was not found: $planUuid")
+    }
 
     require(goal.areaOfNeed != null && goal.title != null)
 
-    val areaOfNeedEntity = areaOfNeedRepository.findByNameIgnoreCase(goal.areaOfNeed)
-      ?: throw Exception("An Area of Need with this name was not found: ${goal.areaOfNeed}")
+    val areaOfNeedEntity: AreaOfNeedEntity
+
+    try {
+      areaOfNeedEntity = areaOfNeedRepository.findByNameIgnoreCase(goal.areaOfNeed)
+    } catch (e: EmptyResultDataAccessException) {
+      throw Exception("An Area of Need with this name was not found: ${goal.areaOfNeed}")
+    }
 
     val relatedAreasOfNeedEntity = getAreasOfNeedByNames(goal)
 
@@ -43,7 +57,7 @@ class GoalService(
     val goalEntity = GoalEntity(
       title = goal.title,
       areaOfNeed = areaOfNeedEntity,
-      targetDate = LocalDateTime.parse(goal.targetDate),
+      targetDate = goal.targetDate?.let { LocalDateTime.parse(it) },
       status = if (goal.targetDate != null) GoalStatus.ACTIVE else GoalStatus.FUTURE,
       statusDate = LocalDateTime.now(),
       planVersion = planVersionEntity,

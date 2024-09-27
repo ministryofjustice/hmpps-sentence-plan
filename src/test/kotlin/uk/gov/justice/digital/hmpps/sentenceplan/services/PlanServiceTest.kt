@@ -29,7 +29,7 @@ class PlanServiceTest {
   private val planEntity: PlanEntity = PlanEntity()
 
   @Nested
-  @DisplayName("gePlayByUuid")
+  @DisplayName("getPlanByUuid")
   inner class GetPlanByUuid {
 
     @Test

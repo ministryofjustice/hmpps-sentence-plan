@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import jakarta.validation.Valid
+import org.springframework.dao.EmptyResultDataAccessException
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.GetMapping
@@ -70,7 +71,11 @@ class PlanController(
      */
     @PathVariable planUuid: UUID,
   ): PlanVersionEntity {
-    return planService.getPlanVersionByPlanUuid(planUuid) ?: throw NoResourceFoundException(HttpMethod.GET, "No Plan found for $planUuid")
+    try {
+      return planService.getPlanVersionByPlanUuid(planUuid)
+    } catch (e: EmptyResultDataAccessException) {
+      throw NoResourceFoundException(HttpMethod.GET, "Could not retrieve the latest version of plan with ID: $planUuid")
+    }
   }
 
   @GetMapping("/{planUuid}/goals")

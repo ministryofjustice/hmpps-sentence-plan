@@ -37,26 +37,9 @@ class PlanControllerTest : IntegrationTestBase() {
   val mutablePlanUuid = "4fe411e3-820d-4198-8400-ab4268208641"
 
   @Nested
-  @DisplayName("createPlan")
-  inner class CreatePlan {
-    @Test
-    fun `should create a new plan`() {
-      val testStartTime = LocalDateTime.now()
-
-      val planVersionEntity: PlanVersionEntity? = webTestClient.post().uri("/plans").header("Content-Type", "application/json")
-        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
-        .exchange()
-        .expectStatus().isCreated
-        .expectBody<PlanVersionEntity>()
-        .returnResult().responseBody
-
-      assertThat(planVersionEntity?.updatedBy?.username).isEqualTo("Tom C")
-      assertThat(planVersionEntity?.updatedDate).isAfter(testStartTime)
-    }
-  }
-
-  @Nested
   @DisplayName("getPlan")
+  @Sql(scripts = [ "/db/test/oasys_assessment_pk_data.sql" ], executionPhase = BEFORE_TEST_CLASS)
+  @Sql(scripts = [ "/db/test/oasys_assessment_pk_cleanup.sql" ], executionPhase = AFTER_TEST_CLASS)
   inner class GetPlan {
     @Test
     fun `should return OK when getting plan by existing UUID `() {

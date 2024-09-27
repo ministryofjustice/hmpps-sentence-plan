@@ -26,7 +26,7 @@ class PlanService(
 
   fun getPlanVersionByPlanUuid(planUuid: UUID): PlanVersionEntity {
     val planEntity = planRepository.findByUuid(planUuid)
-    return planVersionRepository.findByUuid(planEntity.currentVersion?.uuid!!)
+    return planEntity.currentVersion!!
   }
 
   fun getPlanByOasysAssessmentPk(oasysAssessmentPk: String): PlanEntity? =

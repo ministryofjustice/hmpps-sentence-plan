@@ -317,18 +317,18 @@ class GoalControllerTest : IntegrationTestBase() {
 
   @Nested
   @DisplayName("updateGoal")
-  @Sql(scripts = ["/db/test/update_goals_data.sql"], executionPhase = BEFORE_TEST_CLASS)
-  @Sql(scripts = ["/db/test/update_goals_cleanup.sql"], executionPhase = AFTER_TEST_CLASS)
+  @Sql(scripts = [ "/db/test/oasys_assessment_pk_data.sql", "/db/test/goals_data.sql" ], executionPhase = BEFORE_TEST_CLASS)
+  @Sql(scripts = [ "/db/test/goals_cleanup.sql", "/db/test/oasys_assessment_pk_cleanup.sql" ], executionPhase = AFTER_TEST_CLASS)
   inner class UpdateGoalTests {
 
     @Test
     fun `should update goal title`() {
       val goalRequestBody = Goal(
-        title = "New Goal Title",
+        title = "Update Goal Title Test",
         areaOfNeed = "Accommodation",
       )
 
-      val goalUuid = "070442be-f855-4eb6-af7e-72f68aab54be"
+      val goalUuid = "31d7e986-4078-4f5c-af1d-115f9ba3722d"
 
       val goalEntity: GoalEntity? =
         webTestClient.patch().uri("/goals/$goalUuid").header("Content-Type", "application/json")
@@ -339,18 +339,18 @@ class GoalControllerTest : IntegrationTestBase() {
           .expectBody<GoalEntity>()
           .returnResult().responseBody
 
-      assertThat(goalEntity?.title).isEqualTo("New Goal Title")
+      assertThat(goalEntity?.title).isEqualTo("Update Goal Title Test")
     }
 
     @Test
     fun `should update and make a current goal`() {
       val goalRequestBody = Goal(
-        title = "New Goal Title",
+        title = "Update goal target date test",
         areaOfNeed = "Accommodation",
-        targetDate = "2024-06-25 10:00:00",
+        targetDate = "2024-06-25",
       )
 
-      val goalUuid = "070442be-f855-4eb6-af7e-72f68aab54be"
+      val goalUuid = "778b8e52-5927-42d4-9c05-7029ef3c6f6d"
 
       val goalEntity: GoalEntity? =
         webTestClient.patch().uri("/goals/$goalUuid").header("Content-Type", "application/json")
@@ -361,20 +361,20 @@ class GoalControllerTest : IntegrationTestBase() {
           .expectBody<GoalEntity>()
           .returnResult().responseBody
 
-      assertThat(goalEntity?.title).isEqualTo("New Goal Title")
+      assertThat(goalEntity?.title).isEqualTo(goalRequestBody.title)
       assertThat(goalEntity?.status).isEqualTo(GoalStatus.ACTIVE)
     }
 
     @Test
     fun `should update a future goal`() {
       val goalRequestBody = Goal(
-        title = "New Goal Title",
+        title = "Update a future goal test",
         areaOfNeed = "Accommodation",
         targetDate = null,
         status = GoalStatus.FUTURE,
       )
 
-      val goalUuid = "070442be-f855-4eb6-af7e-72f68aab54be"
+      val goalUuid = "778b8e52-5927-42d4-9c05-7029ef3c6f6d"
 
       val goalEntity: GoalEntity? =
         webTestClient.patch().uri("/goals/$goalUuid").header("Content-Type", "application/json")
@@ -385,7 +385,7 @@ class GoalControllerTest : IntegrationTestBase() {
           .expectBody<GoalEntity>()
           .returnResult().responseBody
 
-      assertThat(goalEntity?.title).isEqualTo("New Goal Title")
+      assertThat(goalEntity?.title).isEqualTo(goalRequestBody.title)
       assertThat(goalEntity?.targetDate).isNull()
       assertThat(goalEntity?.status).isEqualTo(GoalStatus.FUTURE)
     }
@@ -394,10 +394,11 @@ class GoalControllerTest : IntegrationTestBase() {
     fun `should update an active goal into a future goal`() {
       val goalRequestBody = Goal(
         targetDate = null,
+        title = "Change active goal into future goal test",
         status = GoalStatus.FUTURE,
       )
 
-      val goalUuid = "379f986a-c4f8-4c27-bdda-2ccb0aebb6a6"
+      val goalUuid = "31d7e986-4078-4f5c-af1d-115f9ba3722d"
 
       val goalEntity: GoalEntity? =
         webTestClient.patch().uri("/goals/$goalUuid").header("Content-Type", "application/json")
@@ -408,7 +409,7 @@ class GoalControllerTest : IntegrationTestBase() {
           .expectBody<GoalEntity>()
           .returnResult().responseBody
 
-      assertThat(goalEntity?.title).isEqualTo("Active Goal For Updating")
+      assertThat(goalEntity?.title).isEqualTo(goalRequestBody.title)
       assertThat(goalEntity?.targetDate).isNull()
       assertThat(goalEntity?.status).isEqualTo(GoalStatus.FUTURE)
     }
@@ -416,11 +417,11 @@ class GoalControllerTest : IntegrationTestBase() {
     @Test
     fun `should update goal without changing area of need`() {
       val goalRequestBody = Goal(
-        title = "Non Changing Area of Need Goal",
+        title = "Update goal without changing area of need test",
         areaOfNeed = "Finance",
       )
 
-      val goalUuid = "070442be-f855-4eb6-af7e-72f68aab54be"
+      val goalUuid = "31d7e986-4078-4f5c-af1d-115f9ba3722d"
 
       val goalEntity: GoalEntity? =
         webTestClient.patch().uri("/goals/$goalUuid").header("Content-Type", "application/json")
@@ -435,13 +436,14 @@ class GoalControllerTest : IntegrationTestBase() {
     }
 
     @Test
+    @Sql(scripts = [ "/db/test/related_area_of_need_deletion_data.sql" ], executionPhase = BEFORE_TEST_METHOD)
     fun `should update goal and delete related areas of need`() {
       val goalRequestBody = Goal(
-        title = "Non Changing Area of Need Goal",
+        title = "update goal and delete related areas of need",
         areaOfNeed = "Finance",
       )
 
-      val goalUuid = "070442be-f855-4eb6-af7e-72f68aab54be"
+      val goalUuid = "31d7e986-4078-4f5c-af1d-115f9ba3722d"
 
       val goalEntity: GoalEntity? =
         webTestClient.patch().uri("/goals/$goalUuid").header("Content-Type", "application/json")

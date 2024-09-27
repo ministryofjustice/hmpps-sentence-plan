@@ -65,6 +65,8 @@ class PlanControllerTest : IntegrationTestBase() {
 
   @Nested
   @DisplayName("getPlanGoals")
+  @Sql(scripts = [ "/db/test/oasys_assessment_pk_data.sql", "/db/test/goals_data.sql" ], executionPhase = BEFORE_TEST_CLASS)
+  @Sql(scripts = [ "/db/test/goals_cleanup.sql", "/db/test/oasys_assessment_pk_cleanup.sql" ], executionPhase = AFTER_TEST_CLASS)
   inner class GetPlanGoals {
     @Test
     fun `should return OK when getting goals by plan UUID`() {

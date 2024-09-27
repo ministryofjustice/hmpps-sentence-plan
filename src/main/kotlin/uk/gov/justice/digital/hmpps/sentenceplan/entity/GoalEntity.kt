@@ -87,7 +87,7 @@ class GoalEntity(
   val goalOrder: Int = 0,
 
   @OneToMany(mappedBy = "goal", cascade = [CascadeType.ALL])
-  @OrderBy("creationDate ASC")
+  @OrderBy("createdDate ASC")
   var steps: List<StepEntity> = emptyList(),
 
   @ManyToMany

@@ -83,9 +83,13 @@ class PlanController(
   fun getPlanGoals(
     @PathVariable planUuid: UUID,
   ): Map<String, List<GoalEntity>> {
-    val plan = planService.getPlanByUuid(planUuid) ?: throw NoResourceFoundException(HttpMethod.GET, "No Plan found for $planUuid")
-    val(now, future) = plan.goals.partition { it.targetDate != null }
-    return mapOf("now" to now, "future" to future)
+    try {
+      val plan = planService.getPlanVersionByPlanUuid(planUuid)
+      val (now, future) = plan.goals.partition { it.targetDate != null }
+      return mapOf("now" to now, "future" to future)
+    } catch (e: EmptyResultDataAccessException) {
+      throw NoResourceFoundException(HttpMethod.GET, "Could not retrieve the latest version of plan with ID: $planUuid")
+    }
   }
 
   @PostMapping("/{planUuid}/goals")

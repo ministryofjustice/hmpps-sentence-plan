@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.server.ResponseStatusException
 import org.springframework.web.servlet.resource.NoResourceFoundException
 import uk.gov.justice.digital.hmpps.sentenceplan.config.ErrorResponse
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Agreement
@@ -25,6 +26,7 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.CounterSignPlanRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.RollbackPlanRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.response.PlanVersionResponse
+import uk.gov.justice.digital.hmpps.sentenceplan.exceptions.ConflictException
 import uk.gov.justice.digital.hmpps.sentenceplan.services.GoalService
 import uk.gov.justice.digital.hmpps.sentenceplan.services.PlanService
 import java.util.UUID
@@ -107,7 +109,13 @@ class PlanController(
     @PathVariable planUuid: UUID,
     @RequestBody agreement: Agreement,
   ): PlanVersionEntity {
-    return planService.agreePlanVersion(planUuid, agreement)
+    try {
+      return planService.agreePlanVersion(planUuid, agreement)
+    } catch (e: EmptyResultDataAccessException) {
+      throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, e.message)
+    } catch (e: ConflictException) {
+      throw ResponseStatusException(HttpStatus.CONFLICT, e.message)
+    }
   }
 
   @PostMapping("/{planUuid}/clone")

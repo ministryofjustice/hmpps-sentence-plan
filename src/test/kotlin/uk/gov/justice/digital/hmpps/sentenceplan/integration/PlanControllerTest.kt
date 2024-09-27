@@ -254,8 +254,8 @@ class PlanControllerTest : IntegrationTestBase() {
   @Nested
   @DisplayName("agreePlan")
   @TestMethodOrder(MethodOrderer.OrderAnnotation::class)
-  @Sql(scripts = [ "/db/test/agree_plan_data.sql" ], executionPhase = BEFORE_TEST_CLASS)
-  @Sql(scripts = [ "/db/test/agree_plan_cleanup.sql" ], executionPhase = AFTER_TEST_CLASS)
+  @Sql(scripts = [ "/db/test/oasys_assessment_pk_data.sql" ], executionPhase = BEFORE_TEST_CLASS)
+  @Sql(scripts = [ "/db/test/oasys_assessment_pk_cleanup.sql" ], executionPhase = AFTER_TEST_CLASS)
   inner class AgreePlan {
     private val agreePlanBody = Agreement(
       PlanAgreementStatus.AGREED,
@@ -270,7 +270,7 @@ class PlanControllerTest : IntegrationTestBase() {
     fun `agree plan`() {
       val testStartTime = LocalDateTime.now()
 
-      val planVersionEntity: PlanVersionEntity? = webTestClient.post().uri("/plans/650df4b2-f74d-4ab7-85a1-143d2a7d8cfe/agree")
+      val planVersionEntity: PlanVersionEntity? = webTestClient.post().uri("/plans/$testPlanUuid/agree")
         .header("Content-Type", "application/json")
         .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
         .bodyValue(agreePlanBody)
@@ -288,7 +288,7 @@ class PlanControllerTest : IntegrationTestBase() {
     @Test
     @Order(2)
     fun `plan has already been agreed`() {
-      webTestClient.post().uri("/plans/650df4b2-f74d-4ab7-85a1-143d2a7d8cfe/agree")
+      webTestClient.post().uri("/plans/$testPlanUuid/agree")
         .header("Content-Type", "application/json")
         .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
         .bodyValue(agreePlanBody)

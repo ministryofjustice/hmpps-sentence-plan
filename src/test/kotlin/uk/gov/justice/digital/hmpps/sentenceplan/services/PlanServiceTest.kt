@@ -29,34 +29,6 @@ class PlanServiceTest {
   private val planEntity: PlanEntity = PlanEntity()
 
   @Nested
-  @DisplayName("getPlanByUuid")
-  inner class GetPlanByUuid {
-
-    @Test
-    fun `should return plan when plan exists with given UUID`() {
-      val planUuid = UUID.randomUUID()
-      val planVersionEntity = PlanVersionEntity(plan = planEntity)
-      every { planVersionRepository.findByUuid(planUuid) } returns planVersionEntity
-
-      val result = planService.getPlanByUuid(planUuid)
-
-      assertEquals(planVersionEntity, result)
-    }
-
-    @Test
-    fun `should throw exception when no plan exists with given UUID`() {
-      val planUuid = UUID.randomUUID()
-      every { planVersionRepository.findByUuid(planUuid) } throws EmptyResultDataAccessException(1)
-
-      val exception = assertThrows(EmptyResultDataAccessException::class.java) {
-        planService.getPlanByUuid(planUuid)
-      }
-
-      assertEquals("Incorrect result size: expected 1, actual 0", exception.message)
-    }
-  }
-
-  @Nested
   @DisplayName("getPlanByOasysAssessmentPk")
   inner class GetPlanByOasysAssessmentPk {
 

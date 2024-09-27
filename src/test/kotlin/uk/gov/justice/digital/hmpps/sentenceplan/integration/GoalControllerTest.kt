@@ -11,6 +11,7 @@ import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWeb
 import org.springframework.test.context.jdbc.Sql
 import org.springframework.test.context.jdbc.Sql.ExecutionPhase.AFTER_TEST_CLASS
 import org.springframework.test.context.jdbc.Sql.ExecutionPhase.BEFORE_TEST_CLASS
+import org.springframework.test.context.jdbc.Sql.ExecutionPhase.BEFORE_TEST_METHOD
 import org.springframework.test.web.reactive.server.expectBody
 import org.springframework.test.web.reactive.server.expectBodyList
 import uk.gov.justice.digital.hmpps.sentenceplan.config.ErrorResponse
@@ -20,11 +21,10 @@ import uk.gov.justice.digital.hmpps.sentenceplan.data.Step
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.AreaOfNeedRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalStatus
-import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepStatus
-import java.time.LocalDateTime
+import java.time.LocalDate
 import java.util.UUID
 
 private const val TEST_DATA_GOAL_UUID = "31d7e986-4078-4f5c-af1d-115f9ba3722d"
@@ -65,20 +65,14 @@ class GoalControllerTest : IntegrationTestBase() {
 
   private val stepList: List<Step> = listOf(stepOne, stepTwo)
 
-  private lateinit var plan: PlanVersionEntity
-
-  private var areaOfNeedName: String = ""
+  private var areaOfNeedName: String = "Accommodation"
 
   @BeforeAll
   fun setup() {
-    plan = planVersionRepository.findAll().first()
-
-    areaOfNeedName = areaOfNeedRepository.findAll().first().name
-
     goalRequestBody = Goal(
       title = "abc",
       areaOfNeed = areaOfNeedName,
-      targetDate = LocalDateTime.now().toString(),
+      targetDate = LocalDate.now().toString(),
     )
   }
 
@@ -86,9 +80,11 @@ class GoalControllerTest : IntegrationTestBase() {
   @DisplayName("authTests")
   inner class GoalActionRoleTests {
 
+    val randomUuid = UUID.randomUUID()
+
     @Test
     fun `create goal should return unauthorized when no auth token`() {
-      webTestClient.post().uri("/plans/$plan.uuid/goals")
+      webTestClient.post().uri("/plans/$randomUuid/goals")
         .header("Content-Type", "application/json")
         .bodyValue(goalRequestBody)
         .exchange()
@@ -97,7 +93,7 @@ class GoalControllerTest : IntegrationTestBase() {
 
     @Test
     fun `create goal should return forbidden when no role`() {
-      webTestClient.post().uri("/plans/$plan.uuid/goals")
+      webTestClient.post().uri("/plans/$randomUuid/goals")
         .header("Content-Type", "application/json")
         .headers(setAuthorisation(roles = listOf("abc")))
         .bodyValue(goalRequestBody)
@@ -107,7 +103,7 @@ class GoalControllerTest : IntegrationTestBase() {
 
     @Test
     fun `create steps should return unauthorized when no auth token`() {
-      webTestClient.post().uri("/plans/$plan.uuid/goals/1/steps")
+      webTestClient.post().uri("/plans/$randomUuid/goals/1/steps")
         .header("Content-Type", "application/json")
         .exchange()
         .expectStatus().isUnauthorized
@@ -115,7 +111,7 @@ class GoalControllerTest : IntegrationTestBase() {
 
     @Test
     fun `create steps should return forbidden when no role`() {
-      webTestClient.post().uri("/plans/$plan.uuid/goals/1/steps")
+      webTestClient.post().uri("/plans/$randomUuid/goals/1/steps")
         .header("Content-Type", "application/json")
         .headers(setAuthorisation(roles = listOf("abc")))
         .exchange()
@@ -124,7 +120,7 @@ class GoalControllerTest : IntegrationTestBase() {
 
     @Test
     fun `get goals should return forbidden when no role`() {
-      webTestClient.get().uri("/plans/$plan.uuid/goals")
+      webTestClient.get().uri("/plans/$randomUuid/goals")
         .header("Content-Type", "application/json")
         .headers(setAuthorisation(roles = listOf("abc")))
         .exchange()
@@ -133,7 +129,7 @@ class GoalControllerTest : IntegrationTestBase() {
 
     @Test
     fun `get goals should return unauthorized when no auth token`() {
-      webTestClient.get().uri("/plans/$plan.uuid/goals")
+      webTestClient.get().uri("/plans/$randomUuid/goals")
         .header("Content-Type", "application/json")
         .exchange()
         .expectStatus().isUnauthorized
@@ -141,7 +137,7 @@ class GoalControllerTest : IntegrationTestBase() {
 
     @Test
     fun `get goal steps should return forbidden when no role`() {
-      webTestClient.get().uri("/plans/$plan.uuid/goals/e6fb513d-3800-4c35-bb3a-5f9bdc9759dd/steps")
+      webTestClient.get().uri("/plans/$randomUuid/goals/e6fb513d-3800-4c35-bb3a-5f9bdc9759dd/steps")
         .header("Content-Type", "application/json")
         .headers(setAuthorisation(roles = listOf("abc")))
         .exchange()
@@ -150,7 +146,7 @@ class GoalControllerTest : IntegrationTestBase() {
 
     @Test
     fun `get goal steps should return unauthorized when no auth token`() {
-      webTestClient.get().uri("/plans/$plan.uuid/goals/e6fb513d-3800-4c35-bb3a-5f9bdc9759dd/steps")
+      webTestClient.get().uri("/plans/$randomUuid/goals/e6fb513d-3800-4c35-bb3a-5f9bdc9759dd/steps")
         .header("Content-Type", "application/json")
         .exchange()
         .expectStatus().isUnauthorized
@@ -167,7 +163,7 @@ class GoalControllerTest : IntegrationTestBase() {
 
     @Test
     fun `update goals order should return forbidden when no role`() {
-      webTestClient.post().uri("/plans/$plan.uuid/goals/order")
+      webTestClient.post().uri("/plans/$randomUuid/goals/order")
         .header("Content-Type", "application/json")
         .headers(setAuthorisation(roles = listOf("abc")))
         .bodyValue(goalOrderList)
@@ -176,121 +172,147 @@ class GoalControllerTest : IntegrationTestBase() {
     }
   }
 
-  @Test
-  fun `get goal by UUID should return OK when goal exists`() {
-    val goal: GoalEntity? = webTestClient.get().uri("/goals/$TEST_DATA_GOAL_UUID")
-      .header("Content-Type", "application/json")
-      .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
-      .exchange()
-      .expectStatus().isOk
-      .expectBody<GoalEntity>()
-      .returnResult().responseBody
+  @Nested
+  @DisplayName("getterTests")
+  @Sql(scripts = [ "/db/test/oasys_assessment_pk_data.sql", "/db/test/goals_data.sql", "/db/test/step_data.sql" ], executionPhase = BEFORE_TEST_CLASS)
+  @Sql(scripts = [ "/db/test/step_cleanup.sql", "/db/test/goals_cleanup.sql", "/db/test/oasys_assessment_pk_cleanup.sql" ], executionPhase = AFTER_TEST_CLASS)
+  inner class GoalControllerGetterTests {
+    @Test
+    fun `get goal by UUID should return OK when goal exists`() {
+      val goal: GoalEntity? = webTestClient.get().uri("/goals/$TEST_DATA_GOAL_UUID")
+        .header("Content-Type", "application/json")
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .exchange()
+        .expectStatus().isOk
+        .expectBody<GoalEntity>()
+        .returnResult().responseBody
 
-    assertThat(goal?.areaOfNeed?.name).isEqualTo(areaOfNeedName)
-    assertThat(goal?.areaOfNeed?.goals?.size).isNull()
+      assertThat(goal?.areaOfNeed?.name).isEqualTo(areaOfNeedName)
+      assertThat(goal?.areaOfNeed?.goals?.size).isNull()
+    }
+
+    @Test
+    fun `get goal by UUID should return NOT FOUND when goal does not exist`() {
+      val randomUuid = UUID.randomUUID()
+      webTestClient.get().uri("/goals/$randomUuid")
+        .header("Content-Type", "application/json")
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .exchange()
+        .expectStatus().isNotFound
+        .expectBody<ErrorResponse>()
+    }
+
+    @Test
+    fun `get goal steps should return OK and contain 1 step`() {
+      webTestClient.get().uri("/goals/$TEST_DATA_GOAL_UUID/steps")
+        .header("Content-Type", "application/json")
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .exchange()
+        .expectStatus().isOk
+        .expectBodyList<StepEntity>()
+    }
+
+    @Test
+    fun `get goal steps for UUID which doesn't exist should return not found`() {
+      val randomUuid = UUID.randomUUID()
+      webTestClient.get().uri("/goals/$randomUuid/steps")
+        .header("Content-Type", "application/json")
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .exchange()
+        .expectStatus().isNotFound
+        .expectBody<ErrorResponse>()
+    }
   }
 
-  @Test
-  fun `get goal by UUID should return NOT FOUND when goal does not exist`() {
-    val randomUuid = UUID.randomUUID()
-    webTestClient.get().uri("/goals/$randomUuid")
-      .header("Content-Type", "application/json")
-      .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
-      .exchange()
-      .expectStatus().isNotFound
-      .expectBody<ErrorResponse>()
+  @Nested
+  @DisplayName("createTests")
+  @Sql(scripts = [ "/db/test/oasys_assessment_pk_data.sql", "/db/test/goals_data.sql", "/db/test/step_data.sql" ], executionPhase = BEFORE_TEST_CLASS)
+  @Sql(scripts = [ "/db/test/step_cleanup.sql", "/db/test/goals_cleanup.sql", "/db/test/oasys_assessment_pk_cleanup.sql" ], executionPhase = AFTER_TEST_CLASS)
+  inner class GoalControllerCreatorTests {
+    @Test
+    fun `create goal steps should return OK`() {
+      webTestClient.post().uri("/goals/${TEST_DATA_GOAL_UUID}/steps")
+        .header("Content-Type", "application/json")
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .bodyValue(stepList)
+        .exchange()
+        .expectStatus().isCreated
+        .expectBodyList<StepEntity>().hasSize(2)
+    }
+
+    @Test
+    fun `create goal steps should throw a DataIntegrityViolationException if the Goal GUID doesn't exist`() {
+      val randomUuid = UUID.randomUUID()
+      webTestClient.post().uri("/goals/$randomUuid/steps")
+        .header("Content-Type", "application/json")
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .bodyValue(stepList)
+        .exchange()
+        .expectStatus().is5xxServerError
+        .expectBody<ErrorResponse>()
+    }
+
+    @Test
+    fun `create goal steps with no steps should return 500`() {
+      webTestClient.post().uri("/goals/${TEST_DATA_GOAL_UUID}/steps")
+        .header("Content-Type", "application/json")
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .bodyValue(emptyList<StepEntity>())
+        .exchange()
+        .expectStatus().is5xxServerError
+        .expectBody<ErrorResponse>()
+    }
   }
 
-  @Test
-  fun `get goal steps should return OK and contain 1 step`() {
-    webTestClient.get().uri("/goals/$TEST_DATA_GOAL_UUID/steps")
-      .header("Content-Type", "application/json")
-      .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
-      .exchange()
-      .expectStatus().isOk
-      .expectBodyList<StepEntity>()
+  @Nested
+  @DisplayName("updateGoalOrderTests")
+  @Sql(scripts = [ "/db/test/oasys_assessment_pk_data.sql", "/db/test/goals_data.sql", "/db/test/step_data.sql" ], executionPhase = BEFORE_TEST_CLASS)
+  @Sql(scripts = [ "/db/test/step_cleanup.sql", "/db/test/goals_cleanup.sql", "/db/test/oasys_assessment_pk_cleanup.sql" ], executionPhase = AFTER_TEST_CLASS)
+  inner class GoalControllerUpdateGoalOrderTests {
+    @Test
+    fun `update goals order should return created`() {
+      webTestClient.post().uri("/goals/order")
+        .header("Content-Type", "application/json")
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .bodyValue(goalOrderList)
+        .exchange()
+        .expectStatus().isCreated
+    }
   }
 
-  @Test
-  fun `get goal steps for UUID which doesn't exist should return not found`() {
-    val randomUuid = UUID.randomUUID()
-    webTestClient.get().uri("/goals/$randomUuid/steps")
-      .header("Content-Type", "application/json")
-      .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
-      .exchange()
-      .expectStatus().isNotFound
-      .expectBody<ErrorResponse>()
-  }
+  @Nested
+  @DisplayName("deleteTests")
+  @Sql(scripts = [ "/db/test/oasys_assessment_pk_data.sql", "/db/test/goals_data.sql", "/db/test/step_data.sql" ], executionPhase = BEFORE_TEST_CLASS)
+  @Sql(scripts = [ "/db/test/step_cleanup.sql", "/db/test/goals_cleanup.sql", "/db/test/oasys_assessment_pk_cleanup.sql" ], executionPhase = AFTER_TEST_CLASS)
+  inner class GoalControllerDeleteTests {
 
-  @Test
-  fun `create goal steps should return OK`() {
-    webTestClient.post().uri("/goals/${TEST_DATA_GOAL_UUID}/steps")
-      .header("Content-Type", "application/json")
-      .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
-      .bodyValue(stepList)
-      .exchange()
-      .expectStatus().isCreated
-      .expectBodyList<StepEntity>().hasSize(2)
-  }
+    @Test
+    @Sql(scripts = [ "/db/test/goal_deletion_data.sql" ], executionPhase = BEFORE_TEST_METHOD)
+    fun `delete goal should return no content and confirm goal and steps deleted`() {
+      webTestClient.delete().uri("/goals/ede47f7f-8431-4ff9-80ec-2dd3a8db3841")
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .exchange()
+        .expectStatus().isNoContent
 
-  @Test
-  fun `create goal steps should throw a DataIntegrityViolationException if the Goal GUID doesn't exist`() {
-    val randomUuid = UUID.randomUUID()
-    webTestClient.post().uri("/goals/$randomUuid/steps")
-      .header("Content-Type", "application/json")
-      .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
-      .bodyValue(stepList)
-      .exchange()
-      .expectStatus().is5xxServerError
-      .expectBody<ErrorResponse>()
-  }
+      webTestClient.get().uri("/goals/ede47f7f-8431-4ff9-80ec-2dd3a8db3841")
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .exchange()
+        .expectStatus().isNotFound
 
-  @Test
-  fun `create goal steps with no steps should return 500`() {
-    webTestClient.post().uri("/goals/${TEST_DATA_GOAL_UUID}/steps")
-      .header("Content-Type", "application/json")
-      .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
-      .bodyValue(emptyList<StepEntity>())
-      .exchange()
-      .expectStatus().is5xxServerError
-      .expectBody<ErrorResponse>()
-  }
+      webTestClient.get().uri("/steps/79803555-fad5-4cb7-8f8e-10f6d436834c")
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .exchange()
+        .expectStatus().isNotFound
+    }
 
-  @Test
-  fun `update goals order should return created`() {
-    webTestClient.post().uri("/goals/order")
-      .header("Content-Type", "application/json")
-      .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
-      .bodyValue(goalOrderList)
-      .exchange()
-      .expectStatus().isCreated
-  }
-
-  @Test
-  fun `delete goal should return no content and confirm goal and steps deleted`() {
-    webTestClient.delete().uri("/goals/ede47f7f-8431-4ff9-80ec-2dd3a8db3841")
-      .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
-      .exchange()
-      .expectStatus().isNoContent
-
-    webTestClient.get().uri("/goals/ede47f7f-8431-4ff9-80ec-2dd3a8db3841")
-      .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
-      .exchange()
-      .expectStatus().isNotFound
-
-    webTestClient.get().uri("/steps/79803555-fad5-4cb7-8f8e-10f6d436834c")
-      .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
-      .exchange()
-      .expectStatus().isNotFound
-  }
-
-  @Test
-  fun `deleting a goal that does not exist should return 404`() {
-    webTestClient.delete().uri("/goals/93ab5028-867f-4554-aa5a-2383e6b50f1f")
-      .header("Content-Type", "application/json")
-      .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
-      .exchange()
-      .expectStatus().isNotFound
+    @Test
+    fun `deleting a goal that does not exist should return 404`() {
+      webTestClient.delete().uri("/goals/93ab5028-867f-4554-aa5a-2383e6b50f1f")
+        .header("Content-Type", "application/json")
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .exchange()
+        .expectStatus().isNotFound
+    }
   }
 
   @Nested

@@ -13,6 +13,7 @@ import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWeb
 import org.springframework.http.HttpStatus
 import org.springframework.test.context.jdbc.Sql
 import org.springframework.test.context.jdbc.Sql.ExecutionPhase.AFTER_TEST_CLASS
+import org.springframework.test.context.jdbc.Sql.ExecutionPhase.AFTER_TEST_METHOD
 import org.springframework.test.context.jdbc.Sql.ExecutionPhase.BEFORE_TEST_CLASS
 import org.springframework.test.web.reactive.server.expectBody
 import org.springframework.test.web.reactive.server.expectBodyList
@@ -33,17 +34,16 @@ import java.util.UUID
 class PlanControllerTest : IntegrationTestBase() {
 
   val authenticatedUser = UUID.randomUUID().toString() + "|Tom C"
-  val staticPlanUuid = "556db5c8-a1eb-4064-986b-0740d6a83c33"
-  val mutablePlanUuid = "4fe411e3-820d-4198-8400-ab4268208641"
+  val testPlanUuid = "556db5c8-a1eb-4064-986b-0740d6a83c33"
 
   @Nested
   @DisplayName("getPlan")
-  @Sql(scripts = [ "/db/test/oasys_assessment_pk_data.sql" ], executionPhase = BEFORE_TEST_CLASS)
-  @Sql(scripts = [ "/db/test/oasys_assessment_pk_cleanup.sql" ], executionPhase = AFTER_TEST_CLASS)
+  @Sql(scripts = [ "/db/test/oasys_assessment_pk_data.sql", "/db/test/goals_data.sql" ], executionPhase = BEFORE_TEST_CLASS)
+  @Sql(scripts = [ "/db/test/goals_cleanup.sql", "/db/test/oasys_assessment_pk_cleanup.sql" ], executionPhase = AFTER_TEST_CLASS)
   inner class GetPlan {
     @Test
     fun `should return OK when getting plan by existing UUID `() {
-      val planVersionEntity: PlanVersionEntity? = webTestClient.get().uri("/plans/$staticPlanUuid")
+      val planVersionEntity: PlanVersionEntity? = webTestClient.get().uri("/plans/$testPlanUuid")
         .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
         .exchange()
         .expectStatus().isOk
@@ -71,7 +71,7 @@ class PlanControllerTest : IntegrationTestBase() {
     @Test
     fun `should return OK when getting goals by plan UUID`() {
       val goalsMap: Map<String, List<GoalEntity>>? =
-        webTestClient.get().uri("/plans/$staticPlanUuid/goals")
+        webTestClient.get().uri("/plans/$testPlanUuid/goals")
           .header("Content-Type", "application/json")
           .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
           .exchange()
@@ -99,13 +99,15 @@ class PlanControllerTest : IntegrationTestBase() {
 
   @Nested
   @DisplayName("createNewGoal")
+  @Sql(scripts = [ "/db/test/oasys_assessment_pk_data.sql", "/db/test/goals_data.sql" ], executionPhase = BEFORE_TEST_CLASS)
+  @Sql(scripts = [ "/db/test/goals_cleanup.sql", "/db/test/oasys_assessment_pk_cleanup.sql" ], executionPhase = AFTER_TEST_CLASS)
   inner class CreateNewGoal {
     private lateinit var goalRequestBody: Goal
 
     @BeforeEach
     fun setup() {
       goalRequestBody = Goal(
-        title = "abc",
+        title = "CreateNewGoal Test data",
         areaOfNeed = "Accommodation",
         targetDate = LocalDateTime.now().toString(),
       )
@@ -118,7 +120,7 @@ class PlanControllerTest : IntegrationTestBase() {
         areaOfNeed = "doesn't exist",
         targetDate = LocalDateTime.now().toString(),
       )
-      webTestClient.post().uri("/plans/$staticPlanUuid/goals").header("Content-Type", "application/json")
+      webTestClient.post().uri("/plans/$testPlanUuid/goals").header("Content-Type", "application/json")
         .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
         .bodyValue(goalRequestBodyBadAreaOfNeed)
         .exchange()
@@ -152,7 +154,7 @@ class PlanControllerTest : IntegrationTestBase() {
         areaOfNeed = "ACCOMMODATION",
       )
       val goalEntity: GoalEntity? =
-        webTestClient.post().uri("/plans/$mutablePlanUuid/goals").header("Content-Type", "application/json")
+        webTestClient.post().uri("/plans/$testPlanUuid/goals").header("Content-Type", "application/json")
           .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
           .bodyValue(goalRequestBodyWithNoTargetDate)
           .exchange()
@@ -167,7 +169,7 @@ class PlanControllerTest : IntegrationTestBase() {
     @Test
     fun `should create goal with a target date`() {
       val goalEntity: GoalEntity? =
-        webTestClient.post().uri("/plans/$mutablePlanUuid/goals").header("Content-Type", "application/json")
+        webTestClient.post().uri("/plans/$testPlanUuid/goals").header("Content-Type", "application/json")
           .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
           .bodyValue(goalRequestBody)
           .exchange()
@@ -187,7 +189,7 @@ class PlanControllerTest : IntegrationTestBase() {
         targetDate = LocalDateTime.now().toString(),
       )
       val goalEntity: GoalEntity? =
-        webTestClient.post().uri("/plans/$mutablePlanUuid/goals").header("Content-Type", "application/json")
+        webTestClient.post().uri("/plans/$testPlanUuid/goals").header("Content-Type", "application/json")
           .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
           .bodyValue(goalRequestBodyUppercaseAreaOfNeed)
           .exchange()
@@ -201,7 +203,7 @@ class PlanControllerTest : IntegrationTestBase() {
     @Test
     fun `should return created when creating goal with no related areas of need`() {
       val goalEntity: GoalEntity? =
-        webTestClient.post().uri("/plans/$mutablePlanUuid/goals").header("Content-Type", "application/json")
+        webTestClient.post().uri("/plans/$testPlanUuid/goals").header("Content-Type", "application/json")
           .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
           .bodyValue(goalRequestBody)
           .exchange()
@@ -215,6 +217,7 @@ class PlanControllerTest : IntegrationTestBase() {
     }
 
     @Test
+    @Sql(scripts = [ "/db/test/related_area_of_need_cleanup.sql" ], executionPhase = AFTER_TEST_METHOD)
     fun `should return created when creating goal with multiple related areas of need`() {
       goalRequestBody = Goal(
         title = "abc",
@@ -223,7 +226,7 @@ class PlanControllerTest : IntegrationTestBase() {
         relatedAreasOfNeed = listOf("Accommodation", "Finance"),
       )
       val goalEntity: GoalEntity? =
-        webTestClient.post().uri("/plans/$mutablePlanUuid/goals").header("Content-Type", "application/json")
+        webTestClient.post().uri("/plans/$testPlanUuid/goals").header("Content-Type", "application/json")
           .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
           .bodyValue(goalRequestBody)
           .exchange()

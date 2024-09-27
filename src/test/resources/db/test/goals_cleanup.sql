@@ -1,3 +1,1 @@
-DELETE FROM goal WHERE uuid = '31d7e986-4078-4f5c-af1d-115f9ba3722d';
-
-DELETE FROM goal WHERE uuid = '778b8e52-5927-42d4-9c05-7029ef3c6f6d';
+DELETE FROM goal;

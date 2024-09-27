@@ -51,7 +51,7 @@ class PlanService(
         plan.agreementStatus = agreement.agreementStatus
         plan.agreementDate = updatedDate
         planRepository.save(plan)
-        addPlanAgreementNote(planUuid, agreement)
+        addPlanAgreementNote(plan, agreement)
       }
       else -> throw ConflictException("Plan $planUuid has already been agreed.")
     }
@@ -59,9 +59,9 @@ class PlanService(
     return plan
   }
 
-  fun addPlanAgreementNote(planUuid: UUID, agreement: Agreement) {
+  fun addPlanAgreementNote(planEntity: PlanEntity, agreement: Agreement) {
     val entity = PlanAgreementNoteEntity(
-      planUuid = planUuid,
+      plan = planEntity,
       agreementStatus = agreement.agreementStatus,
       agreementStatusNote = agreement.agreementStatusNote,
       optionalNote = agreement.optionalNote,

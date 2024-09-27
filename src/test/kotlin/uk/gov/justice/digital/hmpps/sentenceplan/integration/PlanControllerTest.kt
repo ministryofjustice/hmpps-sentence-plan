@@ -20,6 +20,7 @@ import uk.gov.justice.digital.hmpps.sentenceplan.config.ErrorResponse
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Agreement
 import uk.gov.justice.digital.hmpps.sentenceplan.data.CreatePlanRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Goal
+import uk.gov.justice.digital.hmpps.sentenceplan.data.UserDetails
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.AreaOfNeedEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalStatus
@@ -45,7 +46,13 @@ class PlanControllerTest : IntegrationTestBase() {
   inner class CreatePlan {
     @Test
     fun `should create a new plan`() {
-      val createPlanRequest = CreatePlanRequest(PlanType.INITIAL)
+      val createPlanRequest = CreatePlanRequest(
+        PlanType.INITIAL,
+        UserDetails(
+          "1",
+          "Tom C"
+        ),
+      )
 
       val planVersionResponse: PlanVersionResponse? = webTestClient.post()
         .uri("/plans")

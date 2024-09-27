@@ -57,7 +57,7 @@ class PlanController(
     ],
   )
   @ResponseStatus(HttpStatus.CREATED)
-  fun createPlan(createPlanRequest: CreatePlanRequest): PlanVersionResponse {
+  fun createPlan(@RequestBody createPlanRequest: CreatePlanRequest): PlanVersionResponse {
     /** TODO: Create a new plan
      *   - Create a new plan
      *   - Set it's version number to 0

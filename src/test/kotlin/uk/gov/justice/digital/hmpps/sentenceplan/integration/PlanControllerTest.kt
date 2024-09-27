@@ -25,6 +25,7 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalStatus
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanAgreementStatus
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionEntity
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -109,7 +110,7 @@ class PlanControllerTest : IntegrationTestBase() {
       goalRequestBody = Goal(
         title = "CreateNewGoal Test data",
         areaOfNeed = "Accommodation",
-        targetDate = LocalDateTime.now().toString(),
+        targetDate = LocalDate.now().toString(),
       )
     }
 
@@ -118,7 +119,7 @@ class PlanControllerTest : IntegrationTestBase() {
       val goalRequestBodyBadAreaOfNeed = Goal(
         title = "abc",
         areaOfNeed = "doesn't exist",
-        targetDate = LocalDateTime.now().toString(),
+        targetDate = LocalDate.now().toString(),
       )
       webTestClient.post().uri("/plans/$testPlanUuid/goals").header("Content-Type", "application/json")
         .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
@@ -133,7 +134,7 @@ class PlanControllerTest : IntegrationTestBase() {
       val goalRequestBodyBadAreaOfNeed = Goal(
         title = "abc",
         areaOfNeed = "doesn't exist",
-        targetDate = LocalDateTime.now().toString(),
+        targetDate = LocalDate.now().toString(),
       )
       val randomUuid = UUID.randomUUID()
       val errorResponse: ErrorResponse? = webTestClient.post().uri("/plans/$randomUuid/goals").header("Content-Type", "application/json")
@@ -186,7 +187,7 @@ class PlanControllerTest : IntegrationTestBase() {
       val goalRequestBodyUppercaseAreaOfNeed = Goal(
         title = "abc",
         areaOfNeed = "ACCOMMODATION",
-        targetDate = LocalDateTime.now().toString(),
+        targetDate = LocalDate.now().toString(),
       )
       val goalEntity: GoalEntity? =
         webTestClient.post().uri("/plans/$testPlanUuid/goals").header("Content-Type", "application/json")
@@ -222,7 +223,7 @@ class PlanControllerTest : IntegrationTestBase() {
       goalRequestBody = Goal(
         title = "abc",
         areaOfNeed = "Accommodation",
-        targetDate = LocalDateTime.now().toString(),
+        targetDate = LocalDate.now().toString(),
         relatedAreasOfNeed = listOf("Accommodation", "Finance"),
       )
       val goalEntity: GoalEntity? =

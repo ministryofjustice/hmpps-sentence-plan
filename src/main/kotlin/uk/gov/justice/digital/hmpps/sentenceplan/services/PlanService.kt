@@ -39,6 +39,13 @@ class PlanService(
   fun createPlan(planType: PlanType): PlanEntity {
     val plan = PlanEntity()
     // TODO: Set planType & planVersion
+//    val planEntity = planRepository.save(plan)
+//
+//    val planVersion = PlanVersionEntity(plan = planEntity)
+//    val planVersionEntity = planVersionRepository.save(planVersion)
+//
+//    planEntity.currentVersion = planVersionEntity
+
     return planRepository.save(plan)
   }
 

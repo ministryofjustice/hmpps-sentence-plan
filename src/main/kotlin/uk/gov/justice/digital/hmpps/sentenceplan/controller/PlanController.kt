@@ -76,7 +76,7 @@ class PlanController(
     try {
       return planService.getPlanVersionByPlanUuid(planUuid)
     } catch (e: EmptyResultDataAccessException) {
-      throw NoResourceFoundException(HttpMethod.GET, "Could not retrieve the latest version of plan with ID: $planUuid")
+      throw NoResourceFoundException(HttpMethod.GET, "Could not find a plan with ID: $planUuid")
     }
   }
 

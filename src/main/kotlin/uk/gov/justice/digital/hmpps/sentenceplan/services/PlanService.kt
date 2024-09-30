@@ -47,7 +47,7 @@ class PlanService(
     return planEntity
   }
 
-  fun agreePlanVersion(planUuid: UUID, agreement: Agreement): PlanVersionEntity {
+  fun agreeLatestPlanVersion(planUuid: UUID, agreement: Agreement): PlanVersionEntity {
     var planVersion: PlanVersionEntity
     try {
       planVersion = planRepository.findByUuid(planUuid).currentVersion!!

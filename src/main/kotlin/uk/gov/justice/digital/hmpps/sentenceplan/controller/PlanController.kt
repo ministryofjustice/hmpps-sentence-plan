@@ -110,7 +110,7 @@ class PlanController(
     @RequestBody agreement: Agreement,
   ): PlanVersionEntity {
     try {
-      return planService.agreePlanVersion(planUuid, agreement)
+      return planService.agreeLatestPlanVersion(planUuid, agreement)
     } catch (e: EmptyResultDataAccessException) {
       throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, e.message)
     } catch (e: ConflictException) {

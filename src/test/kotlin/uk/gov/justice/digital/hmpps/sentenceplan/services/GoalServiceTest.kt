@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.AreaOfNeedRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntity
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepEntity
@@ -31,8 +32,9 @@ class GoalServiceTest {
   private val goalRepository: GoalRepository = mockk()
   private val areaOfNeedRepository: AreaOfNeedRepository = mockk()
   private val planVersionRepository: PlanVersionRepository = mockk()
+  private val planRepository: PlanRepository = mockk()
   private val stepRepository: StepRepository = mockk()
-  private val goalService = GoalService(goalRepository, areaOfNeedRepository, planVersionRepository, stepRepository)
+  private val goalService = GoalService(goalRepository, areaOfNeedRepository, planVersionRepository, stepRepository, planRepository)
   private val goalUuid = UUID.fromString("ef74ee4b-5a0b-481b-860f-19187260f2e7")
   private val plan: PlanEntity = mockk()
 
@@ -110,7 +112,7 @@ class GoalServiceTest {
     @Test
     fun `create new goal with Area Of Need that doesn't exist should throw Exception`() {
       every { planVersionRepository.findByUuid(any()) } returns planVersionEntity
-      every { areaOfNeedRepository.findByNameIgnoreCase(any()) } returns null
+      every { areaOfNeedRepository.findByNameIgnoreCase(any()) } throws EmptyResultDataAccessException(1)
 
       var exception: Exception? = null
       var goalEntity: GoalEntity? = null

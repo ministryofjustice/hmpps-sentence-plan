@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.sentenceplan.integration
 
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
@@ -28,15 +27,7 @@ class OasysControllerTest : IntegrationTestBase() {
 
   @Autowired
   lateinit var planRepository: PlanRepository
-  lateinit var planUuid: UUID
-
   val authenticatedUser = UUID.randomUUID().toString() + "|Tom C"
-
-  @BeforeAll
-  fun setup() {
-    val plan: PlanEntity = planRepository.findAll().first()
-    planUuid = plan.uuid
-  }
 
   @Nested
   @DisplayName("createPlan")

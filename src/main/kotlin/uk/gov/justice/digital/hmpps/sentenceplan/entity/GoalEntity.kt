@@ -27,6 +27,7 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Goal
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -51,7 +52,7 @@ class GoalEntity(
   val areaOfNeed: AreaOfNeedEntity,
 
   @Column(name = "target_date")
-  var targetDate: LocalDateTime? = null,
+  var targetDate: LocalDate? = null,
 
   @Column(name = "created_date")
   val createdDate: LocalDateTime = LocalDateTime.now(),
@@ -87,7 +88,7 @@ class GoalEntity(
   val goalOrder: Int = 0,
 
   @OneToMany(mappedBy = "goal", cascade = [CascadeType.ALL])
-  @OrderBy("creationDate ASC")
+  @OrderBy("createdDate ASC")
   var steps: List<StepEntity> = emptyList(),
 
   @ManyToMany
@@ -106,7 +107,7 @@ class GoalEntity(
     }
 
     if (goal.targetDate != null) {
-      this.targetDate = LocalDateTime.parse(goal.targetDate)
+      this.targetDate = LocalDate.parse(goal.targetDate)
       if (this.status == GoalStatus.FUTURE) {
         this.status = GoalStatus.ACTIVE
         this.statusDate = LocalDateTime.now()

@@ -96,6 +96,8 @@ class PlanServiceTest {
           withArg { assertEquals(result.id, it) },
         )
       }
+
+      assertEquals(planVersionEntity, result.currentVersion)
     }
 
     @Test

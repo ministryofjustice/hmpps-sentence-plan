@@ -50,7 +50,7 @@ class PlanControllerTest : IntegrationTestBase() {
         PlanType.INITIAL,
         UserDetails(
           "1",
-          "Tom C"
+          "Tom C",
         ),
       )
 

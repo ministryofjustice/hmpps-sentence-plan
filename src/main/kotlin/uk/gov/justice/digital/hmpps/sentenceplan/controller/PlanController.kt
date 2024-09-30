@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.servlet.resource.NoResourceFoundException
 import uk.gov.justice.digital.hmpps.sentenceplan.config.ErrorResponse
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Agreement
+import uk.gov.justice.digital.hmpps.sentenceplan.data.CreatePlanRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Goal
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntity
@@ -36,9 +37,34 @@ class PlanController(
 ) {
 
   @PostMapping
+  @Operation(
+    description = "Create a new sentence plan",
+    tags = ["Integrations"],
+  )
+  @ApiResponses(
+    value = [
+      ApiResponse(responseCode = "201", description = "Plan created successfully"),
+      ApiResponse(
+        responseCode = "409",
+        description = "Plan could not be created. See details in error message.",
+        content = arrayOf(Content(schema = Schema(implementation = ErrorResponse::class))),
+      ),
+      ApiResponse(
+        responseCode = "500",
+        description = "Unexpected error",
+        content = arrayOf(Content(schema = Schema(implementation = ErrorResponse::class))),
+      ),
+    ],
+  )
   @ResponseStatus(HttpStatus.CREATED)
-  fun createPlan(): PlanEntity {
-    return planService.createPlan()
+  fun createPlan(@RequestBody createPlanRequest: CreatePlanRequest): PlanVersionResponse {
+    /** TODO: Create a new plan
+     *   - Create a new plan
+     *   - Set it's version number to 0
+     *   - Return UUID and version number
+     */
+    return planService.createPlan(createPlanRequest.planType)
+      .run(PlanVersionResponse::from)
   }
 
   @GetMapping("/{planUuid}")

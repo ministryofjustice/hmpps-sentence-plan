@@ -42,10 +42,11 @@ class PlanVersionEntity(
   @Column(name = "version")
   val version: Int = 0,
 
+  // this is nullable in the declaration to enable ignoring the field in JSON serialisation
   @OneToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "plan_id", nullable = false)
   @JsonIgnore
-  val plan: PlanEntity,
+  val plan: PlanEntity?,
 
   @Column(name = "countersigning_status")
   @Enumerated(EnumType.STRING)

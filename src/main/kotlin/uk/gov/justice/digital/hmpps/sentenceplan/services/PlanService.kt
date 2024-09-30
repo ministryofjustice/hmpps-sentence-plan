@@ -1,8 +1,7 @@
 package uk.gov.justice.digital.hmpps.sentenceplan.services
 
-import org.springframework.http.HttpStatus
+import org.springframework.dao.EmptyResultDataAccessException
 import org.springframework.stereotype.Service
-import org.springframework.web.server.ResponseStatusException
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Agreement
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanAgreementNoteEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanAgreementNoteRepository
@@ -22,11 +21,9 @@ class PlanService(
   private val planAgreementNoteRepository: PlanAgreementNoteRepository,
 ) {
 
-  fun getPlanByUuid(planUuid: UUID): PlanVersionEntity? = planVersionRepository.findByUuid(planUuid)
-
   fun getPlanVersionByPlanUuid(planUuid: UUID): PlanVersionEntity {
     val planEntity = planRepository.findByUuid(planUuid)
-    return planVersionRepository.findByUuid(planEntity.currentVersion?.uuid!!)
+    return planEntity.currentVersion!!
   }
 
   fun getPlanByOasysAssessmentPk(oasysAssessmentPk: String): PlanEntity? =
@@ -51,8 +48,12 @@ class PlanService(
   }
 
   fun agreePlanVersion(planUuid: UUID, agreement: Agreement): PlanVersionEntity {
-    var planVersion: PlanVersionEntity = getPlanByUuid(planUuid)
-      ?: throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Plan $planUuid was not found.")
+    var planVersion: PlanVersionEntity
+    try {
+      planVersion = planRepository.findByUuid(planUuid).currentVersion!!
+    } catch (e: EmptyResultDataAccessException) {
+      throw EmptyResultDataAccessException("Plan was not found with UUID: $planUuid", 1)
+    }
 
     when (planVersion.agreementStatus) {
       PlanAgreementStatus.DRAFT -> {

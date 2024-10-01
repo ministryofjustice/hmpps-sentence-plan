@@ -38,9 +38,7 @@ class AreaOfNeedEntity(
 @Repository
 interface AreaOfNeedRepository : JpaRepository<AreaOfNeedEntity, Long> {
 
-  fun findByUuid(uuid: UUID): AreaOfNeedEntity
-
-  fun findByNameIgnoreCase(name: String): AreaOfNeedEntity?
+  fun findByNameIgnoreCase(name: String): AreaOfNeedEntity
 
   @Query("select aon from AreaOfNeed aon where aon.name in :relatedAreasOfNeedNames")
   fun findAllByNames(@Param("relatedAreasOfNeedNames") relatedAreasOfNeedNames: List<String>): List<AreaOfNeedEntity>?

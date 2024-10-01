@@ -5,11 +5,14 @@ import io.mockk.junit5.MockKExtension
 import io.mockk.mockk
 import io.mockk.slot
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
+import org.springframework.dao.EmptyResultDataAccessException
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Goal
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Step
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.AreaOfNeedEntity
@@ -18,6 +21,8 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionEntity
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepStatus
@@ -25,12 +30,15 @@ import java.util.UUID
 
 @ExtendWith(MockKExtension::class)
 @DisplayName("Goal Service Tests")
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class GoalServiceTest {
   private val goalRepository: GoalRepository = mockk()
   private val areaOfNeedRepository: AreaOfNeedRepository = mockk()
+  private val planVersionRepository: PlanVersionRepository = mockk()
   private val planRepository: PlanRepository = mockk()
   private val stepRepository: StepRepository = mockk()
-  private val goalService = GoalService(goalRepository, areaOfNeedRepository, planRepository, stepRepository)
+
+  private val goalService = GoalService(goalRepository, areaOfNeedRepository, planVersionRepository, stepRepository, planRepository)
   private val goalUuid = UUID.fromString("ef74ee4b-5a0b-481b-860f-19187260f2e7")
 
   private val goal: Goal = Goal(
@@ -54,25 +62,21 @@ class GoalServiceTest {
   private val goalEntityNoSteps: GoalEntity = GoalEntity(
     title = "Mock Goal",
     areaOfNeed = mockk<AreaOfNeedEntity>(),
-    plan = null,
+    planVersion = null,
     uuid = goalUuid,
     goalOrder = 1,
   )
+
+  private val goalSet = setOf(goalEntityNoSteps)
 
   private val goalEntityWithRelatedAreasOfNeed: GoalEntity = GoalEntity(
     title = "Mock Goal with Related Areas of Need",
     areaOfNeed = mockk<AreaOfNeedEntity>(),
-    plan = null,
+    planVersion = null,
     uuid = goalUuid,
     goalOrder = 1,
     relatedAreasOfNeed = mockk<MutableList<AreaOfNeedEntity>>(),
   )
-
-  private val planEntity: PlanEntity = PlanEntity()
-
-  private val goalSet = setOf(goalEntityNoSteps)
-
-  private val planEntityWithOneGoal: PlanEntity = PlanEntity(goals = goalSet)
 
   private val steps = listOf(
     Step(
@@ -89,13 +93,22 @@ class GoalServiceTest {
 
   private val incompleteSteps = steps + Step("This is a step with no actor", status = StepStatus.NOT_STARTED, actor = "")
 
+  private val planEntity: PlanEntity = PlanEntity()
+  private val planVersionEntity: PlanVersionEntity = PlanVersionEntity(plan = planEntity)
+  private val planVersionEntityWithOneGoal: PlanVersionEntity = PlanVersionEntity(plan = planEntity, goals = goalSet)
+
+  @BeforeAll
+  fun setup() {
+    planEntity.currentVersion = planVersionEntity
+  }
+
   @Nested
   @DisplayName("createNewGoal")
   inner class CreateNewGoal {
 
     @Test
     fun `create new goal with random Plan UUID should throw Exception`() {
-      every { planRepository.findByUuid(any()) } returns null
+      every { planRepository.findByUuid(any()) } throws EmptyResultDataAccessException(1)
 
       val exception = assertThrows<Exception> {
         goalService.createNewGoal(UUID.randomUUID(), goal)
@@ -107,7 +120,7 @@ class GoalServiceTest {
     @Test
     fun `create new goal with Area Of Need that doesn't exist should throw Exception`() {
       every { planRepository.findByUuid(any()) } returns planEntity
-      every { areaOfNeedRepository.findByNameIgnoreCase(any()) } returns null
+      every { areaOfNeedRepository.findByNameIgnoreCase(any()) } throws EmptyResultDataAccessException(1)
 
       var exception: Exception? = null
       var goalEntity: GoalEntity? = null
@@ -152,7 +165,7 @@ class GoalServiceTest {
       val goalSlot = slot<GoalEntity>()
       every { goalRepository.save(capture(goalSlot)) } answers { goalSlot.captured }
 
-      val goalEntity = goalService.createNewGoal(planEntity.uuid, goalWithNoRelatedAreasOfNeed)
+      val goalEntity = goalService.createNewGoal(planVersionEntity.uuid, goalWithNoRelatedAreasOfNeed)
 
       assertThat(goalEntity).isNotNull()
       assertThat(goalEntity.relatedAreasOfNeed).isEmpty()
@@ -171,7 +184,7 @@ class GoalServiceTest {
       assertThat(goalEntityOne).isNotNull()
       assertThat(goalEntityOne.goalOrder).isEqualTo(1)
 
-      every { planRepository.findByUuid(any()) } returns planEntityWithOneGoal
+      planEntity.currentVersion = planVersionEntityWithOneGoal
 
       val goalEntityTwo = goalService.createNewGoal(planEntity.uuid, goalWithNoRelatedAreasOfNeed)
       assertThat(goalEntityTwo).isNotNull()
@@ -321,7 +334,7 @@ class GoalServiceTest {
       val goalEntityWithOneStep = GoalEntity(
         title = "Mock Goal",
         areaOfNeed = mockk<AreaOfNeedEntity>(),
-        plan = null,
+        planVersion = null,
         uuid = goalUuid,
         goalOrder = 1,
       )

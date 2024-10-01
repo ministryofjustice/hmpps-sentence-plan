@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import jakarta.validation.Valid
+import org.springframework.dao.EmptyResultDataAccessException
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.GetMapping
@@ -15,16 +16,18 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.server.ResponseStatusException
 import org.springframework.web.servlet.resource.NoResourceFoundException
 import uk.gov.justice.digital.hmpps.sentenceplan.config.ErrorResponse
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Agreement
 import uk.gov.justice.digital.hmpps.sentenceplan.data.CreatePlanRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Goal
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalEntity
-import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntity
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.CounterSignPlanRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.RollbackPlanRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.response.PlanVersionResponse
+import uk.gov.justice.digital.hmpps.sentenceplan.exceptions.ConflictException
 import uk.gov.justice.digital.hmpps.sentenceplan.services.GoalService
 import uk.gov.justice.digital.hmpps.sentenceplan.services.PlanService
 import java.util.UUID
@@ -101,8 +104,12 @@ class PlanController(
      *  - Handle any exceptions or edge cases (i.e plan not found).
      */
     @PathVariable planUuid: UUID,
-  ): PlanEntity {
-    return planService.getPlanByUuid(planUuid) ?: throw NoResourceFoundException(HttpMethod.GET, "No Plan found for $planUuid")
+  ): PlanVersionEntity {
+    try {
+      return planService.getPlanVersionByPlanUuid(planUuid)
+    } catch (e: EmptyResultDataAccessException) {
+      throw NoResourceFoundException(HttpMethod.GET, "Could not find a plan with ID: $planUuid")
+    }
   }
 
   @GetMapping("/{planUuid}/goals")
@@ -110,9 +117,13 @@ class PlanController(
   fun getPlanGoals(
     @PathVariable planUuid: UUID,
   ): Map<String, List<GoalEntity>> {
-    val plan = planService.getPlanByUuid(planUuid) ?: throw NoResourceFoundException(HttpMethod.GET, "No Plan found for $planUuid")
-    val(now, future) = plan.goals.partition { it.targetDate != null }
-    return mapOf("now" to now, "future" to future)
+    try {
+      val plan = planService.getPlanVersionByPlanUuid(planUuid)
+      val (now, future) = plan.goals.partition { it.targetDate != null }
+      return mapOf("now" to now, "future" to future)
+    } catch (e: EmptyResultDataAccessException) {
+      throw NoResourceFoundException(HttpMethod.GET, "Could not retrieve the latest version of plan with ID: $planUuid")
+    }
   }
 
   @PostMapping("/{planUuid}/goals")
@@ -126,11 +137,17 @@ class PlanController(
 
   @PostMapping("/{planUuid}/agree")
   @ResponseStatus(HttpStatus.ACCEPTED)
-  fun agreePlan(
+  fun agreePlanVersion(
     @PathVariable planUuid: UUID,
     @RequestBody agreement: Agreement,
-  ): PlanEntity {
-    return planService.agreePlan(planUuid, agreement)
+  ): PlanVersionEntity {
+    try {
+      return planService.agreeLatestPlanVersion(planUuid, agreement)
+    } catch (e: EmptyResultDataAccessException) {
+      throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, e.message)
+    } catch (e: ConflictException) {
+      throw ResponseStatusException(HttpStatus.CONFLICT, e.message)
+    }
   }
 
   @PostMapping("/{planUuid}/clone")

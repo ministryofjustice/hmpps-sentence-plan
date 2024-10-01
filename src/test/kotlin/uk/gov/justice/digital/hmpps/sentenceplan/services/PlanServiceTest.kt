@@ -17,9 +17,6 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanAgreementNoteReposit
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanAgreementStatus
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
-import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionEntity
-import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionRepository
-import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanStatus
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanType
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionRepository
@@ -43,27 +40,26 @@ class PlanServiceTest {
   }
 
   @Nested
-  @DisplayName("getPlanByUuid")
-  inner class GetPlanByUuid {
+  @DisplayName("getPlanVersionByPlanUuid")
+  inner class GetPlanVersionByPlanUuid {
 
     @Test
-    fun `should return plan when plan exists with given UUID`() {
+    fun `should return plan version when plan exists with given UUID`() {
       val planUuid = UUID.randomUUID()
-      val planVersionEntity = PlanVersionEntity(plan = planEntity)
-      every { planVersionRepository.findByUuid(planUuid) } returns planVersionEntity
 
-      val result = planService.getPlanByUuid(planUuid)
+      every { planRepository.findByUuid(planUuid) } returns planEntity
+
+      val result = planService.getPlanVersionByPlanUuid(planUuid)
 
       assertEquals(planVersionEntity, result)
     }
 
     @Test
     fun `should throw exception when no plan exists with given UUID`() {
-      val planUuid = UUID.randomUUID()
-      every { planVersionRepository.findByUuid(planUuid) } throws EmptyResultDataAccessException(1)
+      every { planRepository.findByUuid(any()) } throws EmptyResultDataAccessException(1)
 
       val exception = assertThrows(EmptyResultDataAccessException::class.java) {
-        planService.getPlanByUuid(planUuid)
+        planService.getPlanVersionByPlanUuid(UUID.randomUUID())
       }
 
       assertEquals("Incorrect result size: expected 1, actual 0", exception.message)
@@ -156,7 +152,7 @@ class PlanServiceTest {
 
       val result = planService.createPlan(PlanType.INITIAL)
 
-      verify { planVersionRepository.save(withArg { assertEquals(result, it) }) }
+      verify { planRepository.save(withArg { assertEquals(result, it) }) }
     }
   }
 

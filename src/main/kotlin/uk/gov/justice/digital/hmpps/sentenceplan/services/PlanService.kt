@@ -8,10 +8,7 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanAgreementNoteReposit
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanAgreementStatus
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
-import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanStatus
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanType
-import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionEntity
-import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.exceptions.ConflictException
@@ -54,14 +51,12 @@ class PlanService(
   fun createPlan(planType: PlanType): PlanEntity {
     val plan = PlanEntity()
     // TODO: Set planType & planVersion
-//    val planEntity = planRepository.save(plan)
-//
-//    val planVersion = PlanVersionEntity(plan = planEntity)
-//    val planVersionEntity = planVersionRepository.save(planVersion)
-//
-//    planEntity.currentVersion = planVersionEntity
+    val planEntity = planRepository.save(plan)
 
-    return planRepository.save(plan)
+    val planVersion = PlanVersionEntity(plan = planEntity)
+    planVersionRepository.save(planVersion)
+
+    return planEntity
   }
 
   fun agreeLatestPlanVersion(planUuid: UUID, agreement: Agreement): PlanVersionEntity {

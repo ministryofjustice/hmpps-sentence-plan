@@ -5,9 +5,11 @@ import io.mockk.junit5.MockKExtension
 import io.mockk.mockk
 import io.mockk.slot
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.dao.EmptyResultDataAccessException
@@ -28,15 +30,16 @@ import java.util.UUID
 
 @ExtendWith(MockKExtension::class)
 @DisplayName("Goal Service Tests")
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class GoalServiceTest {
   private val goalRepository: GoalRepository = mockk()
   private val areaOfNeedRepository: AreaOfNeedRepository = mockk()
   private val planVersionRepository: PlanVersionRepository = mockk()
   private val planRepository: PlanRepository = mockk()
   private val stepRepository: StepRepository = mockk()
+
   private val goalService = GoalService(goalRepository, areaOfNeedRepository, planVersionRepository, stepRepository, planRepository)
   private val goalUuid = UUID.fromString("ef74ee4b-5a0b-481b-860f-19187260f2e7")
-  private val plan: PlanEntity = mockk()
 
   private val goal: Goal = Goal(
     areaOfNeed = "Area Of Need",
@@ -64,6 +67,8 @@ class GoalServiceTest {
     goalOrder = 1,
   )
 
+  private val goalSet = setOf(goalEntityNoSteps)
+
   private val goalEntityWithRelatedAreasOfNeed: GoalEntity = GoalEntity(
     title = "Mock Goal with Related Areas of Need",
     areaOfNeed = mockk<AreaOfNeedEntity>(),
@@ -72,12 +77,6 @@ class GoalServiceTest {
     goalOrder = 1,
     relatedAreasOfNeed = mockk<MutableList<AreaOfNeedEntity>>(),
   )
-
-  private val planVersionEntity: PlanVersionEntity = PlanVersionEntity(plan = plan)
-
-  private val goalSet = setOf(goalEntityNoSteps)
-
-  private val planVersionEntityWithOneGoal: PlanVersionEntity = PlanVersionEntity(plan = plan, goals = goalSet)
 
   private val steps = listOf(
     Step(
@@ -94,13 +93,22 @@ class GoalServiceTest {
 
   private val incompleteSteps = steps + Step("This is a step with no actor", status = StepStatus.NOT_STARTED, actor = "")
 
+  private val planEntity: PlanEntity = PlanEntity()
+  private val planVersionEntity: PlanVersionEntity = PlanVersionEntity(plan = planEntity)
+  private val planVersionEntityWithOneGoal: PlanVersionEntity = PlanVersionEntity(plan = planEntity, goals = goalSet)
+
+  @BeforeAll
+  fun setup() {
+    planEntity.currentVersion = planVersionEntity
+  }
+
   @Nested
   @DisplayName("createNewGoal")
   inner class CreateNewGoal {
 
     @Test
     fun `create new goal with random Plan UUID should throw Exception`() {
-      every { planVersionRepository.findByUuid(any()) } throws EmptyResultDataAccessException(1)
+      every { planRepository.findByUuid(any()) } throws EmptyResultDataAccessException(1)
 
       val exception = assertThrows<Exception> {
         goalService.createNewGoal(UUID.randomUUID(), goal)
@@ -111,14 +119,14 @@ class GoalServiceTest {
 
     @Test
     fun `create new goal with Area Of Need that doesn't exist should throw Exception`() {
-      every { planVersionRepository.findByUuid(any()) } returns planVersionEntity
+      every { planRepository.findByUuid(any()) } returns planEntity
       every { areaOfNeedRepository.findByNameIgnoreCase(any()) } throws EmptyResultDataAccessException(1)
 
       var exception: Exception? = null
       var goalEntity: GoalEntity? = null
 
       try {
-        goalEntity = goalService.createNewGoal(planVersionEntity.uuid, goal)
+        goalEntity = goalService.createNewGoal(planEntity.uuid, goal)
       } catch (e: Exception) {
         exception = e
       }
@@ -130,7 +138,7 @@ class GoalServiceTest {
 
     @Test
     fun `create new goal with Related Areas Of Need that don't exist should throw Exception`() {
-      every { planVersionRepository.findByUuid(any()) } returns planVersionEntity
+      every { planRepository.findByUuid(any()) } returns planEntity
       every { areaOfNeedRepository.findByNameIgnoreCase(any()) } returns areaOfNeedEntity
       every { areaOfNeedRepository.findAllByNames(any()) } returns null
 
@@ -138,7 +146,7 @@ class GoalServiceTest {
       var goalEntity: GoalEntity? = null
 
       try {
-        goalEntity = goalService.createNewGoal(planVersionEntity.uuid, goal)
+        goalEntity = goalService.createNewGoal(planEntity.uuid, goal)
       } catch (e: Exception) {
         exception = e
       }
@@ -150,7 +158,7 @@ class GoalServiceTest {
 
     @Test
     fun `create new goal with no Related Areas of Need should call save`() {
-      every { planVersionRepository.findByUuid(any()) } returns planVersionEntity
+      every { planRepository.findByUuid(any()) } returns planEntity
       every { areaOfNeedRepository.findByNameIgnoreCase(any()) } returns areaOfNeedEntity
       every { areaOfNeedRepository.findAllByNames(any()) } returns null
 
@@ -165,20 +173,20 @@ class GoalServiceTest {
 
     @Test
     fun `creating two goals should set incrementing goal order values`() {
-      every { planVersionRepository.findByUuid(any()) } returns planVersionEntity
+      every { planRepository.findByUuid(any()) } returns planEntity
       every { areaOfNeedRepository.findByNameIgnoreCase(any()) } returns areaOfNeedEntity
       every { areaOfNeedRepository.findAllByNames(any()) } returns null
 
       val goalSlot = slot<GoalEntity>()
       every { goalRepository.save(capture(goalSlot)) } answers { goalSlot.captured }
 
-      val goalEntityOne = goalService.createNewGoal(planVersionEntity.uuid, goalWithNoRelatedAreasOfNeed)
+      val goalEntityOne = goalService.createNewGoal(planEntity.uuid, goalWithNoRelatedAreasOfNeed)
       assertThat(goalEntityOne).isNotNull()
       assertThat(goalEntityOne.goalOrder).isEqualTo(1)
 
-      every { planVersionRepository.findByUuid(any()) } returns planVersionEntityWithOneGoal
+      planEntity.currentVersion = planVersionEntityWithOneGoal
 
-      val goalEntityTwo = goalService.createNewGoal(planVersionEntity.uuid, goalWithNoRelatedAreasOfNeed)
+      val goalEntityTwo = goalService.createNewGoal(planEntity.uuid, goalWithNoRelatedAreasOfNeed)
       assertThat(goalEntityTwo).isNotNull()
       assertThat(goalEntityTwo.goalOrder).isEqualTo(2)
     }

@@ -22,11 +22,15 @@ import uk.gov.justice.digital.hmpps.sentenceplan.data.CreatePlanRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Goal
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntity
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanType
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.CounterSignPlanRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.RollbackPlanRequest
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.response.GetPlanResponse
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.response.PlanState
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.response.PlanVersionResponse
 import uk.gov.justice.digital.hmpps.sentenceplan.services.GoalService
 import uk.gov.justice.digital.hmpps.sentenceplan.services.PlanService
+import java.time.Instant
 import java.util.UUID
 
 @RestController
@@ -96,13 +100,18 @@ class PlanController(
   fun getPlan(
     /**
      * TODO: Implement logic to getting an existing sentence plan identified by 'planUuid'.
-     *  - Retrieve the plan using 'planUuid' and it's specified 'sentencePlanVersion (if provided), else latest
-     *    - Add new planType field, with INITIAL hardcoded (?clarify this?)
+     *  - Retrieve the plan information using 'planUuid' and it's specified 'sentencePlanVersion (if provided), else latest
      *  - Handle any exceptions or edge cases (i.e plan not found).
      */
     @PathVariable planUuid: UUID,
-  ): PlanEntity {
-    return planService.getPlanByUuid(planUuid) ?: throw NoResourceFoundException(HttpMethod.GET, "No Plan found for $planUuid")
+  ): GetPlanResponse {
+    return GetPlanResponse(
+      sentencePlanId = UUID.randomUUID(),
+      sentencePlanVersion = 1L,
+      lastUpdatedTimestampSP = Instant.now().toEpochMilli(),
+      planComplete = PlanState.INCOMPLETE,
+      planType = PlanType.INITIAL
+    )
   }
 
   @GetMapping("/{planUuid}/goals")

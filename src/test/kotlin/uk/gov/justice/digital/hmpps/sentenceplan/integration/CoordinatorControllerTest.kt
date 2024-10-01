@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.sentenceplan.integration
 
 import org.assertj.core.api.Assertions.assertThat
-import org.assertj.core.api.SoftAssertions
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -17,7 +16,7 @@ import java.util.UUID
 
 @AutoConfigureWebTestClient(timeout = "5s")
 @DisplayName("Coordinator Controller Tests")
-class CoordinatorControllerTest: IntegrationTestBase() {
+class CoordinatorControllerTest : IntegrationTestBase() {
 
   val authenticatedUser = "${UUID.randomUUID()}|Tom C"
 
@@ -57,7 +56,7 @@ class CoordinatorControllerTest: IntegrationTestBase() {
     @Test
     fun `should retrieve a plan`() {
       webTestClient.get()
-        .uri("/coordinator/plan/${staticPlanUuid}")
+        .uri("/coordinator/plan/$staticPlanUuid")
         .header("Content-Type", "application/json")
         .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
         .exchange()

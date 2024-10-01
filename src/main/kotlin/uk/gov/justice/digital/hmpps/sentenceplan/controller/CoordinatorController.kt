@@ -22,7 +22,6 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.RollbackPlanRequ
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.response.GetPlanResponse
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.response.PlanState
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.response.PlanVersionResponse
-
 import uk.gov.justice.digital.hmpps.sentenceplan.services.PlanService
 import java.time.Instant
 import java.util.UUID
@@ -103,7 +102,7 @@ class CoordinatorController(
       sentencePlanVersion = 1L,
       lastUpdatedTimestampSP = Instant.now().toEpochMilli(),
       planComplete = PlanState.INCOMPLETE,
-      planType = PlanType.INITIAL
+      planType = PlanType.INITIAL,
     )
   }
 

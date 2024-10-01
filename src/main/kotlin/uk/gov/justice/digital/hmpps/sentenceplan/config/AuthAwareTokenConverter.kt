@@ -15,7 +15,7 @@ class AuthAwareTokenConverter() : Converter<Jwt, AbstractAuthenticationToken> {
   }
 
   private fun extractAuthorities(jwt: Jwt): Collection<GrantedAuthority> {
-    val authorities = jwt.claims.getOrDefault("authorities", emptyList<String>()) as Collection<String>
-    return authorities.map { SimpleGrantedAuthority(it) }
+    val authorities = jwt.claims.getOrDefault("authorities", emptyList<String>()) as Collection<*>
+    return authorities.map { SimpleGrantedAuthority(it as String?) }
   }
 }

@@ -6,6 +6,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import jakarta.validation.Valid
+import org.springframework.dao.EmptyResultDataAccessException
+import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -14,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.servlet.resource.NoResourceFoundException
 import uk.gov.justice.digital.hmpps.sentenceplan.config.ErrorResponse
 import uk.gov.justice.digital.hmpps.sentenceplan.data.CreatePlanRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.CounterSignPlanRequest
@@ -89,8 +92,12 @@ class CoordinatorController(
      */
     @PathVariable planUuid: UUID,
   ): GetPlanResponse {
-    return planService.getPlanVersionByPlanUuid(planUuid)
-      .run(GetPlanResponse::from)
+    try {
+      return planService.getPlanVersionByPlanUuid(planUuid)
+        .run(GetPlanResponse::from)
+    } catch (_: EmptyResultDataAccessException) {
+      throw NoResourceFoundException(HttpMethod.GET, "Could not find a plan with ID: $planUuid")
+    }
   }
 
   @PostMapping("/{planUuid}/clone")

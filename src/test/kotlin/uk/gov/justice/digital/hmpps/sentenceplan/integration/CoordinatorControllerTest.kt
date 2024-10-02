@@ -7,10 +7,12 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient
+import org.springframework.http.HttpStatus
 import org.springframework.test.context.jdbc.Sql
 import org.springframework.test.context.jdbc.Sql.ExecutionPhase.AFTER_TEST_CLASS
 import org.springframework.test.context.jdbc.Sql.ExecutionPhase.BEFORE_TEST_CLASS
 import org.springframework.test.web.reactive.server.expectBody
+import uk.gov.justice.digital.hmpps.sentenceplan.config.ErrorResponse
 import uk.gov.justice.digital.hmpps.sentenceplan.data.CreatePlanRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.data.UserDetails
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanType
@@ -74,6 +76,28 @@ class CoordinatorControllerTest : IntegrationTestBase() {
           assertThat(responseBody?.planComplete).isEqualTo(PlanState.INCOMPLETE)
           assertThat(responseBody?.planType).isEqualTo(PlanType.INITIAL)
         }
+    }
+
+    @Test
+    fun `should return not found when getting plan by non-existent UUID`() {
+      webTestClient.get()
+        .uri("/coordinator/plan/15285be5-fe67-448f-b8b0-45c9e4c7ad8e")
+        .header("Content-Type", "application/json")
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .exchange()
+        .expectStatus().isNotFound
+        .expectBody<ErrorResponse>()
+    }
+
+    @Test
+    fun `should return server error when trying to get a plan param that is not a UUID`() {
+      webTestClient.get()
+        .uri("/coordinator/plan/x")
+        .header("Content-Type", "application/json")
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .exchange()
+        .expectStatus().is5xxServerError
+        .expectBody<ErrorResponse>()
     }
   }
 }

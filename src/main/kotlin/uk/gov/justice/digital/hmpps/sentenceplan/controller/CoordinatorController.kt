@@ -54,11 +54,6 @@ class CoordinatorController(
   )
   @ResponseStatus(HttpStatus.CREATED)
   fun createPlan(@RequestBody createPlanRequest: CreatePlanRequest): PlanVersionResponse {
-    /** TODO: Create a new plan
-     *   - Create a new plan
-     *   - Set it's version number to 0
-     *   - Return UUID and version number
-     */
     return planService.createPlan(createPlanRequest.planType)
       .run(PlanVersionResponse::from)
   }

@@ -72,14 +72,6 @@ enum class PublishState {
   ARCHIVED,
 }
 
-enum class PlanType {
-  INITIAL,
-  REVIEW,
-  TERMINATE,
-  TRANSFER,
-  OTHER,
-}
-
 interface PlanRepository : JpaRepository<PlanEntity, Long> {
   fun findByUuid(planUuid: UUID): PlanEntity
 

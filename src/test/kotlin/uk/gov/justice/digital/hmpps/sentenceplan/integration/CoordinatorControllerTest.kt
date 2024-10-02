@@ -4,6 +4,8 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient
 import org.springframework.test.web.reactive.server.expectBody
 import uk.gov.justice.digital.hmpps.sentenceplan.data.CreatePlanRequest
@@ -18,15 +20,16 @@ import java.util.UUID
 @DisplayName("Coordinator Controller Tests")
 class CoordinatorControllerTest : IntegrationTestBase() {
 
-  val authenticatedUser = "${UUID.randomUUID()}|Tom C"
+  val authenticatedUser = "OASYS|Tom C"
 
   @Nested
   @DisplayName("createPlan")
   inner class CreatePlan {
-    @Test
-    fun `should create a new plan`() {
+    @ParameterizedTest
+    @EnumSource(PlanType::class)
+    fun `should create a new plan`(planType: PlanType) {
       val createPlanRequest = CreatePlanRequest(
-        PlanType.INITIAL,
+        planType = planType,
         UserDetails(
           "1",
           "Tom C",

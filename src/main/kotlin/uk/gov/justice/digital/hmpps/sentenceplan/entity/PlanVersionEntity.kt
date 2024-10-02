@@ -40,13 +40,17 @@ class PlanVersionEntity(
   val uuid: UUID = UUID.randomUUID(),
 
   @Column(name = "version")
-  val version: Int = 0,
+  var version: Int = 0,
 
   // this is nullable in the declaration to enable ignoring the field in JSON serialisation
   @OneToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "plan_id", nullable = false)
   @JsonIgnore
   val plan: PlanEntity?,
+
+  @Column(name = "plan_type", nullable = false)
+  @Enumerated(EnumType.STRING)
+  var planType: PlanType = PlanType.INITIAL,
 
   @Column(name = "countersigning_status")
   @Enumerated(EnumType.STRING)
@@ -111,6 +115,14 @@ enum class PlanAgreementStatus {
   AGREED,
   DO_NOT_AGREE,
   COULD_NOT_ANSWER,
+}
+
+enum class PlanType {
+  INITIAL,
+  REVIEW,
+  TERMINATE,
+  TRANSFER,
+  OTHER,
 }
 
 interface PlanVersionRepository : JpaRepository<PlanVersionEntity, Long> {

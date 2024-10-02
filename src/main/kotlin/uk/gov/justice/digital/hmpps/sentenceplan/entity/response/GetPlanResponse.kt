@@ -1,6 +1,9 @@
 package uk.gov.justice.digital.hmpps.sentenceplan.entity.response
 
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanAgreementStatus
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanType
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionEntity
+import java.time.ZoneOffset
 import java.util.UUID
 
 enum class PlanState {
@@ -14,4 +17,21 @@ data class GetPlanResponse(
   var planComplete: PlanState,
   var planType: PlanType,
   var lastUpdatedTimestampSP: Long,
-)
+) {
+  companion object {
+    fun from(planVersionEntity: PlanVersionEntity): GetPlanResponse {
+      val planComplete = if (planVersionEntity.agreementStatus == PlanAgreementStatus.DRAFT)
+        PlanState.INCOMPLETE
+      else
+        PlanState.COMPLETE
+
+      return GetPlanResponse(
+        sentencePlanId = planVersionEntity.uuid,
+        sentencePlanVersion = planVersionEntity.version.toLong(),
+        lastUpdatedTimestampSP = planVersionEntity.updatedDate.toEpochSecond(ZoneOffset.UTC),
+        planComplete = planComplete,
+        planType = planVersionEntity.planType,
+      )
+    }
+  }
+}

@@ -21,6 +21,7 @@ import java.util.UUID
 class CoordinatorControllerTest : IntegrationTestBase() {
 
   val authenticatedUser = "OASYS|Tom C"
+  val userDetails = UserDetails("1", "Tom C")
 
   @Nested
   @DisplayName("createPlan")
@@ -30,10 +31,7 @@ class CoordinatorControllerTest : IntegrationTestBase() {
     fun `should create a new plan`(planType: PlanType) {
       val createPlanRequest = CreatePlanRequest(
         planType = planType,
-        UserDetails(
-          "1",
-          "Tom C",
-        ),
+        userDetails = userDetails,
       )
 
       webTestClient.post()

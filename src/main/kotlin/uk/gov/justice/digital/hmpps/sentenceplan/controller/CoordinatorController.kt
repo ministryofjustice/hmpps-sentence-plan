@@ -16,14 +16,11 @@ import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.sentenceplan.config.ErrorResponse
 import uk.gov.justice.digital.hmpps.sentenceplan.data.CreatePlanRequest
-import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanType
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.CounterSignPlanRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.RollbackPlanRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.response.GetPlanResponse
-import uk.gov.justice.digital.hmpps.sentenceplan.entity.response.PlanState
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.response.PlanVersionResponse
 import uk.gov.justice.digital.hmpps.sentenceplan.services.PlanService
-import java.time.Instant
 import java.util.UUID
 
 @RestController
@@ -92,13 +89,8 @@ class CoordinatorController(
      */
     @PathVariable planUuid: UUID,
   ): GetPlanResponse {
-    return GetPlanResponse(
-      sentencePlanId = planUuid,
-      sentencePlanVersion = 1L,
-      lastUpdatedTimestampSP = Instant.now().toEpochMilli(),
-      planComplete = PlanState.INCOMPLETE,
-      planType = PlanType.INITIAL,
-    )
+    return planService.getPlanVersionByPlanUuid(planUuid)
+      .run(GetPlanResponse::from)
   }
 
   @PostMapping("/{planUuid}/clone")

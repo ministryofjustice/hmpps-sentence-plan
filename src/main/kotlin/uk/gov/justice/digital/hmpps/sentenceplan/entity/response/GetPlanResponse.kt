@@ -20,10 +20,11 @@ data class GetPlanResponse(
 ) {
   companion object {
     fun from(planVersionEntity: PlanVersionEntity): GetPlanResponse {
-      val planComplete = if (planVersionEntity.agreementStatus == PlanAgreementStatus.DRAFT)
+      val planComplete = if (planVersionEntity.agreementStatus == PlanAgreementStatus.DRAFT) {
         PlanState.INCOMPLETE
-      else
+      } else {
         PlanState.COMPLETE
+      }
 
       return GetPlanResponse(
         sentencePlanId = planVersionEntity.uuid,

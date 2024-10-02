@@ -7,6 +7,9 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient
+import org.springframework.test.context.jdbc.Sql
+import org.springframework.test.context.jdbc.Sql.ExecutionPhase.AFTER_TEST_CLASS
+import org.springframework.test.context.jdbc.Sql.ExecutionPhase.BEFORE_TEST_CLASS
 import org.springframework.test.web.reactive.server.expectBody
 import uk.gov.justice.digital.hmpps.sentenceplan.data.CreatePlanRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.data.UserDetails
@@ -51,6 +54,8 @@ class CoordinatorControllerTest : IntegrationTestBase() {
 
   @Nested
   @DisplayName("getPlan")
+  @Sql(scripts = [ "/db/test/oasys_assessment_pk_data.sql" ], executionPhase = BEFORE_TEST_CLASS)
+  @Sql(scripts = [ "/db/test/oasys_assessment_pk_cleanup.sql" ], executionPhase = AFTER_TEST_CLASS)
   inner class GetPlan {
     val staticPlanUuid = UUID.fromString("556db5c8-a1eb-4064-986b-0740d6a83c33")
 
@@ -64,8 +69,8 @@ class CoordinatorControllerTest : IntegrationTestBase() {
         .expectStatus().isOk
         .expectBody<GetPlanResponse>()
         .returnResult().apply {
-          assertThat(responseBody?.sentencePlanId).isEqualTo(staticPlanUuid)
-          assertThat(responseBody?.sentencePlanVersion).isEqualTo(1L)
+          assertThat(responseBody?.sentencePlanId).isEqualTo(UUID.fromString("9f2aaa46-e544-4bcd-8db6-fbe7842ddb64"))
+          assertThat(responseBody?.sentencePlanVersion).isEqualTo(0L)
           assertThat(responseBody?.planComplete).isEqualTo(PlanState.INCOMPLETE)
           assertThat(responseBody?.planType).isEqualTo(PlanType.INITIAL)
         }

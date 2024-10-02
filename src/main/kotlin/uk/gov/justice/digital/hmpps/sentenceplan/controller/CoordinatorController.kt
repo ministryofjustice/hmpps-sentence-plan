@@ -84,7 +84,7 @@ class CoordinatorController(
   fun getPlan(
     /**
      * TODO: Implement logic to getting an existing sentence plan identified by 'planUuid'.
-     *  - Retrieve the plan information using 'planUuid' and it's specified 'sentencePlanVersion (if provided), else latest
+     *  - Retrieve the plan information using 'planUuid' and return latest
      *  - Handle any exceptions or edge cases (i.e plan not found).
      */
     @PathVariable planUuid: UUID,

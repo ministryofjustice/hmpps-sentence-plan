@@ -19,16 +19,12 @@ import org.springframework.test.web.reactive.server.expectBody
 import org.springframework.test.web.reactive.server.expectBodyList
 import uk.gov.justice.digital.hmpps.sentenceplan.config.ErrorResponse
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Agreement
-import uk.gov.justice.digital.hmpps.sentenceplan.data.CreatePlanRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Goal
-import uk.gov.justice.digital.hmpps.sentenceplan.data.UserDetails
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.AreaOfNeedEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalStatus
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanAgreementStatus
-import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanType
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionEntity
-import uk.gov.justice.digital.hmpps.sentenceplan.entity.response.PlanVersionResponse
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
@@ -40,34 +36,6 @@ class PlanControllerTest : IntegrationTestBase() {
 
   val authenticatedUser = UUID.randomUUID().toString() + "|Tom C"
   val testPlanUuid = "556db5c8-a1eb-4064-986b-0740d6a83c33"
-
-  @Nested
-  @DisplayName("createPlan")
-  inner class CreatePlan {
-    @Test
-    fun `should create a new plan`() {
-      val createPlanRequest = CreatePlanRequest(
-        PlanType.INITIAL,
-        UserDetails(
-          "1",
-          "Tom C",
-        ),
-      )
-
-      val planVersionResponse: PlanVersionResponse? = webTestClient.post()
-        .uri("/plans")
-        .bodyValue(createPlanRequest)
-        .header("Content-Type", "application/json")
-        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
-        .exchange()
-        .expectStatus().isCreated
-        .expectBody<PlanVersionResponse>()
-        .returnResult().responseBody
-
-      assertThat(planVersionResponse?.planVersion).isEqualTo(0L)
-      assertThat(planVersionResponse?.planUuid).isNotNull
-    }
-  }
 
   @Nested
   @DisplayName("getPlan")

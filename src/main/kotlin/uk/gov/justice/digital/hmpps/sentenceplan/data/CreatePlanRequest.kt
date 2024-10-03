@@ -6,4 +6,3 @@ data class CreatePlanRequest(
   val planType: PlanType,
   val userDetails: UserDetails,
 )
-// Maybe it includes Auditing information...

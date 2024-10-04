@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.sentenceplan.services
 import org.springframework.dao.EmptyResultDataAccessException
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Agreement
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.CountersigningStatus
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanAgreementNoteEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanAgreementNoteRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanAgreementStatus
@@ -11,6 +12,8 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanType
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionRepository
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.LockRequest
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.LockType
 import uk.gov.justice.digital.hmpps.sentenceplan.exceptions.ConflictException
 import java.time.LocalDateTime
 import java.util.UUID
@@ -94,5 +97,23 @@ class PlanService(
     )
 
     planAgreementNoteRepository.save(planAgreementNote)
+  }
+
+  fun lockPlan(planUuid: UUID, lockRequest: LockRequest): PlanVersionEntity {
+    val plan = getPlanVersionByPlanUuid(planUuid)
+
+    // Check signing status here
+    if (plan.status != CountersigningStatus.UNSIGNED) {
+      println(plan) // Placeholder for throw?
+    }
+
+    when (lockRequest.lockType) {
+      LockType.SELF -> { plan.status = CountersigningStatus.SELF_SIGNED }
+      LockType.COUNTERSIGN -> { plan.status = CountersigningStatus.AWAITING_COUNTERSIGN }
+    }
+    // make sure we update the same version
+    return planVersionRepository.save(plan)
+
+    // make a new version
   }
 }

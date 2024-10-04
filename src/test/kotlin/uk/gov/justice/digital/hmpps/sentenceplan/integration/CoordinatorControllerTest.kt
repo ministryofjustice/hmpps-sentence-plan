@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient
+import org.springframework.http.HttpStatus
 import org.springframework.test.context.jdbc.Sql
 import org.springframework.test.context.jdbc.Sql.ExecutionPhase.AFTER_TEST_CLASS
 import org.springframework.test.context.jdbc.Sql.ExecutionPhase.BEFORE_TEST_CLASS
@@ -15,6 +16,8 @@ import uk.gov.justice.digital.hmpps.sentenceplan.config.ErrorResponse
 import uk.gov.justice.digital.hmpps.sentenceplan.data.CreatePlanRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.data.UserDetails
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanType
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.LockRequest
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.LockType
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.response.GetPlanResponse
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.response.PlanState
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.response.PlanVersionResponse
@@ -46,7 +49,7 @@ class CoordinatorControllerTest : IntegrationTestBase() {
         .exchange()
         .expectStatus().isCreated
         .expectBody<PlanVersionResponse>()
-        .returnResult().apply {
+        .returnResult().run {
           assertThat(responseBody?.planVersion).isEqualTo(0L)
           assertThat(responseBody?.planId).isNotNull
         }
@@ -69,7 +72,7 @@ class CoordinatorControllerTest : IntegrationTestBase() {
         .exchange()
         .expectStatus().isOk
         .expectBody<GetPlanResponse>()
-        .returnResult().apply {
+        .returnResult().run {
           assertThat(responseBody?.sentencePlanId).isEqualTo(UUID.fromString("9f2aaa46-e544-4bcd-8db6-fbe7842ddb64"))
           assertThat(responseBody?.sentencePlanVersion).isEqualTo(0L)
           assertThat(responseBody?.planComplete).isEqualTo(PlanState.INCOMPLETE)
@@ -97,6 +100,55 @@ class CoordinatorControllerTest : IntegrationTestBase() {
         .exchange()
         .expectStatus().is5xxServerError
         .expectBody<ErrorResponse>()
+    }
+  }
+
+  @Nested
+  @DisplayName("lockPlan")
+  @Sql(scripts = [ "/db/test/oasys_assessment_pk_data.sql" ], executionPhase = BEFORE_TEST_CLASS)
+  @Sql(scripts = [ "/db/test/oasys_assessment_pk_cleanup.sql" ], executionPhase = AFTER_TEST_CLASS)
+  inner class LockPlan {
+    val planUuid = UUID.fromString("556db5c8-a1eb-4064-986b-0740d6a83c33")
+    val notFoundUuid = UUID.fromString("0d0f2d85-5b70-4916-9f89-ed248f8d5196")
+
+    val userDetails = UserDetails("1", "Tom C")
+
+    @ParameterizedTest
+    @EnumSource(LockType::class)
+    fun `should do something`(lockType: LockType) {
+      val lockRequest = LockRequest(
+        lockType = lockType,
+        userDetails = userDetails,
+      )
+
+      webTestClient.post()
+        .uri("/coordinator/plan/$planUuid/lock")
+        .bodyValue(lockRequest)
+        .header("Content-Type", "application/json")
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .exchange()
+        .expectStatus().isOk
+        .expectBody<PlanVersionResponse>()
+        .returnResult().run {
+          assertThat(responseBody?.planUuid).isNotNull
+          assertThat(responseBody?.planVersion).isEqualTo(10L)
+        }
+    }
+
+    @Test
+    fun `should return not found`() {
+      webTestClient.post()
+        .uri("/coordinator/plan/$notFoundUuid/lock")
+        .header("Content-Type", "application/json")
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .exchange()
+        .expectStatus().isNotFound
+        .expectBody<ErrorResponse>()
+        .returnResult().run {
+          assertThat(responseBody?.status).isEqualTo(HttpStatus.NOT_FOUND.value())
+          assertThat(responseBody?.userMessage).startsWith("No resource found failure")
+          assertThat(responseBody?.developerMessage).startsWith("No static resource")
+        }
     }
   }
 }

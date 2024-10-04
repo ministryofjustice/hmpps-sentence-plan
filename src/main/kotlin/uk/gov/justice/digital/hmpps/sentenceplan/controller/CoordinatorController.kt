@@ -20,6 +20,7 @@ import org.springframework.web.servlet.resource.NoResourceFoundException
 import uk.gov.justice.digital.hmpps.sentenceplan.config.ErrorResponse
 import uk.gov.justice.digital.hmpps.sentenceplan.data.CreatePlanRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.CounterSignPlanRequest
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.LockRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.RollbackPlanRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.response.GetPlanResponse
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.response.PlanVersionResponse
@@ -85,11 +86,6 @@ class CoordinatorController(
   )
   @ResponseStatus(HttpStatus.OK)
   fun getPlan(
-    /**
-     * TODO: Implement logic to getting an existing sentence plan identified by 'planUuid'.
-     *  - Retrieve the plan information using 'planUuid' and return latest
-     *  - Handle any exceptions or edge cases (i.e plan not found).
-     */
     @PathVariable planUuid: UUID,
   ): GetPlanResponse {
     try {
@@ -169,16 +165,23 @@ class CoordinatorController(
   )
   fun lockPlan(
     @PathVariable planUuid: UUID,
+    @RequestBody lockRequest: LockRequest,
   ): PlanVersionResponse {
     /**
      * TODO: Implement logic to lock the sentence plan identified by 'planUuid'
      *  - Retrieve the plan using 'planUuid'
-     *  - Update the plan's status to 'LOCKED' (?is this AWAIITNG_COUNTERSIGN?).
+     *  - Update the plan's status to AWAITING_COUNTERSIGN or SELF_SIGNED.
      *    - When doing this, make sure you DO NOT update the plan version number
      *  - Create a new plan version with countersigning_status as UNSIGNED
      *  - Save the changes and ensure the locked version number is returned
      *  - Handle any exceptions or edge cases (i,e plan not found, locking failures)
      */
+    try {
+      return planService.lockPlan(planUuid, lockRequest)
+        .run(PlanVersionResponse::from)
+    } catch (_: EmptyResultDataAccessException) {
+      throw NoResourceFoundException(HttpMethod.GET, "Could not find a plan with ID: $planUuid")
+    }
     return PlanVersionResponse(
       planId = planUuid,
       planVersion = 10,
@@ -260,7 +263,7 @@ class CoordinatorController(
     /**
      * TODO: Implement logic to countersign the specified sentence plan version
      *  - Retrieve the plan using 'planUuid' and it's specified 'sentencePlanVersion'
-     *  - Check plan is in correct AWAIITNG_COUNTERSIGN/AWAITING_DOUBLE_COUNTERSIGN/LOCKED countersigning state
+     *  - Check plan is in correct AWAITING_COUNTERSIGN/AWAITING_DOUBLE_COUNTERSIGN/LOCKED countersigning state
      *  - Update the plan countersigning_status with the 'SignType' from the request body
      *    - When doing this, make sure you DO NOT update the plan version number
      *  - Save the changes and return the the plan UUID and version number

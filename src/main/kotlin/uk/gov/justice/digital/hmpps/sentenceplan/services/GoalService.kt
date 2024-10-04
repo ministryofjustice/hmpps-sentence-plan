@@ -141,7 +141,6 @@ class GoalService(
 
   @Transactional
   fun deleteGoalByUuid(goalUuid: UUID): Int {
-    val goalsDeletedCount = goalRepository.deleteByUuid(goalUuid)
-    return goalsDeletedCount
+    return goalRepository.deleteByUuid(goalUuid)
   }
 }

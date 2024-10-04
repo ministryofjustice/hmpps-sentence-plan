@@ -21,6 +21,8 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.services.GoalService
 import java.util.UUID
 
+private const val ONE_ROW_DELETED = 1
+
 @RestController
 @RequestMapping("/goals")
 class GoalController(private val service: GoalService) {
@@ -49,7 +51,7 @@ class GoalController(private val service: GoalService) {
   fun deleteGoal(
     @PathVariable goalUuid: UUID,
   ) {
-    if (service.deleteGoalByUuid(goalUuid) != 1) {
+    if (service.deleteGoalByUuid(goalUuid) != ONE_ROW_DELETED) {
       throw NoResourceFoundException(HttpMethod.DELETE, "No goal found for $goalUuid")
     }
   }

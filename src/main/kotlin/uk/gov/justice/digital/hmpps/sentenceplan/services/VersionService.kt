@@ -28,7 +28,7 @@ class VersionService(
 
     try {
       newPlanVersionEntity = planVersionRepository.getWholePlanVersionByUuid(planVersionUuid)
-    } catch (e: NoResultException) {
+    } catch (_: NoResultException) {
       throw NoResultException("A Plan Version couldn't be found for Plan Version UUID: $planVersionUuid")
     }
 
@@ -37,7 +37,7 @@ class VersionService(
     newPlanVersionEntity.uuid = UUID.randomUUID()
     newPlanVersionEntity.id = null
     newPlanVersionEntity.agreementNote!!.id = null
-    newPlanVersionEntity.agreementNote!!.planVersion = newPlanVersionEntity
+    newPlanVersionEntity.agreementNote.planVersion = newPlanVersionEntity
 
     newPlanVersionEntity.planProgressNotes.forEach { planProgressNote ->
       planProgressNote.id = null

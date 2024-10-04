@@ -98,7 +98,7 @@ class VersionServiceIntegrationTest : IntegrationTestBase() {
     assertThat(goalRepository.findAll()).hasSize(4)
 
     // check that the first step in the first goal of each plan version have matching descriptions but different UUIDs
-    val planVersionZeroFirstGoal = goalRepository.findByUuidWithSteps(planVersionZero.goals.toList().get(0).uuid)
+    val planVersionZeroFirstGoal = goalRepository.findByUuidWithSteps(planVersionZero.goals.toList()[0].uuid)
     val planVersionOneFirstGoal = goalRepository.findByUuidWithSteps(planVersionOne.goals.toList().get(0).uuid)
 
     assertThat(planVersionZeroFirstGoal.steps.get(0).description).isEqualTo(planVersionZeroFirstGoal.steps.get(0).description)

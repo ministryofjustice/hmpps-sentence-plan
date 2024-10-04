@@ -34,8 +34,8 @@ class PlanServiceTest {
 
   @BeforeEach
   fun setup() {
-    planEntity = PlanEntity()
-    planVersionEntity = PlanVersionEntity(plan = planEntity)
+    planEntity = PlanEntity(id = 0L)
+    planVersionEntity = PlanVersionEntity(plan = planEntity, planId = 0L)
     planEntity.currentVersion = planVersionEntity
   }
 
@@ -148,7 +148,8 @@ class PlanServiceTest {
 
     @Test
     fun `should create and return a new plan`() {
-      every { planRepository.save(any()) } returnsArgument 0
+      every { planRepository.save(any()) } returns planEntity
+      every { planVersionRepository.save(any()) } returns planVersionEntity
 
       val result = planService.createPlan(PlanType.INITIAL)
 

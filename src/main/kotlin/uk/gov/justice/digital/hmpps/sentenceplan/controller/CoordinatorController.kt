@@ -137,7 +137,7 @@ class CoordinatorController(
      *  - Handle any exceptions or edge cases (i.e plan not found, cloning failures).
      */
     return PlanVersionResponse(
-      planUuid = UUID.randomUUID(),
+      planId = UUID.randomUUID(),
       planVersion = 0,
     )
   }
@@ -180,7 +180,7 @@ class CoordinatorController(
      *  - Handle any exceptions or edge cases (i,e plan not found, locking failures)
      */
     return PlanVersionResponse(
-      planUuid = planUuid,
+      planId = planUuid,
       planVersion = 10,
     )
   }
@@ -223,7 +223,7 @@ class CoordinatorController(
      *  - Handle any exceptions or edge cases (i,e, plan not found, locking failures)
      */
     return PlanVersionResponse(
-      planUuid = planUuid,
+      planId = planUuid,
       planVersion = 15,
     )
   }
@@ -267,7 +267,7 @@ class CoordinatorController(
      *  - Handle any exceptions or edge cases (i.e plan or version not found, invalid sign type, countersigning failures))
      */
     return PlanVersionResponse(
-      planUuid = planUuid,
+      planId = planUuid,
       planVersion = body.sentencePlanVersion,
     )
   }
@@ -311,7 +311,7 @@ class CoordinatorController(
      *  - Handle any exceptions or edge cases (i.e plan or version not found, invalid state for rollback, rollback failures)
      */
     return PlanVersionResponse(
-      planUuid = planUuid,
+      planId = planUuid,
       planVersion = body.sentencePlanVersion,
     )
   }

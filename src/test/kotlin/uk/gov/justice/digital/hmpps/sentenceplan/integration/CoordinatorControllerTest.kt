@@ -48,7 +48,7 @@ class CoordinatorControllerTest : IntegrationTestBase() {
         .expectBody<PlanVersionResponse>()
         .returnResult().apply {
           assertThat(responseBody?.planVersion).isEqualTo(0L)
-          assertThat(responseBody?.planUuid).isNotNull
+          assertThat(responseBody?.planId).isNotNull
         }
     }
   }

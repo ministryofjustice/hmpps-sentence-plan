@@ -17,6 +17,7 @@ import jakarta.persistence.ManyToMany
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.OneToMany
 import jakarta.persistence.OrderBy
+import jakarta.persistence.PrePersist
 import jakarta.persistence.Table
 import jakarta.persistence.UniqueConstraint
 import org.springframework.data.annotation.CreatedBy
@@ -27,6 +28,7 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Goal
+import uk.gov.justice.digital.hmpps.sentenceplan.services.VersionService
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
@@ -73,7 +75,7 @@ class GoalEntity(
 
   @Column(name = "goal_status")
   @Enumerated(EnumType.STRING)
-  var status: GoalStatus? = null,
+  var status: GoalStatus = GoalStatus.FUTURE,
 
   @Column(name = "status_date")
   var statusDate: LocalDateTime? = null,
@@ -100,6 +102,13 @@ class GoalEntity(
   )
   var relatedAreasOfNeed: MutableSet<AreaOfNeedEntity>? = mutableSetOf(),
 ) {
+  companion object {
+    private lateinit var versionService: VersionService
+
+    fun setVersionService(service: VersionService) {
+      versionService = service
+    }
+  }
 
   fun merge(goal: Goal, relatedAreasOfNeedList: List<AreaOfNeedEntity>): GoalEntity {
     if (goal.title != null) {
@@ -126,6 +135,19 @@ class GoalEntity(
     this.relatedAreasOfNeed = relatedAreasOfNeedList.toMutableSet()
 
     return this
+  }
+
+  @Transient
+  private var prePersistCalled: Boolean = false
+
+  @PrePersist
+  fun prePersist() {
+    println("In GoalEntity PrePersist")
+    // use a simple semaphore to prevent recursion
+    if (prePersistCalled) return
+    prePersistCalled = true
+    versionService.doStuff(this.planVersion)
+    prePersistCalled = false
   }
 }
 

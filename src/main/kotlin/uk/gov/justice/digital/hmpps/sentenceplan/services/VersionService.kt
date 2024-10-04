@@ -36,8 +36,8 @@ class VersionService(
 
     newPlanVersionEntity.uuid = UUID.randomUUID()
     newPlanVersionEntity.id = null
-    newPlanVersionEntity.agreementNote!!.id = null
-    newPlanVersionEntity.agreementNote.planVersion = newPlanVersionEntity
+    newPlanVersionEntity.agreementNote?.id = null
+    newPlanVersionEntity.agreementNote?.planVersion = newPlanVersionEntity
 
     newPlanVersionEntity.planProgressNotes.forEach { planProgressNote ->
       planProgressNote.id = null
@@ -63,7 +63,10 @@ class VersionService(
       goal.relatedAreasOfNeed = relatedAreasSet
     }
 
+    planVersionsBeingCopied.add(newPlanVersionEntity.uuid)
     planVersionRepository.save(newPlanVersionEntity)
+    planVersionsBeingCopied.remove(newPlanVersionEntity.uuid)
+
     entityManager.detach(newPlanVersionEntity)
 
     val currentPlanVersion = planVersionRepository.findByUuid(planVersionUuid)
@@ -71,5 +74,29 @@ class VersionService(
     val updatedCurrentVersion = planVersionRepository.save(currentPlanVersion)
 
     return updatedCurrentVersion
+  }
+
+  private var planVersionsBeingCopied: MutableSet<UUID> = mutableSetOf()
+
+  @Transactional
+  fun doStuff(planVersion: PlanVersionEntity?) {
+    println("In VersionService doStuff")
+    if (planVersion == null) {
+      return
+    }
+
+    // do nothing if this PlanVersion is not the latest version - this will not prevent changes to the objects however!
+    // if we want to prevent the persist we can return a value here, detect it in the @PrePersist and throw an e.g. RuntimeException
+    if (planVersion.uuid != planVersion.plan?.currentVersion?.uuid) {
+      return
+    }
+
+    if (planVersionsBeingCopied.contains(planVersion.uuid)) {
+      return
+    }
+
+    planVersionsBeingCopied.add(planVersion.uuid)
+    createNewPlanVersion(planVersion.uuid)
+    planVersionsBeingCopied.remove(planVersion.uuid)
   }
 }

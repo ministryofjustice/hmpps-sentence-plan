@@ -19,6 +19,7 @@ import jakarta.persistence.NamedSubgraph
 import jakarta.persistence.OneToMany
 import jakarta.persistence.OneToOne
 import jakarta.persistence.OrderBy
+import jakarta.persistence.PrePersist
 import jakarta.persistence.Table
 import org.springframework.data.annotation.CreatedBy
 import org.springframework.data.annotation.CreatedDate
@@ -120,7 +121,12 @@ class PlanVersionEntity(
   @OneToMany(mappedBy = "planVersion", cascade = [CascadeType.PERSIST], fetch = FetchType.EAGER)
   @OrderBy("goalOrder ASC")
   val goals: Set<GoalEntity> = emptySet(),
-)
+) {
+  @PrePersist
+  fun prePersist() {
+    println("PlanVersionEntity @PrePersist called")
+  }
+}
 
 enum class CountersigningStatus {
   AWAITING_COUNTERSIGN,

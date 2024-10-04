@@ -73,7 +73,7 @@ class GoalEntity(
 
   @Column(name = "goal_status")
   @Enumerated(EnumType.STRING)
-  var status: GoalStatus? = null,
+  var status: GoalStatus = GoalStatus.FUTURE,
 
   @Column(name = "status_date")
   var statusDate: LocalDateTime? = null,

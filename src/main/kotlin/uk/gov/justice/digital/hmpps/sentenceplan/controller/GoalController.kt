@@ -49,7 +49,9 @@ class GoalController(private val service: GoalService) {
   fun deleteGoal(
     @PathVariable goalUuid: UUID,
   ) {
-    service.deleteGoal(goalUuid) ?: throw NoResourceFoundException(HttpMethod.DELETE, "No goal found for $goalUuid")
+    if (service.deleteGoalByUuid(goalUuid) != 1) {
+      throw NoResourceFoundException(HttpMethod.DELETE, "No goal found for $goalUuid")
+    }
   }
 
   @PostMapping("/{goalUuid}/steps")

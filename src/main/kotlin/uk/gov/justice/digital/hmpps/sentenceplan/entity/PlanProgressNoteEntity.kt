@@ -17,6 +17,7 @@ import org.springframework.data.annotation.CreatedBy
 import org.springframework.data.jpa.domain.support.AuditingEntityListener
 import org.springframework.data.jpa.repository.JpaRepository
 import java.time.LocalDateTime
+import java.util.UUID
 
 @Entity(name = "PlanProgressNote")
 @Table(name = "plan_progress_notes")
@@ -26,12 +27,12 @@ class PlanProgressNoteEntity(
   @Column(name = "id")
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @JsonIgnore
-  val id: Long? = null,
+  var id: Long? = null,
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "plan_version_id", referencedColumnName = "id")
   @JsonIgnore
-  val planVersion: PlanVersionEntity?,
+  var planVersion: PlanVersionEntity?,
 
   @Column(name = "note")
   var note: String,
@@ -70,4 +71,6 @@ enum class NoteIsSupportNeeded {
   DONT_KNOW,
 }
 
-interface PlanProgressNotesRepository : JpaRepository<PlanProgressNoteEntity, Long>
+interface PlanProgressNotesRepository : JpaRepository<PlanProgressNoteEntity, Long> {
+  fun findByPlanVersionUuid(planVersionUuid: UUID): List<PlanProgressNoteEntity>
+}

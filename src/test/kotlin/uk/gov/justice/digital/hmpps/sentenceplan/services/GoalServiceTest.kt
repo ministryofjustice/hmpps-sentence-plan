@@ -22,7 +22,6 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionEntity
-import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepStatus
@@ -34,11 +33,10 @@ import java.util.UUID
 class GoalServiceTest {
   private val goalRepository: GoalRepository = mockk()
   private val areaOfNeedRepository: AreaOfNeedRepository = mockk()
-  private val planVersionRepository: PlanVersionRepository = mockk()
   private val planRepository: PlanRepository = mockk()
   private val stepRepository: StepRepository = mockk()
 
-  private val goalService = GoalService(goalRepository, areaOfNeedRepository, planVersionRepository, stepRepository, planRepository)
+  private val goalService = GoalService(goalRepository, areaOfNeedRepository, stepRepository, planRepository)
   private val goalUuid = UUID.fromString("ef74ee4b-5a0b-481b-860f-19187260f2e7")
 
   private val goal: Goal = Goal(
@@ -75,7 +73,7 @@ class GoalServiceTest {
     planVersion = null,
     uuid = goalUuid,
     goalOrder = 1,
-    relatedAreasOfNeed = mockk<MutableList<AreaOfNeedEntity>>(),
+    relatedAreasOfNeed = mockk<MutableSet<AreaOfNeedEntity>>(),
   )
 
   private val steps = listOf(
@@ -94,8 +92,8 @@ class GoalServiceTest {
   private val incompleteSteps = steps + Step("This is a step with no actor", status = StepStatus.NOT_STARTED, actor = "")
 
   private val planEntity: PlanEntity = PlanEntity()
-  private val planVersionEntity: PlanVersionEntity = PlanVersionEntity(plan = planEntity)
-  private val planVersionEntityWithOneGoal: PlanVersionEntity = PlanVersionEntity(plan = planEntity, goals = goalSet)
+  private val planVersionEntity: PlanVersionEntity = PlanVersionEntity(plan = planEntity, planId = 0L)
+  private val planVersionEntityWithOneGoal: PlanVersionEntity = PlanVersionEntity(plan = planEntity, goals = goalSet, planId = 0L)
 
   @BeforeAll
   fun setup() {

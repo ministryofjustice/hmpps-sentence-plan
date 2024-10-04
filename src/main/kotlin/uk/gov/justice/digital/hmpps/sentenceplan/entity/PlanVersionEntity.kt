@@ -13,6 +13,9 @@ import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
+import jakarta.persistence.NamedAttributeNode
+import jakarta.persistence.NamedEntityGraph
+import jakarta.persistence.NamedSubgraph
 import jakarta.persistence.OneToMany
 import jakarta.persistence.OneToOne
 import jakarta.persistence.OrderBy
@@ -23,30 +26,51 @@ import org.springframework.data.annotation.LastModifiedBy
 import org.springframework.data.annotation.LastModifiedDate
 import org.springframework.data.jpa.domain.support.AuditingEntityListener
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Query
 import java.time.LocalDateTime
 import java.util.UUID
 
 @Entity(name = "PlanVersion")
 @Table(name = "plan_version")
 @EntityListeners(AuditingEntityListener::class)
+@NamedEntityGraph(
+  name = "graph.planversion.eager",
+  attributeNodes = [
+    NamedAttributeNode("agreementNote"),
+    NamedAttributeNode("planProgressNotes"),
+    NamedAttributeNode(value = "goals", subgraph = "goals-subgraph"),
+  ],
+  subgraphs = [
+    NamedSubgraph(
+      name = "goals-subgraph",
+      attributeNodes = [
+        NamedAttributeNode("steps"),
+        NamedAttributeNode("relatedAreasOfNeed"),
+      ],
+    ),
+  ],
+)
 class PlanVersionEntity(
   @Id
   @Column(name = "id")
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @JsonIgnore
-  val id: Long? = null,
+  var id: Long? = null,
 
   @Column(name = "uuid")
-  val uuid: UUID = UUID.randomUUID(),
+  var uuid: UUID = UUID.randomUUID(),
 
   @Column(name = "version")
   var version: Int = 0,
 
-  // this is nullable in the declaration to enable ignoring the field in JSON serialisation
-  @OneToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "plan_id", nullable = false)
+  // This is nullable in the declaration to enable ignoring the field in JSON serialisation
+  @OneToOne(mappedBy = "currentVersion")
   @JsonIgnore
   val plan: PlanEntity?,
+
+  // We need this field as well as the plan above because we want a reference from each of the plan and plan_version tables
+  @Column(name = "plan_id")
+  val planId: Long,
 
   @Column(name = "plan_type", nullable = false)
   @Enumerated(EnumType.STRING)
@@ -87,13 +111,13 @@ class PlanVersionEntity(
   @Column(name = "checksum")
   var checksum: String? = null,
 
-  @OneToOne(mappedBy = "planVersion", cascade = [CascadeType.ALL], fetch = FetchType.LAZY)
+  @OneToOne(mappedBy = "planVersion", cascade = [CascadeType.ALL])
   val agreementNote: PlanAgreementNoteEntity? = null,
 
-  @OneToMany(mappedBy = "planVersion", cascade = [CascadeType.ALL], fetch = FetchType.LAZY)
+  @OneToMany(mappedBy = "planVersion", cascade = [CascadeType.ALL])
   val planProgressNotes: Set<PlanProgressNoteEntity> = emptySet(),
 
-  @OneToMany(mappedBy = "planVersion")
+  @OneToMany(mappedBy = "planVersion", cascade = [CascadeType.PERSIST], fetch = FetchType.EAGER)
   @OrderBy("goalOrder ASC")
   val goals: Set<GoalEntity> = emptySet(),
 )
@@ -127,4 +151,14 @@ enum class PlanType {
 
 interface PlanVersionRepository : JpaRepository<PlanVersionEntity, Long> {
   fun findByUuid(planVersionUuid: UUID): PlanVersionEntity
+
+  @Query(
+    "select plan_version.* from plan_version inner join plan p on p.id = plan_version.plan_id " +
+      "where p.uuid = :planUuid and plan_version.version = :versionNumber",
+    nativeQuery = true,
+  )
+  fun findByPlanUuidAndVersion(planUuid: UUID, versionNumber: Int): PlanVersionEntity
+
+  @org.springframework.data.jpa.repository.EntityGraph(value = "graph.planversion.eager", type = org.springframework.data.jpa.repository.EntityGraph.EntityGraphType.FETCH)
+  fun getWholePlanVersionByUuid(planVersionUuid: UUID): PlanVersionEntity
 }

@@ -13,7 +13,6 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalStatus
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionEntity
-import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepRepository
 import java.time.LocalDate
@@ -24,16 +23,14 @@ import java.util.UUID
 class GoalService(
   private val goalRepository: GoalRepository,
   private val areaOfNeedRepository: AreaOfNeedRepository,
-  private val planVersionRepository: PlanVersionRepository,
   private val stepRepository: StepRepository,
   private val planRepository: PlanRepository,
 ) {
-
   fun getGoalByUuid(goalUuid: UUID): GoalEntity? = goalRepository.findByUuid(goalUuid)
 
   @Transactional
   fun createNewGoal(planUuid: UUID, goal: Goal): GoalEntity {
-    var planVersionEntity: PlanVersionEntity
+    val planVersionEntity: PlanVersionEntity
 
     try {
       planVersionEntity = planRepository.findByUuid(planUuid).currentVersion!!
@@ -62,7 +59,7 @@ class GoalService(
       status = if (goal.targetDate != null) GoalStatus.ACTIVE else GoalStatus.FUTURE,
       statusDate = LocalDateTime.now(),
       planVersion = planVersionEntity,
-      relatedAreasOfNeed = relatedAreasOfNeedEntity.toMutableList(),
+      relatedAreasOfNeed = relatedAreasOfNeedEntity.toMutableSet(),
       goalOrder = highestGoalOrder + 1,
     )
     val savedGoalEntity = goalRepository.save(goalEntity)
@@ -143,8 +140,7 @@ class GoalService(
   }
 
   @Transactional
-  fun deleteGoal(goalUuid: UUID): Unit? {
-    val goalEntity: GoalEntity? = goalRepository.findByUuid(goalUuid)
-    return goalEntity?.let { goalRepository.delete(it) }
+  fun deleteGoalByUuid(goalUuid: UUID): Int {
+    return goalRepository.deleteByUuid(goalUuid)
   }
 }

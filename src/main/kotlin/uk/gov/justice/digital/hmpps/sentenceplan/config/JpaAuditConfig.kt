@@ -18,9 +18,19 @@ class JpaAuditConfig(private val practitionerRepository: PractitionerRepository)
   fun auditorProvider(): AuditorAware<PractitionerEntity> = AuditorAware<PractitionerEntity> {
     var practitionerEntity: PractitionerEntity
 
-    val usernameParts = SecurityContextHolder.getContext().authentication.name.split('|')
-    val externalId: String = usernameParts[0]
-    val username: String = usernameParts[1]
+    val authenticationName = SecurityContextHolder.getContext().authentication.name
+
+    val usernameParts = authenticationName.split('|')
+    val externalId: String
+    val username: String
+
+    if (usernameParts.size != 2) {
+      externalId = "SYSTEM"
+      username = usernameParts[0]
+    } else {
+      externalId = usernameParts[0]
+      username = usernameParts[1]
+    }
 
     try {
       practitionerEntity = practitionerRepository.findByExternalId(externalId)

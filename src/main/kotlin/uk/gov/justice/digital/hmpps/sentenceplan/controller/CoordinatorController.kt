@@ -138,14 +138,14 @@ class CoordinatorController(
     )
   }
 
-  @PostMapping("/{planUuid}/lock")
+  @PostMapping("/{planUuid}/sign")
   @Operation(
-    description = "Locks the specified sentence plan, updating its status to 'LOCKED' and returning the latest version of the plan.",
+    description = "Signs the specified sentence plan, updating its status to 'AWAITING_COUNTERSIGN' and returning the latest version of the plan.",
     tags = ["Integrations"],
   )
   @ApiResponses(
     value = [
-      ApiResponse(responseCode = "200", description = "Plan locked successfully"),
+      ApiResponse(responseCode = "200", description = "Plan signed successfully"),
       ApiResponse(
         responseCode = "404",
         description = "Plan not found",
@@ -153,7 +153,7 @@ class CoordinatorController(
       ),
       ApiResponse(
         responseCode = "409",
-        description = "Plan could not be locked. See details in error message.",
+        description = "Plan could not be signed. See details in error message.",
         content = arrayOf(Content(schema = Schema(implementation = ErrorResponse::class))),
       ),
       ApiResponse(
@@ -163,7 +163,7 @@ class CoordinatorController(
       ),
     ],
   )
-  fun lockPlan(
+  fun signPlan(
     @PathVariable planUuid: UUID,
     @RequestBody lockRequest: LockRequest,
   ): PlanVersionResponse {
@@ -177,7 +177,7 @@ class CoordinatorController(
      *  - Handle any exceptions or edge cases (i,e plan not found, locking failures)
      */
     try {
-      return planService.lockPlan(planUuid, lockRequest)
+      return planService.signPlan(planUuid, lockRequest)
         .run(PlanVersionResponse::from)
     } catch (_: EmptyResultDataAccessException) {
       throw NoResourceFoundException(HttpMethod.GET, "Could not find a plan with ID: $planUuid")
@@ -188,14 +188,14 @@ class CoordinatorController(
     )
   }
 
-  @PostMapping("/{planUuid}/lock-incomplete")
+  @PostMapping("/{planUuid}/lock")
   @Operation(
     description = "Locks the specified sentence plan, updating its status to 'LOCKED_INCOMPLETE' and returning the latest version of the plan.",
     tags = ["Integrations"],
   )
   @ApiResponses(
     value = [
-      ApiResponse(responseCode = "200", description = "Plan locked successfully"),
+      ApiResponse(responseCode = "200", description = "Plan locked (incomplete) successfully"),
       ApiResponse(
         responseCode = "404",
         description = "Plan not found",
@@ -213,7 +213,7 @@ class CoordinatorController(
       ),
     ],
   )
-  fun lockIncompletePlan(
+  fun lockPlan(
     @PathVariable planUuid: UUID,
   ): PlanVersionResponse {
     /**
@@ -222,7 +222,7 @@ class CoordinatorController(
      *  - Update the plan's status to 'LOCKED_INCOMPLETE'.
      *    - When doing this, make sure you DO NOT update the plan version number
      *  - Create a new plan version with countersigning_status as UNSIGNED (?are we sure this is the correct behaviour?)
-     *  - Save the changes and ensure the locked version number is returned
+     *  - Save the changes and ensure the LOCKED_INCOMPLETE version number is returned
      *  - Handle any exceptions or edge cases (i,e, plan not found, locking failures)
      */
     return PlanVersionResponse(

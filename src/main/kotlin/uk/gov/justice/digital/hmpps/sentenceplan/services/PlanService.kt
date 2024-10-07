@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.sentenceplan.services
 
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.EmptyResultDataAccessException
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Agreement
@@ -24,6 +25,9 @@ class PlanService(
   private val planVersionRepository: PlanVersionRepository,
   private val planAgreementNoteRepository: PlanAgreementNoteRepository,
 ) {
+
+  @Autowired
+  private lateinit var versionService: VersionService
 
   fun getPlanVersionByPlanUuid(planUuid: UUID): PlanVersionEntity {
     val planEntity = planRepository.findByUuid(planUuid)
@@ -95,7 +99,7 @@ class PlanService(
     planAgreementNoteRepository.save(planAgreementNote)
   }
 
-  fun lockPlan(planUuid: UUID, lockRequest: LockRequest): PlanVersionEntity {
+  fun signPlan(planUuid: UUID, lockRequest: LockRequest): PlanVersionEntity {
     val plan = getPlanVersionByPlanUuid(planUuid)
 
     // Check signing status here
@@ -107,9 +111,12 @@ class PlanService(
       LockType.SELF -> { plan.status = CountersigningStatus.SELF_SIGNED }
       LockType.COUNTERSIGN -> { plan.status = CountersigningStatus.AWAITING_COUNTERSIGN }
     }
-    // make sure we update the same version
-    return planVersionRepository.save(plan)
+    // make a new version in the UNSIGNED state
+    val versionedPlan = versionService.createNewPlanVersion(planUuid)
+    versionedPlan.status = CountersigningStatus.UNSIGNED
+    planVersionRepository.save(versionedPlan)
 
-    // make a new version
+    // make sure we update the previous version with the new status, not the new one.
+    return planVersionRepository.save(plan)
   }
 }

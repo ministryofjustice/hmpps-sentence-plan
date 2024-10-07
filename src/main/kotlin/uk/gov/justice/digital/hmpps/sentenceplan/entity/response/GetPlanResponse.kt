@@ -3,7 +3,7 @@ package uk.gov.justice.digital.hmpps.sentenceplan.entity.response
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanAgreementStatus
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanType
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionEntity
-import java.time.ZoneOffset
+import java.time.LocalDateTime
 import java.util.UUID
 
 enum class PlanState {
@@ -16,7 +16,7 @@ data class GetPlanResponse(
   var sentencePlanVersion: Long,
   var planComplete: PlanState,
   var planType: PlanType,
-  var lastUpdatedTimestampSP: Long,
+  var lastUpdatedTimestampSP: LocalDateTime,
 ) {
   companion object {
     fun from(planVersionEntity: PlanVersionEntity): GetPlanResponse {
@@ -29,7 +29,7 @@ data class GetPlanResponse(
       return GetPlanResponse(
         sentencePlanId = planVersionEntity.uuid,
         sentencePlanVersion = planVersionEntity.version.toLong(),
-        lastUpdatedTimestampSP = planVersionEntity.updatedDate.toEpochSecond(ZoneOffset.UTC),
+        lastUpdatedTimestampSP = planVersionEntity.updatedDate,
         planComplete = planComplete,
         planType = planVersionEntity.planType,
       )

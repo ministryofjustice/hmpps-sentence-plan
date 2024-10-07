@@ -104,7 +104,7 @@ class CoordinatorControllerTest : IntegrationTestBase() {
   }
 
   @Nested
-  @DisplayName("lockPlan")
+  @DisplayName("signPlan")
   @Sql(scripts = [ "/db/test/oasys_assessment_pk_data.sql" ], executionPhase = BEFORE_TEST_CLASS)
   @Sql(scripts = [ "/db/test/oasys_assessment_pk_cleanup.sql" ], executionPhase = AFTER_TEST_CLASS)
   inner class LockPlan {
@@ -122,7 +122,7 @@ class CoordinatorControllerTest : IntegrationTestBase() {
       )
 
       webTestClient.post()
-        .uri("/coordinator/plan/$planUuid/lock")
+        .uri("/coordinator/plan/$planUuid/sign")
         .bodyValue(lockRequest)
         .header("Content-Type", "application/json")
         .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
@@ -130,7 +130,7 @@ class CoordinatorControllerTest : IntegrationTestBase() {
         .expectStatus().isOk
         .expectBody<PlanVersionResponse>()
         .returnResult().run {
-          assertThat(responseBody?.planUuid).isNotNull
+          assertThat(responseBody?.planId).isNotNull
           assertThat(responseBody?.planVersion).isEqualTo(10L)
         }
     }
@@ -138,7 +138,7 @@ class CoordinatorControllerTest : IntegrationTestBase() {
     @Test
     fun `should return not found`() {
       webTestClient.post()
-        .uri("/coordinator/plan/$notFoundUuid/lock")
+        .uri("/coordinator/plan/$notFoundUuid/sign")
         .header("Content-Type", "application/json")
         .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
         .exchange()

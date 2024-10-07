@@ -10,6 +10,8 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 import org.mockito.kotlin.any
 import org.springframework.dao.EmptyResultDataAccessException
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Agreement
@@ -20,6 +22,7 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanType
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionRepository
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.LockType
 import uk.gov.justice.digital.hmpps.sentenceplan.exceptions.ConflictException
 import java.util.UUID
 
@@ -202,6 +205,25 @@ class PlanServiceTest {
       }
 
       assertEquals("Plan was not found with UUID: 1c93ebe7-1d8d-4fcc-aef2-f97c4c983a6b", exception.message)
+    }
+  }
+
+  @Nested
+  @DisplayName("lockPlan")
+  inner class LockPlan {
+    @ParameterizedTest
+    @EnumSource(LockType::class)
+    fun `should lock plan`(lockType: LockType) {
+      every { planRepository.findByUuid(any()) } returns planEntity
+      every { planVersionRepository.save(any()) } returns planVersionEntity
+      println(lockType)
+      // there should be a new version too.
+    }
+
+    @Test
+    fun `plan not in UNSIGNED state throws`() {
+      every { planRepository.findByUuid(any()) } returns planEntity
+      // there should be a new version too.
     }
   }
 }

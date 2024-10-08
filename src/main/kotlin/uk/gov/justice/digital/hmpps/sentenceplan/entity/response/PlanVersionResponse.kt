@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.sentenceplan.entity.response
 
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntity
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionEntity
 import java.util.UUID
 
 data class PlanVersionResponse(
@@ -12,6 +13,13 @@ data class PlanVersionResponse(
       return PlanVersionResponse(
         planId = planEntity.uuid,
         planVersion = 0L,
+      )
+    }
+
+    fun from(planVersionEntity: PlanVersionEntity): PlanVersionResponse {
+      return PlanVersionResponse(
+        planId = planVersionEntity.uuid,
+        planVersion = planVersionEntity.version.toLong(),
       )
     }
   }

@@ -23,8 +23,8 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanType
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionRepository
-import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.LockRequest
-import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.LockType
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.SignRequest
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.SignType
 import uk.gov.justice.digital.hmpps.sentenceplan.exceptions.ConflictException
 import java.util.UUID
 
@@ -227,12 +227,12 @@ class PlanServiceTest {
       every { planVersionRepository.save(any()) } returnsArgument 0
       every { versionService.createNewPlanVersion(any()) } returns newPlanVersionEntity
 
-      val lockRequest = LockRequest(
-        lockType = LockType.SELF,
+      val signRequest = SignRequest(
+        signType = SignType.SELF,
         userDetails = userDetails,
       )
 
-      val planVersion = planService.signPlan(UUID.randomUUID(), lockRequest)
+      val planVersion = planService.signPlan(UUID.randomUUID(), signRequest)
 
       assertThat(planVersion.status).isEqualTo(CountersigningStatus.SELF_SIGNED)
     }
@@ -243,12 +243,12 @@ class PlanServiceTest {
       every { planVersionRepository.save(any()) } returnsArgument 0
       every { versionService.createNewPlanVersion(any()) } returns newPlanVersionEntity
 
-      val lockRequest = LockRequest(
-        lockType = LockType.COUNTERSIGN,
+      val signRequest = SignRequest(
+        signType = SignType.COUNTERSIGN,
         userDetails = userDetails,
       )
 
-      val planVersion = planService.signPlan(UUID.randomUUID(), lockRequest)
+      val planVersion = planService.signPlan(UUID.randomUUID(), signRequest)
 
       assertThat(planVersion.status).isEqualTo(CountersigningStatus.AWAITING_COUNTERSIGN)
     }

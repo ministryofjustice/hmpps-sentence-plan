@@ -20,8 +20,8 @@ import org.springframework.web.servlet.resource.NoResourceFoundException
 import uk.gov.justice.digital.hmpps.sentenceplan.config.ErrorResponse
 import uk.gov.justice.digital.hmpps.sentenceplan.data.CreatePlanRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.CounterSignPlanRequest
-import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.LockRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.RollbackPlanRequest
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.SignRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.response.GetPlanResponse
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.response.PlanVersionResponse
 import uk.gov.justice.digital.hmpps.sentenceplan.services.PlanService
@@ -165,10 +165,10 @@ class CoordinatorController(
   )
   fun signPlan(
     @PathVariable planUuid: UUID,
-    @RequestBody lockRequest: LockRequest,
+    @RequestBody signRequest: SignRequest,
   ): PlanVersionResponse {
     try {
-      return planService.signPlan(planUuid, lockRequest)
+      return planService.signPlan(planUuid, signRequest)
         .run(PlanVersionResponse::from)
     } catch (_: EmptyResultDataAccessException) {
       throw NoResourceFoundException(HttpMethod.GET, "Could not find a plan with ID: $planUuid")

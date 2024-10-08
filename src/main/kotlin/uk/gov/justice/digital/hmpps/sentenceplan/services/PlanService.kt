@@ -12,8 +12,8 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanType
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionRepository
-import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.LockRequest
-import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.LockType
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.SignRequest
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.SignType
 import uk.gov.justice.digital.hmpps.sentenceplan.exceptions.ConflictException
 import java.time.LocalDateTime
 import java.util.UUID
@@ -96,14 +96,14 @@ class PlanService(
     planAgreementNoteRepository.save(planAgreementNote)
   }
 
-  fun signPlan(planUuid: UUID, lockRequest: LockRequest): PlanVersionEntity {
+  fun signPlan(planUuid: UUID, signRequest: SignRequest): PlanVersionEntity {
     val plan = getPlanVersionByPlanUuid(planUuid)
 
-    when (lockRequest.lockType) {
-      LockType.SELF -> {
+    when (signRequest.signType) {
+      SignType.SELF -> {
         plan.status = CountersigningStatus.SELF_SIGNED
       }
-      LockType.COUNTERSIGN -> {
+      SignType.COUNTERSIGN -> {
         plan.status = CountersigningStatus.AWAITING_COUNTERSIGN
       }
     }

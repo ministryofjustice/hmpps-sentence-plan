@@ -18,8 +18,8 @@ import uk.gov.justice.digital.hmpps.sentenceplan.config.ErrorResponse
 import uk.gov.justice.digital.hmpps.sentenceplan.data.CreatePlanRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.data.UserDetails
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanType
-import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.LockRequest
-import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.LockType
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.SignRequest
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.SignType
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.response.GetPlanResponse
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.response.PlanState
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.response.PlanVersionResponse
@@ -107,7 +107,7 @@ class CoordinatorControllerTest : IntegrationTestBase() {
 
   @Nested
   @DisplayName("signPlan")
-  inner class LockPlan {
+  inner class SignPlan {
     val planUuid = UUID.fromString("556db5c8-a1eb-4064-986b-0740d6a83c33")
     val notFoundUuid = UUID.fromString("0d0f2d85-5b70-4916-9f89-ed248f8d5196")
 
@@ -116,16 +116,16 @@ class CoordinatorControllerTest : IntegrationTestBase() {
     @Sql(scripts = [ "/db/test/oasys_assessment_pk_data.sql" ], executionPhase = BEFORE_TEST_METHOD)
     @Sql(scripts = [ "/db/test/oasys_assessment_pk_cleanup.sql" ], executionPhase = AFTER_TEST_METHOD)
     @ParameterizedTest
-    @EnumSource(LockType::class)
-    fun `should do something`(lockType: LockType) {
-      val lockRequest = LockRequest(
-        lockType = lockType,
+    @EnumSource(SignType::class)
+    fun `should do something`(signType: SignType) {
+      val signRequest = SignRequest(
+        signType = signType,
         userDetails = userDetails,
       )
 
       webTestClient.post()
         .uri("/coordinator/plan/$planUuid/sign")
-        .bodyValue(lockRequest)
+        .bodyValue(signRequest)
         .header("Content-Type", "application/json")
         .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
         .exchange()
@@ -139,14 +139,14 @@ class CoordinatorControllerTest : IntegrationTestBase() {
 
     @Test
     fun `should return 404 not found`() {
-      val lockRequest = LockRequest(
-        lockType = LockType.COUNTERSIGN,
+      val signRequest = SignRequest(
+        signType = SignType.COUNTERSIGN,
         userDetails = userDetails,
       )
 
       webTestClient.post()
         .uri("/coordinator/plan/$notFoundUuid/sign")
-        .bodyValue(lockRequest)
+        .bodyValue(signRequest)
         .header("Content-Type", "application/json")
         .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
         .exchange()

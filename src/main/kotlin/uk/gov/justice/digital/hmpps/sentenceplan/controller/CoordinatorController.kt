@@ -167,15 +167,6 @@ class CoordinatorController(
     @PathVariable planUuid: UUID,
     @RequestBody lockRequest: LockRequest,
   ): PlanVersionResponse {
-    /**
-     * TODO: Implement logic to lock the sentence plan identified by 'planUuid'
-     *  - Retrieve the plan using 'planUuid'
-     *  - Update the plan's status to AWAITING_COUNTERSIGN or SELF_SIGNED.
-     *    - When doing this, make sure you DO NOT update the plan version number
-     *  - Create a new plan version with countersigning_status as UNSIGNED
-     *  - Save the changes and ensure the locked version number is returned
-     *  - Handle any exceptions or edge cases (i,e plan not found, locking failures)
-     */
     try {
       return planService.signPlan(planUuid, lockRequest)
         .run(PlanVersionResponse::from)

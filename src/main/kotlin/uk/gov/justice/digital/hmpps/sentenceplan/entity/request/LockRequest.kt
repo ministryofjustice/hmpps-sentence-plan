@@ -9,5 +9,5 @@ data class LockRequest(
 
 enum class LockType {
   SELF,
-  COUNTERSIGN
+  COUNTERSIGN,
 }

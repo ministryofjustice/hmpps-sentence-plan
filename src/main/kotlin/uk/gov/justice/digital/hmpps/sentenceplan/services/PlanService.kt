@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.sentenceplan.services
 
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.EmptyResultDataAccessException
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Agreement
@@ -101,8 +100,12 @@ class PlanService(
     val plan = getPlanVersionByPlanUuid(planUuid)
 
     when (lockRequest.lockType) {
-      LockType.SELF -> { plan.status = CountersigningStatus.SELF_SIGNED }
-      LockType.COUNTERSIGN -> { plan.status = CountersigningStatus.AWAITING_COUNTERSIGN }
+      LockType.SELF -> {
+        plan.status = CountersigningStatus.SELF_SIGNED
+      }
+      LockType.COUNTERSIGN -> {
+        plan.status = CountersigningStatus.AWAITING_COUNTERSIGN
+      }
     }
 
     // make a new version in the UNSIGNED state

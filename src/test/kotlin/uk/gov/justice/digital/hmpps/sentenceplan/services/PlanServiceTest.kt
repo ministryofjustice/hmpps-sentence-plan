@@ -1,8 +1,6 @@
 package uk.gov.justice.digital.hmpps.sentenceplan.services
 
-import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
-import io.mockk.impl.annotations.MockK
 import io.mockk.mockk
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
@@ -13,8 +11,6 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
-import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.EnumSource
 import org.mockito.kotlin.any
 import org.springframework.dao.EmptyResultDataAccessException
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Agreement
@@ -222,7 +218,7 @@ class PlanServiceTest {
   inner class LockPlan {
     val userDetails = UserDetails(
       id = "123",
-      name = "Tom C"
+      name = "Tom C",
     )
 
     @Test

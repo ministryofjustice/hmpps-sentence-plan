@@ -27,16 +27,16 @@ class StepEntity(
   @Column(name = "id")
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @JsonIgnore
-  var id: Long? = null,
+  val id: Long? = null,
 
   @Column(name = "uuid")
-  var uuid: UUID = UUID.randomUUID(),
+  val uuid: UUID = UUID.randomUUID(),
 
   // this is nullable in the declaration to enable ignoring the field in JSON serialisation
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "goal_id", nullable = false)
   @JsonIgnore
-  var goal: GoalEntity? = null,
+  val goal: GoalEntity? = null,
 
   @Column(name = "description")
   val description: String,

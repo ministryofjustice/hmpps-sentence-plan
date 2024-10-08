@@ -28,12 +28,12 @@ class PlanAgreementNoteEntity(
   @Column(name = "id")
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @JsonIgnore
-  var id: Long? = null,
+  val id: Long? = null,
 
   @OneToOne(cascade = [CascadeType.ALL], fetch = FetchType.LAZY)
   @JoinColumn(name = "plan_version_id", referencedColumnName = "id")
   @JsonIgnore
-  var planVersion: PlanVersionEntity?,
+  val planVersion: PlanVersionEntity?,
 
   @Column(name = "optional_note")
   var optionalNote: String,

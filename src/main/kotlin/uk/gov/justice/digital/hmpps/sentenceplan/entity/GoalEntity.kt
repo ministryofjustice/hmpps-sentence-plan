@@ -39,7 +39,7 @@ class GoalEntity(
   @Column(name = "id")
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @JsonIgnore
-  var id: Long? = null,
+  val id: Long? = null,
 
   @Column(name = "uuid")
   var uuid: UUID = UUID.randomUUID(),
@@ -82,7 +82,7 @@ class GoalEntity(
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "plan_version_id", nullable = false)
   @JsonIgnore
-  var planVersion: PlanVersionEntity?,
+  val planVersion: PlanVersionEntity?,
 
   @Column(name = "goal_order")
   val goalOrder: Int = 0,
@@ -98,7 +98,7 @@ class GoalEntity(
     inverseJoinColumns = [JoinColumn(name = "area_of_need_id")],
     uniqueConstraints = [UniqueConstraint(columnNames = ["goal_id", "area_of_need_id"])],
   )
-  var relatedAreasOfNeed: MutableSet<AreaOfNeedEntity>? = mutableSetOf(),
+  var relatedAreasOfNeed: MutableList<AreaOfNeedEntity>? = mutableListOf(),
 ) {
 
   fun merge(goal: Goal, relatedAreasOfNeedList: List<AreaOfNeedEntity>): GoalEntity {
@@ -123,7 +123,7 @@ class GoalEntity(
       this.statusDate = LocalDateTime.now()
     }
 
-    this.relatedAreasOfNeed = relatedAreasOfNeedList.toMutableSet()
+    this.relatedAreasOfNeed = relatedAreasOfNeedList.toMutableList()
 
     return this
   }
@@ -138,14 +138,6 @@ enum class GoalStatus {
 
 interface GoalRepository : JpaRepository<GoalEntity, Long> {
   fun findByUuid(uuid: UUID): GoalEntity?
-
-  // returns how many records were deleted
-  @Modifying
-  @Query("DELETE Goal g WHERE g.uuid = :goalUuid")
-  fun deleteByUuid(goalUuid: UUID): Int
-
-  @Query("select g from Goal as g join fetch g.steps where g.uuid = :uuid")
-  fun findByUuidWithSteps(uuid: UUID): GoalEntity
 
   @Modifying
   @Query("update Goal g set g.goalOrder = ?1 where g.uuid = ?2")

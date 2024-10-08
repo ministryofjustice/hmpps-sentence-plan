@@ -212,7 +212,7 @@ class PlanControllerTest : IntegrationTestBase() {
           .expectBody<GoalEntity>()
           .returnResult().responseBody
 
-      val relatedAreasOfNeed: Set<AreaOfNeedEntity>? = goalEntity?.relatedAreasOfNeed
+      val relatedAreasOfNeed: List<AreaOfNeedEntity>? = goalEntity?.relatedAreasOfNeed
 
       assertThat(relatedAreasOfNeed?.size).isZero()
     }
@@ -235,7 +235,7 @@ class PlanControllerTest : IntegrationTestBase() {
           .expectBody<GoalEntity>()
           .returnResult().responseBody
 
-      val relatedAreasOfNeed: Set<AreaOfNeedEntity>? = goalEntity?.relatedAreasOfNeed
+      val relatedAreasOfNeed: List<AreaOfNeedEntity>? = goalEntity?.relatedAreasOfNeed
 
       assertThat(relatedAreasOfNeed?.size).isEqualTo(2)
     }

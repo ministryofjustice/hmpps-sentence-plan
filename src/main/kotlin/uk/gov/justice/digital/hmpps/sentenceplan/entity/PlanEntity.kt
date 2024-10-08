@@ -62,8 +62,7 @@ class PlanEntity(
   var lastUpdatedBy: PractitionerEntity? = null,
 
   // this is nullable because PlanEntity and PlanVersionEntity link to each other. We must have a PlanEntity.ID before we can save a PlanVersionEntity
-  @OneToOne()
-  @JoinColumn(name = "current_plan_version_id")
+  @OneToOne(mappedBy = "plan")
   var currentVersion: PlanVersionEntity? = null,
 )
 

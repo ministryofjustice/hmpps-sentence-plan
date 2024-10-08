@@ -35,25 +35,29 @@ class PlanService(
       throw ConflictException("Plan already associated with PK: $oasysAssessmentPk")
     }
 
-    val planEntity = createPlan(PlanType.INITIAL)
+    val plan = PlanEntity()
+    val planEntity = planRepository.save(plan)
+
+    val planVersion = PlanVersionEntity(plan = planEntity)
+    val planVersionEntity = planVersionRepository.save(planVersion)
+
+    planEntity.currentVersion = planVersionEntity
+    planRepository.save(planEntity)
+
     planRepository.createOasysAssessmentPk(oasysAssessmentPk, planEntity.id!!)
     return planEntity
   }
 
   fun createPlan(planType: PlanType): PlanEntity {
-    val planEntity = planRepository.save(PlanEntity())
+    val plan = PlanEntity()
+    val planEntity = planRepository.save(plan)
 
-    val planVersion = PlanVersionEntity(
-      plan = planEntity,
-      planId = planEntity.id!!,
-      planType = planType,
-      version = 0,
-    )
-
-    val planVersionEntity = planVersionRepository.save(planVersion)
-
-    planEntity.currentVersion = planVersionEntity
-    planRepository.save(planEntity)
+    val planVersion = PlanVersionEntity(plan = planEntity)
+    planVersion.apply {
+      this.planType = planType
+      this.version = 0
+    }
+    planVersionRepository.save(planVersion)
 
     return planEntity
   }

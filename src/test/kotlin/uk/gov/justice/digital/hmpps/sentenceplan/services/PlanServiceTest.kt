@@ -215,7 +215,7 @@ class PlanServiceTest {
 
   @Nested
   @DisplayName("signPlan")
-  inner class LockPlan {
+  inner class SignPlan {
     val userDetails = UserDetails(
       id = "123",
       name = "Tom C",

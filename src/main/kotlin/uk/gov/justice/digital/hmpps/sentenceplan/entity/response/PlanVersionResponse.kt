@@ -19,7 +19,7 @@ data class PlanVersionResponse(
     fun from(planVersionEntity: PlanVersionEntity): PlanVersionResponse {
       return PlanVersionResponse(
         planId = planVersionEntity.uuid,
-        planVersion = 10L,
+        planVersion = planVersionEntity.version.toLong(),
       )
     }
   }

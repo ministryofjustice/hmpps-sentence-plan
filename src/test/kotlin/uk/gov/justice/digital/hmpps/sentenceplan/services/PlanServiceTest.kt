@@ -214,7 +214,7 @@ class PlanServiceTest {
   }
 
   @Nested
-  @DisplayName("lockPlan")
+  @DisplayName("signPlan")
   inner class LockPlan {
     val userDetails = UserDetails(
       id = "123",
@@ -222,7 +222,7 @@ class PlanServiceTest {
     )
 
     @Test
-    fun `should lock plan as self-signed`() {
+    fun `should mark plan as self-signed`() {
       every { planRepository.findByUuid(any()) } returns planEntity
       every { planVersionRepository.save(any()) } returnsArgument 0
       every { versionService.createNewPlanVersion(any()) } returns newPlanVersionEntity
@@ -238,7 +238,7 @@ class PlanServiceTest {
     }
 
     @Test
-    fun `should lock plan as awaiting-countersign`() {
+    fun `should mark plan as awaiting-countersign`() {
       every { planRepository.findByUuid(any()) } returns planEntity
       every { planVersionRepository.save(any()) } returnsArgument 0
       every { versionService.createNewPlanVersion(any()) } returns newPlanVersionEntity

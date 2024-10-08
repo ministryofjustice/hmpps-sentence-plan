@@ -1,8 +1,11 @@
 package uk.gov.justice.digital.hmpps.sentenceplan.services
 
+import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
+import io.mockk.impl.annotations.MockK
 import io.mockk.mockk
 import io.mockk.verify
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.BeforeEach
@@ -15,6 +18,8 @@ import org.junit.jupiter.params.provider.EnumSource
 import org.mockito.kotlin.any
 import org.springframework.dao.EmptyResultDataAccessException
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Agreement
+import uk.gov.justice.digital.hmpps.sentenceplan.data.UserDetails
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.CountersigningStatus
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanAgreementNoteRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanAgreementStatus
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntity
@@ -22,6 +27,7 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanType
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionRepository
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.LockRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.LockType
 import uk.gov.justice.digital.hmpps.sentenceplan.exceptions.ConflictException
 import java.util.UUID
@@ -31,14 +37,17 @@ class PlanServiceTest {
   private val planRepository: PlanRepository = mockk()
   private val planVersionRepository: PlanVersionRepository = mockk()
   private val planAgreementNoteRepository: PlanAgreementNoteRepository = mockk()
-  private val planService = PlanService(planRepository, planVersionRepository, planAgreementNoteRepository)
+  private val versionService: VersionService = mockk()
+  private val planService = PlanService(planRepository, planVersionRepository, planAgreementNoteRepository, versionService)
   private lateinit var planEntity: PlanEntity
   private lateinit var planVersionEntity: PlanVersionEntity
+  private lateinit var newPlanVersionEntity: PlanVersionEntity
 
   @BeforeEach
   fun setup() {
     planEntity = PlanEntity(id = 0L)
     planVersionEntity = PlanVersionEntity(plan = planEntity, planId = 0L)
+    newPlanVersionEntity = PlanVersionEntity(plan = planEntity, planId = 1L)
     planEntity.currentVersion = planVersionEntity
   }
 
@@ -211,19 +220,41 @@ class PlanServiceTest {
   @Nested
   @DisplayName("lockPlan")
   inner class LockPlan {
-    @ParameterizedTest
-    @EnumSource(LockType::class)
-    fun `should lock plan`(lockType: LockType) {
+    val userDetails = UserDetails(
+      id = "123",
+      name = "Tom C"
+    )
+
+    @Test
+    fun `should lock plan as self-signed`() {
       every { planRepository.findByUuid(any()) } returns planEntity
-      every { planVersionRepository.save(any()) } returns planVersionEntity
-      println(lockType)
-      // there should be a new version too.
+      every { planVersionRepository.save(any()) } returnsArgument 0
+      every { versionService.createNewPlanVersion(any()) } returns newPlanVersionEntity
+
+      val lockRequest = LockRequest(
+        lockType = LockType.SELF,
+        userDetails = userDetails,
+      )
+
+      val planVersion = planService.signPlan(UUID.randomUUID(), lockRequest)
+
+      assertThat(planVersion.status).isEqualTo(CountersigningStatus.SELF_SIGNED)
     }
 
     @Test
-    fun `plan not in UNSIGNED state throws`() {
+    fun `should lock plan as awaiting-countersign`() {
       every { planRepository.findByUuid(any()) } returns planEntity
-      // there should be a new version too.
+      every { planVersionRepository.save(any()) } returnsArgument 0
+      every { versionService.createNewPlanVersion(any()) } returns newPlanVersionEntity
+
+      val lockRequest = LockRequest(
+        lockType = LockType.COUNTERSIGN,
+        userDetails = userDetails,
+      )
+
+      val planVersion = planService.signPlan(UUID.randomUUID(), lockRequest)
+
+      assertThat(planVersion.status).isEqualTo(CountersigningStatus.AWAITING_COUNTERSIGN)
     }
   }
 }

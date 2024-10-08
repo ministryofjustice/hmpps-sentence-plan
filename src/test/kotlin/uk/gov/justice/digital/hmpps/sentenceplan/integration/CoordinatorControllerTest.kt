@@ -136,9 +136,15 @@ class CoordinatorControllerTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `should return not found`() {
+    fun `should return 404 not found`() {
+      val lockRequest = LockRequest(
+        lockType = LockType.COUNTERSIGN,
+        userDetails = userDetails,
+      )
+
       webTestClient.post()
         .uri("/coordinator/plan/$notFoundUuid/sign")
+        .bodyValue(lockRequest)
         .header("Content-Type", "application/json")
         .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
         .exchange()

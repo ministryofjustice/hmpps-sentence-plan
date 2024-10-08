@@ -24,10 +24,8 @@ class PlanService(
   private val planRepository: PlanRepository,
   private val planVersionRepository: PlanVersionRepository,
   private val planAgreementNoteRepository: PlanAgreementNoteRepository,
+  private val versionService: VersionService,
 ) {
-
-  @Autowired
-  private lateinit var versionService: VersionService
 
   fun getPlanVersionByPlanUuid(planUuid: UUID): PlanVersionEntity {
     val planEntity = planRepository.findByUuid(planUuid)
@@ -69,7 +67,7 @@ class PlanService(
     var planVersion: PlanVersionEntity
     try {
       planVersion = planRepository.findByUuid(planUuid).currentVersion!!
-    } catch (e: EmptyResultDataAccessException) {
+    } catch (_: EmptyResultDataAccessException) {
       throw EmptyResultDataAccessException("Plan was not found with UUID: $planUuid", 1)
     }
 
@@ -102,18 +100,17 @@ class PlanService(
   fun signPlan(planUuid: UUID, lockRequest: LockRequest): PlanVersionEntity {
     val plan = getPlanVersionByPlanUuid(planUuid)
 
-    // Check signing status here
-    if (plan.status != CountersigningStatus.UNSIGNED) {
-      println(plan) // Placeholder for throw?
-    }
-
     when (lockRequest.lockType) {
       LockType.SELF -> { plan.status = CountersigningStatus.SELF_SIGNED }
       LockType.COUNTERSIGN -> { plan.status = CountersigningStatus.AWAITING_COUNTERSIGN }
     }
+
     // make a new version in the UNSIGNED state
-    val versionedPlan = versionService.createNewPlanVersion(planUuid)
-    versionedPlan.status = CountersigningStatus.UNSIGNED
+    val versionedPlan = versionService.createNewPlanVersion(plan.uuid)
+      .apply {
+        status = CountersigningStatus.UNSIGNED
+      }
+
     planVersionRepository.save(versionedPlan)
 
     // make sure we update the previous version with the new status, not the new one.

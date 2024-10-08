@@ -2,17 +2,14 @@ package uk.gov.justice.digital.hmpps.sentenceplan.config
 
 import jakarta.validation.ValidationException
 import org.slf4j.LoggerFactory
-import org.springframework.beans.TypeMismatchException
 import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatus.BAD_REQUEST
 import org.springframework.http.HttpStatus.CONFLICT
 import org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR
 import org.springframework.http.HttpStatus.NOT_FOUND
 import org.springframework.http.ResponseEntity
-import org.springframework.http.converter.HttpMessageNotReadableException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
-import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
 import org.springframework.web.server.ResponseStatusException
 import org.springframework.web.servlet.resource.NoResourceFoundException
 import uk.gov.justice.digital.hmpps.sentenceplan.exceptions.ConflictException
@@ -59,17 +56,6 @@ class HmppsSentencePlanExceptionHandler {
       ErrorResponse(
         status = e.statusCode.value(),
         userMessage = "Response: ${e.reason}",
-        developerMessage = e.message,
-      ),
-    ).also { log.info("Response status: {}", e.message) }
-
-  @ExceptionHandler(MethodArgumentTypeMismatchException::class)
-  fun handleHttpMessageNotReadableException(e: TypeMismatchException): ResponseEntity<ErrorResponse> = ResponseEntity
-    .status(BAD_REQUEST)
-    .body(
-      ErrorResponse(
-        status = BAD_REQUEST,
-        userMessage = "Response: ${e.message}",
         developerMessage = e.message,
       ),
     ).also { log.info("Response status: {}", e.message) }

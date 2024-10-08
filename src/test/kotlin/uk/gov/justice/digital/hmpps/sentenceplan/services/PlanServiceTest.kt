@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.sentenceplan.services
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.BeforeEach
@@ -13,6 +14,8 @@ import org.junit.jupiter.api.TestInstance
 import org.mockito.kotlin.any
 import org.springframework.dao.EmptyResultDataAccessException
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Agreement
+import uk.gov.justice.digital.hmpps.sentenceplan.data.UserDetails
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.CountersigningStatus
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanAgreementNoteRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanAgreementStatus
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntity
@@ -20,6 +23,8 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanType
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionRepository
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.SignRequest
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.SignType
 import uk.gov.justice.digital.hmpps.sentenceplan.exceptions.ConflictException
 import java.util.UUID
 
@@ -28,14 +33,17 @@ class PlanServiceTest {
   private val planRepository: PlanRepository = mockk()
   private val planVersionRepository: PlanVersionRepository = mockk()
   private val planAgreementNoteRepository: PlanAgreementNoteRepository = mockk()
-  private val planService = PlanService(planRepository, planVersionRepository, planAgreementNoteRepository)
+  private val versionService: VersionService = mockk()
+  private val planService = PlanService(planRepository, planVersionRepository, planAgreementNoteRepository, versionService)
   private lateinit var planEntity: PlanEntity
   private lateinit var planVersionEntity: PlanVersionEntity
+  private lateinit var newPlanVersionEntity: PlanVersionEntity
 
   @BeforeEach
   fun setup() {
     planEntity = PlanEntity(id = 0L)
     planVersionEntity = PlanVersionEntity(plan = planEntity, planId = 0L)
+    newPlanVersionEntity = PlanVersionEntity(plan = planEntity, planId = 1L)
     planEntity.currentVersion = planVersionEntity
   }
 
@@ -202,6 +210,47 @@ class PlanServiceTest {
       }
 
       assertEquals("Plan was not found with UUID: 1c93ebe7-1d8d-4fcc-aef2-f97c4c983a6b", exception.message)
+    }
+  }
+
+  @Nested
+  @DisplayName("signPlan")
+  inner class SignPlan {
+    val userDetails = UserDetails(
+      id = "123",
+      name = "Tom C",
+    )
+
+    @Test
+    fun `should mark plan as self-signed`() {
+      every { planRepository.findByUuid(any()) } returns planEntity
+      every { planVersionRepository.save(any()) } returnsArgument 0
+      every { versionService.createNewPlanVersion(any()) } returns newPlanVersionEntity
+
+      val signRequest = SignRequest(
+        signType = SignType.SELF,
+        userDetails = userDetails,
+      )
+
+      val planVersion = planService.signPlan(UUID.randomUUID(), signRequest)
+
+      assertThat(planVersion.status).isEqualTo(CountersigningStatus.SELF_SIGNED)
+    }
+
+    @Test
+    fun `should mark plan as awaiting-countersign`() {
+      every { planRepository.findByUuid(any()) } returns planEntity
+      every { planVersionRepository.save(any()) } returnsArgument 0
+      every { versionService.createNewPlanVersion(any()) } returns newPlanVersionEntity
+
+      val signRequest = SignRequest(
+        signType = SignType.COUNTERSIGN,
+        userDetails = userDetails,
+      )
+
+      val planVersion = planService.signPlan(UUID.randomUUID(), signRequest)
+
+      assertThat(planVersion.status).isEqualTo(CountersigningStatus.AWAITING_COUNTERSIGN)
     }
   }
 }

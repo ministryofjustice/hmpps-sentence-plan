@@ -78,7 +78,7 @@ class PlanVersionEntity(
 
   @Column(name = "countersigning_status")
   @Enumerated(EnumType.STRING)
-  val status: CountersigningStatus = CountersigningStatus.UNSIGNED,
+  var status: CountersigningStatus = CountersigningStatus.UNSIGNED,
 
   @Column(name = "agreement_status")
   @Enumerated(EnumType.STRING)

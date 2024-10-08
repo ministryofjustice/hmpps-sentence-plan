@@ -10,7 +10,9 @@ import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWeb
 import org.springframework.http.HttpStatus
 import org.springframework.test.context.jdbc.Sql
 import org.springframework.test.context.jdbc.Sql.ExecutionPhase.AFTER_TEST_CLASS
+import org.springframework.test.context.jdbc.Sql.ExecutionPhase.AFTER_TEST_METHOD
 import org.springframework.test.context.jdbc.Sql.ExecutionPhase.BEFORE_TEST_CLASS
+import org.springframework.test.context.jdbc.Sql.ExecutionPhase.BEFORE_TEST_METHOD
 import org.springframework.test.web.reactive.server.expectBody
 import uk.gov.justice.digital.hmpps.sentenceplan.config.ErrorResponse
 import uk.gov.justice.digital.hmpps.sentenceplan.data.CreatePlanRequest
@@ -105,14 +107,14 @@ class CoordinatorControllerTest : IntegrationTestBase() {
 
   @Nested
   @DisplayName("signPlan")
-  @Sql(scripts = [ "/db/test/oasys_assessment_pk_data.sql" ], executionPhase = BEFORE_TEST_CLASS)
-  @Sql(scripts = [ "/db/test/oasys_assessment_pk_cleanup.sql" ], executionPhase = AFTER_TEST_CLASS)
   inner class LockPlan {
     val planUuid = UUID.fromString("556db5c8-a1eb-4064-986b-0740d6a83c33")
     val notFoundUuid = UUID.fromString("0d0f2d85-5b70-4916-9f89-ed248f8d5196")
 
     val userDetails = UserDetails("1", "Tom C")
 
+    @Sql(scripts = [ "/db/test/oasys_assessment_pk_data.sql" ], executionPhase = BEFORE_TEST_METHOD)
+    @Sql(scripts = [ "/db/test/oasys_assessment_pk_cleanup.sql" ], executionPhase = AFTER_TEST_METHOD)
     @ParameterizedTest
     @EnumSource(LockType::class)
     fun `should do something`(lockType: LockType) {
@@ -131,7 +133,7 @@ class CoordinatorControllerTest : IntegrationTestBase() {
         .expectBody<PlanVersionResponse>()
         .returnResult().run {
           assertThat(responseBody?.planId).isNotNull
-          assertThat(responseBody?.planVersion).isEqualTo(10L)
+          assertThat(responseBody?.planVersion).isEqualTo(0L)
         }
     }
 

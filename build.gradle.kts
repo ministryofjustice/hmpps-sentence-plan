@@ -8,7 +8,7 @@ plugins {
   kotlin("plugin.jpa") version "2.0.20"
   kotlin("jvm") version "2.0.20"
   id("org.jlleitschuh.gradle.ktlint") version "12.1.1"
-  id("org.openapi.generator") version "7.8.0"
+  id("org.openapi.generator") version "7.9.0"
   jacoco
 }
 

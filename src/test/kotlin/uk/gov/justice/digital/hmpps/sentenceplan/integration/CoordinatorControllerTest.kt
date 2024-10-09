@@ -23,7 +23,7 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.CountersigningStatus
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanType
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionRepository
-import uk.gov.justice.digital.hmpps.sentenceplan.entity.getPlan
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.getPlanByUuid
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.SignRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.SignType
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.response.GetPlanResponse
@@ -188,7 +188,7 @@ class CoordinatorControllerTest : IntegrationTestBase() {
         userDetails = userDetails,
       )
 
-      val beforePlanVersion = planRepository.getPlan(planUuid).currentVersion
+      val beforePlanVersion = planRepository.getPlanByUuid(planUuid).currentVersion
       val beforeVersionStatus = beforePlanVersion?.status!!
       val beforeVersion = beforePlanVersion.version
 
@@ -206,7 +206,7 @@ class CoordinatorControllerTest : IntegrationTestBase() {
         }
 
       val afterStatus = planVersionRepository.findByPlanUuidAndVersion(planUuid, beforeVersion).status
-      val newPlanVersion = planRepository.getPlan(planUuid).currentVersion
+      val newPlanVersion = planRepository.getPlanByUuid(planUuid).currentVersion
 
       assertThat(afterStatus).isNotEqualTo(beforeVersionStatus)
       assertThat(afterStatus).isEqualTo(CountersigningStatus.LOCKED_INCOMPLETE)

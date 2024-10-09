@@ -83,7 +83,7 @@ interface PlanRepository : JpaRepository<PlanEntity, Long> {
     where p.uuid = :planUuid
   """,
   )
-  fun findByPlanId(planUuid: UUID): PlanEntity?
+  fun findPlanByUuId(planUuid: UUID): PlanEntity?
 
   @Query("select p.* from plan p inner join oasys_pk_to_plan o on p.id = o.plan_id and o.oasys_assessment_pk = :oasysAssessmentPk", nativeQuery = true)
   fun findByOasysAssessmentPk(@Param("oasysAssessmentPk") oasysAssessmentPk: String): PlanEntity?
@@ -94,4 +94,4 @@ interface PlanRepository : JpaRepository<PlanEntity, Long> {
   fun createOasysAssessmentPk(@Param("oasysAssessmentPk") oasysAssessmentPk: String, @Param("planId") planId: Long)
 }
 
-fun PlanRepository.getPlan(planUuid: UUID) = findByPlanId(planUuid) ?: throw NotFoundException("Plan not found for id $planUuid")
+fun PlanRepository.getPlanByUuid(planUuid: UUID) = findPlanByUuId(planUuid) ?: throw NotFoundException("Plan not found for id $planUuid")

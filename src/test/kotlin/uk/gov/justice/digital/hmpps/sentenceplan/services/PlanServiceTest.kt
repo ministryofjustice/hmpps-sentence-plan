@@ -225,7 +225,7 @@ class PlanServiceTest {
     fun `should mark plan as self-signed`() {
       every { planRepository.findByUuid(any()) } returns planEntity
       every { planVersionRepository.save(any()) } returnsArgument 0
-      every { versionService.conditionallyCreateNewPlanVersion(any()) } returns newPlanVersionEntity
+      every { versionService.alwaysCreateNewPlanVersion(any()) } returns newPlanVersionEntity
 
       val signRequest = SignRequest(
         signType = SignType.SELF,

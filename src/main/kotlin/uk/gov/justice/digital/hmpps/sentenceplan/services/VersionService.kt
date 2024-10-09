@@ -93,10 +93,18 @@ class VersionService(
       return planVersion
     }
 
-    val planVersionUuid: UUID = planVersion.uuid
+    return createNewPlanVersion(planVersion.uuid)
+  }
 
-    val currentPlanVersion = createNewPlanVersion(planVersionUuid)
-
-    return currentPlanVersion
+  /**
+   * Always creates a new PlanVersion, regardless of the criteria that apply in `conditionallyCreateNewPlanVersion`
+   */
+  @Transactional
+  fun alwaysCreateNewPlanVersion(planVersion: PlanVersionEntity): PlanVersionEntity {
+    // Don't try and make a new version if the passed-in reference hasn't been saved yet.
+    if (planVersion.id == null) {
+      return planVersion
+    }
+    return createNewPlanVersion(planVersion.uuid)
   }
 }

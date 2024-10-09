@@ -111,7 +111,7 @@ class PlanService(
     }
 
     // make a new version in the UNSIGNED state
-    val versionedPlan = versionService.conditionallyCreateNewPlanVersion(plan)
+    val versionedPlan = versionService.alwaysCreateNewPlanVersion(plan)
       .apply {
         status = CountersigningStatus.UNSIGNED
       }

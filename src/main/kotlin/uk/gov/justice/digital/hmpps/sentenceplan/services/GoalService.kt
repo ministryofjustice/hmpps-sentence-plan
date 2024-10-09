@@ -152,7 +152,7 @@ class GoalService(
 
   @Transactional
   fun deleteGoalByUuid(goalUuid: UUID): Int {
-    versionService.conditionallyCreateNewPlanVersion(goalRepository.findByUuid(goalUuid)?.planVersion)
+    goalRepository.findByUuid(goalUuid)?.let { versionService.conditionallyCreateNewPlanVersion(it.planVersion) }
     return goalRepository.deleteByUuid(goalUuid)
   }
 }

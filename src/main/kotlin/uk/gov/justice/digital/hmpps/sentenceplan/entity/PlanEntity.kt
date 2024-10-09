@@ -23,6 +23,7 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
+import uk.gov.justice.digital.hmpps.sentenceplan.exceptions.NotFoundException
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -76,6 +77,14 @@ enum class PublishState {
 interface PlanRepository : JpaRepository<PlanEntity, Long> {
   fun findByUuid(planUuid: UUID): PlanEntity
 
+  @Query(
+    """
+    select p from PlanEntity p
+    where p.uuid = :planUuid
+  """,
+  )
+  fun findByPlanId(planUuid: UUID): PlanEntity?
+
   @Query("select p.* from plan p inner join oasys_pk_to_plan o on p.id = o.plan_id and o.oasys_assessment_pk = :oasysAssessmentPk", nativeQuery = true)
   fun findByOasysAssessmentPk(@Param("oasysAssessmentPk") oasysAssessmentPk: String): PlanEntity?
 
@@ -84,3 +93,5 @@ interface PlanRepository : JpaRepository<PlanEntity, Long> {
   @Query("insert into oasys_pk_to_plan(oasys_assessment_pk, plan_id) values (:oasysAssessmentPk, :planId)", nativeQuery = true)
   fun createOasysAssessmentPk(@Param("oasysAssessmentPk") oasysAssessmentPk: String, @Param("planId") planId: Long)
 }
+
+fun PlanRepository.getPlan(planUuid: UUID) = findByPlanId(planUuid) ?: throw NotFoundException("Plan not found for id $planUuid")

@@ -181,6 +181,7 @@ class PlanServiceTest {
       every { planRepository.findByUuid(any()) } returns planEntity
       every { planVersionRepository.save(any()) } returns planVersionEntity
       every { planAgreementNoteRepository.save(any()) } returns any()
+      every { versionService.conditionallyCreateNewPlanVersion(any()) } returns newPlanVersionEntity
 
       val result = planService.agreeLatestPlanVersion(UUID.randomUUID(), agreement)
 

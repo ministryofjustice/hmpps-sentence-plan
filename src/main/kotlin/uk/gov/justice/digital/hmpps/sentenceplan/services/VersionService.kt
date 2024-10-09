@@ -72,6 +72,8 @@ class VersionService(
     currentPlanVersion.version = currentPlanVersion.version.inc()
     val updatedCurrentVersion = planVersionRepository.save(currentPlanVersion)
 
+    entityManager.flush()
+
     return updatedCurrentVersion
   }
 

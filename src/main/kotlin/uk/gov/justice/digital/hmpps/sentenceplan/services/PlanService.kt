@@ -84,9 +84,12 @@ class PlanService(
     return planVersion
   }
 
+  @Transactional
   fun addPlanAgreementNote(planVersionEntity: PlanVersionEntity, agreement: Agreement) {
+    val currentPlanVersion = versionService.conditionallyCreateNewPlanVersion(planVersionEntity)
+
     val planAgreementNote = PlanAgreementNoteEntity(
-      planVersion = planVersionEntity,
+      planVersion = currentPlanVersion,
       agreementStatus = agreement.agreementStatus,
       agreementStatusNote = agreement.agreementStatusNote,
       optionalNote = agreement.optionalNote,

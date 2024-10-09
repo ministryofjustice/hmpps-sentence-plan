@@ -25,6 +25,7 @@ class GoalService(
   private val areaOfNeedRepository: AreaOfNeedRepository,
   private val stepRepository: StepRepository,
   private val planRepository: PlanRepository,
+  private val versionService: VersionService,
 ) {
   fun getGoalByUuid(goalUuid: UUID): GoalEntity? = goalRepository.findByUuid(goalUuid)
 
@@ -52,13 +53,15 @@ class GoalService(
 
     val highestGoalOrder = planVersionEntity.goals.maxByOrNull { g -> g.goalOrder }?.goalOrder ?: 0
 
+    val currentPlanVersion = versionService.conditionallyCreateNewPlanVersion(planVersionEntity)
+
     val goalEntity = GoalEntity(
       title = goal.title,
       areaOfNeed = areaOfNeedEntity,
       targetDate = goal.targetDate?.let { LocalDate.parse(it) },
       status = if (goal.targetDate != null) GoalStatus.ACTIVE else GoalStatus.FUTURE,
       statusDate = LocalDateTime.now(),
-      planVersion = planVersionEntity,
+      planVersion = currentPlanVersion,
       relatedAreasOfNeed = relatedAreasOfNeedEntity.toMutableSet(),
       goalOrder = highestGoalOrder + 1,
     )
@@ -90,17 +93,25 @@ class GoalService(
     val relatedAreasOfNeedList: List<AreaOfNeedEntity> = getAreasOfNeedByNames(goal)
     goalEntity.merge(goal, relatedAreasOfNeedList)
 
+    versionService.conditionallyCreateNewPlanVersion(goalEntity.planVersion)
+
     return goalRepository.save(goalEntity)
   }
 
   @Transactional
   fun addStepsToGoal(goalUuid: UUID, steps: List<Step>, replaceExistingSteps: Boolean = false): List<StepEntity> {
-    val goal: GoalEntity = goalRepository.findByUuid(goalUuid)
+    var goal: GoalEntity = goalRepository.findByUuid(goalUuid)
       ?: throw Exception("This Goal was not found: $goalUuid")
 
     require(steps.isNotEmpty()) { "At least one Step must be provided" }
 
     requireStepsAreValid(steps)
+
+    val planVersion = goal.planVersion
+    versionService.conditionallyCreateNewPlanVersion(planVersion)
+
+    // the planversion has changed, so refetch the goal to make sure we have the right version tree
+    goal = goalRepository.findByUuid(goalUuid)!!
 
     if (replaceExistingSteps) {
       stepRepository.deleteAll(goal.steps)
@@ -141,6 +152,7 @@ class GoalService(
 
   @Transactional
   fun deleteGoalByUuid(goalUuid: UUID): Int {
+    versionService.conditionallyCreateNewPlanVersion(goalRepository.findByUuid(goalUuid)?.planVersion)
     return goalRepository.deleteByUuid(goalUuid)
   }
 }

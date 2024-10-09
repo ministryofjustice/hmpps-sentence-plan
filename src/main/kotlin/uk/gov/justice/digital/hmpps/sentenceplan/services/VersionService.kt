@@ -18,9 +18,6 @@ class VersionService(
   @PersistenceContext
   lateinit var entityManager: EntityManager
 
-  // we keep a list of plans being copied so that cascading persists don't trigger recursive copying
-  private var planVersionsBeingCopied: MutableSet<UUID> = mutableSetOf()
-
   /**
    * This function makes a copy of a PlanVersion object and all its descendent objects.
    * New UUIDs are set on the copied objects and then persisted to the database.
@@ -37,8 +34,6 @@ class VersionService(
     entityManager.detach(newPlanVersionEntity)
 
     newPlanVersionEntity.uuid = UUID.randomUUID()
-
-    planVersionsBeingCopied.add(newPlanVersionEntity.uuid)
 
     newPlanVersionEntity.id = null
     newPlanVersionEntity.agreementNote?.id = null
@@ -70,7 +65,6 @@ class VersionService(
     }
 
     planVersionRepository.save(newPlanVersionEntity)
-    planVersionsBeingCopied.remove(newPlanVersionEntity.uuid)
 
     entityManager.detach(newPlanVersionEntity)
 
@@ -99,21 +93,9 @@ class VersionService(
       return planVersion
     }
 
-    // We only allow a single new version of a plan to be made at once.
-    // This is because when a new PlanVersion is being created the @PrePersist on its children will be triggered,
-    // which if unchecked-for will result in infinite recursion.
-    // We have not implemented a way of differentiating between human-triggerd and machine-triggered versioning.
-    // This means we also do not provide any kind of object invalidation back to the user. If two users modify the same
-    // plan version in short succession then the first change will be overridden.
-    if (planVersionsBeingCopied.contains(planVersion.uuid)) {
-      return planVersion
-    }
-
     val planVersionUuid: UUID = planVersion.uuid
 
-    planVersionsBeingCopied.add(planVersionUuid)
     val currentPlanVersion = createNewPlanVersion(planVersionUuid)
-    planVersionsBeingCopied.remove(planVersionUuid)
 
     return currentPlanVersion
   }

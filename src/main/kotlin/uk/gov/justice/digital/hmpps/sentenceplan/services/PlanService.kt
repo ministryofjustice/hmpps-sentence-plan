@@ -63,6 +63,7 @@ class PlanService(
     return planEntity
   }
 
+  @Transactional
   fun agreeLatestPlanVersion(planUuid: UUID, agreement: Agreement): PlanVersionEntity {
     var planVersion: PlanVersionEntity
     try {
@@ -84,8 +85,7 @@ class PlanService(
     return planVersion
   }
 
-  @Transactional
-  fun addPlanAgreementNote(planVersionEntity: PlanVersionEntity, agreement: Agreement) {
+  private fun addPlanAgreementNote(planVersionEntity: PlanVersionEntity, agreement: Agreement) {
     val currentPlanVersion = versionService.conditionallyCreateNewPlanVersion(planVersionEntity)
 
     val planAgreementNote = PlanAgreementNoteEntity(

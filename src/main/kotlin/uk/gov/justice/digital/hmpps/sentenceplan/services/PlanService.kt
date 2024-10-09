@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.sentenceplan.services
 
 import org.springframework.dao.EmptyResultDataAccessException
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Agreement
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.CountersigningStatus
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanAgreementNoteEntity
@@ -96,6 +97,7 @@ class PlanService(
     planAgreementNoteRepository.save(planAgreementNote)
   }
 
+  @Transactional
   fun signPlan(planUuid: UUID, signRequest: SignRequest): PlanVersionEntity {
     val plan = getPlanVersionByPlanUuid(planUuid)
 
@@ -109,7 +111,7 @@ class PlanService(
     }
 
     // make a new version in the UNSIGNED state
-    val versionedPlan = versionService.createNewPlanVersion(plan.uuid)
+    val versionedPlan = versionService.conditionallyCreateNewPlanVersion(plan)
       .apply {
         status = CountersigningStatus.UNSIGNED
       }

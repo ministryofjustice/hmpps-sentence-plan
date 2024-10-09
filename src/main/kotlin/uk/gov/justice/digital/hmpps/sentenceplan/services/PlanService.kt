@@ -38,7 +38,7 @@ class PlanService(
     planEntity.currentVersion?.status = CountersigningStatus.LOCKED_INCOMPLETE
     planRepository.save(planEntity)
 
-    val newVersion = versionService.createNewPlanVersion(planEntity.currentVersion!!.uuid).apply { status = CountersigningStatus.UNSIGNED }
+    val newVersion = versionService.alwaysCreateNewPlanVersion(planEntity.currentVersion!!).apply { status = CountersigningStatus.UNSIGNED }
     planVersionRepository.save(newVersion)
 
     return planEntity.currentVersion!!

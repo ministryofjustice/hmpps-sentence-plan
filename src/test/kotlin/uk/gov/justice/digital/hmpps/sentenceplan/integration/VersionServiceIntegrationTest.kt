@@ -3,7 +3,6 @@ package uk.gov.justice.digital.hmpps.sentenceplan.integration
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.MethodOrderer
-import org.junit.jupiter.api.Order
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.TestMethodOrder
@@ -16,6 +15,7 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanProgressNotesRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionRepository
+import uk.gov.justice.digital.hmpps.sentenceplan.services.GoalService
 import uk.gov.justice.digital.hmpps.sentenceplan.services.VersionService
 import java.util.UUID
 
@@ -39,13 +39,15 @@ class VersionServiceIntegrationTest : IntegrationTestBase() {
   @Autowired
   lateinit var goalRepository: GoalRepository
 
+  @Autowired
+  lateinit var goalService: GoalService
+
   // from SQL scripts
   val testPlanUuid = UUID.fromString("556db5c8-a1eb-4064-986b-0740d6a83c33")
   val testPlanVersionUuid = UUID.fromString("9f2aaa46-e544-4bcd-8db6-fbe7842ddb64")
   var newPlanVersionUuid: UUID = UUID.randomUUID()
 
   @Test
-  @Order(1)
   @DisplayName("Create new PlanVersion")
   @WithMockUser(username = "UserId|Username")
   @Sql(
@@ -72,7 +74,8 @@ class VersionServiceIntegrationTest : IntegrationTestBase() {
     // a plan and a version are added via SQL scripts in annotation
 
     // create a new version
-    val planVersionOne = versionService.createNewPlanVersion(testPlanVersionUuid)
+    val planVersion = planVersionRepository.findByUuid(testPlanVersionUuid)
+    val planVersionOne = versionService.conditionallyCreateNewPlanVersion(planVersion)
     newPlanVersionUuid = planVersionOne.uuid
 
     // now check there are two versions

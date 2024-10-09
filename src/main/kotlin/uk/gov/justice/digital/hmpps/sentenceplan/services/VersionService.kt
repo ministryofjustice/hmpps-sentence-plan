@@ -22,8 +22,7 @@ class VersionService(
    * This function makes a copy of a PlanVersion object and all its descendent objects.
    * New UUIDs are set on the copied objects and then persisted to the database.
    */
-  @Transactional
-  fun createNewPlanVersion(planVersionUuid: UUID): PlanVersionEntity {
+  private fun createNewPlanVersion(planVersionUuid: UUID): PlanVersionEntity {
     val newPlanVersionEntity: PlanVersionEntity
 
     try {
@@ -35,6 +34,7 @@ class VersionService(
     entityManager.detach(newPlanVersionEntity)
 
     newPlanVersionEntity.uuid = UUID.randomUUID()
+
     newPlanVersionEntity.id = null
     newPlanVersionEntity.agreementNote?.id = null
     newPlanVersionEntity.agreementNote?.planVersion = newPlanVersionEntity
@@ -59,11 +59,13 @@ class VersionService(
       }
       goal.steps = stepsList
 
+      // the set needs copying otherwise both original and new goal will be referencing the same collection object
       val relatedAreasSet: MutableSet<AreaOfNeedEntity>? = goal.relatedAreasOfNeed?.toSet()?.toMutableSet()
       goal.relatedAreasOfNeed = relatedAreasSet
     }
 
     planVersionRepository.save(newPlanVersionEntity)
+
     entityManager.detach(newPlanVersionEntity)
 
     val currentPlanVersion = planVersionRepository.findByUuid(planVersionUuid)
@@ -71,5 +73,38 @@ class VersionService(
     val updatedCurrentVersion = planVersionRepository.save(currentPlanVersion)
 
     return updatedCurrentVersion
+  }
+
+  @Transactional
+  fun conditionallyCreateNewPlanVersion(planVersion: PlanVersionEntity?): PlanVersionEntity {
+    if (planVersion == null) {
+      throw NullPointerException("Tried to create a new plan version for a null planVersion")
+    }
+
+    // Don't try and make a new version if the passed-in reference hasn't been saved yet.
+    if (planVersion.id == null) {
+      return planVersion
+    }
+
+    // Do not make a new version if this PlanVersion is not the latest version - the persist which triggered this will
+    // still take place.
+    // If we want to prevent the persist we can return a value here, detect it in the @PrePersist and throw an e.g. RuntimeException
+    if (planVersion.uuid != planVersion.plan?.currentVersion?.uuid) {
+      return planVersion
+    }
+
+    return createNewPlanVersion(planVersion.uuid)
+  }
+
+  /**
+   * Always creates a new PlanVersion, regardless of the criteria that apply in `conditionallyCreateNewPlanVersion`
+   */
+  @Transactional
+  fun alwaysCreateNewPlanVersion(planVersion: PlanVersionEntity): PlanVersionEntity {
+    // Don't try and make a new version if the passed-in reference hasn't been saved yet.
+    if (planVersion.id == null) {
+      return planVersion
+    }
+    return createNewPlanVersion(planVersion.uuid)
   }
 }

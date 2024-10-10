@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.servlet.resource.NoResourceFoundException
 import uk.gov.justice.digital.hmpps.sentenceplan.config.ErrorResponse
 import uk.gov.justice.digital.hmpps.sentenceplan.data.CreatePlanRequest
+import uk.gov.justice.digital.hmpps.sentenceplan.data.LockPlanRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.CounterSignPlanRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.RollbackPlanRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.SignRequest
@@ -206,21 +207,8 @@ class CoordinatorController(
   )
   fun lockPlan(
     @PathVariable planUuid: UUID,
-  ): PlanVersionResponse {
-    /**
-     * TODO: Implement logic to lock an incomplete sentence plan identified by 'planUuid'
-     *  - Retrieve the plan using 'planUuid'
-     *  - Update the plan's status to 'LOCKED_INCOMPLETE'.
-     *    - When doing this, make sure you DO NOT update the plan version number
-     *  - Create a new plan version with countersigning_status as UNSIGNED (?are we sure this is the correct behaviour?)
-     *  - Save the changes and ensure the LOCKED_INCOMPLETE version number is returned
-     *  - Handle any exceptions or edge cases (i,e, plan not found, locking failures)
-     */
-    return PlanVersionResponse(
-      planId = planUuid,
-      planVersion = 15,
-    )
-  }
+    @RequestBody lockPlanRequest: LockPlanRequest,
+  ): PlanVersionResponse = PlanVersionResponse.from(planService.lockPlan(planUuid))
 
   @PostMapping("/{planUuid}/countersign")
   @Operation(
@@ -294,21 +282,7 @@ class CoordinatorController(
   fun rollbackPlanVersion(
     @PathVariable planUuid: UUID,
     @RequestBody @Valid body: RollbackPlanRequest,
-  ): PlanVersionResponse {
-    /**
-     * TODO: Implement logic to rollback the specified sentence plan version
-     *  - Retrieve the plan using 'planUuid' and it's specified 'sentencePlanVersion'
-     *  - Check the plan version is in a valid state for rollback (?what are the valid states for a rollback?)
-     *  - Update the countersigning status of the specified plan version to 'ROLLED_BACK'
-     *    - When doing this, make sure you DO NOT update the plan version number
-     *  - Save the changes and return the LATEST plan UUID and version number (?are we sure this is correct?)
-     *  - Handle any exceptions or edge cases (i.e plan or version not found, invalid state for rollback, rollback failures)
-     */
-    return PlanVersionResponse(
-      planId = planUuid,
-      planVersion = body.sentencePlanVersion,
-    )
-  }
+  ): PlanVersionResponse = PlanVersionResponse.from(planService.rollbackVersion(planUuid, body.sentencePlanVersion.toInt()))
 
   /**
    * TODO: Implement logic for soft-deleting and restoring

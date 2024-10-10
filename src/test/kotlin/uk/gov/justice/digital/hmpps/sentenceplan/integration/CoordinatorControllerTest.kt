@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient
 import org.springframework.http.HttpStatus
 import org.springframework.test.context.jdbc.Sql
@@ -16,8 +17,14 @@ import org.springframework.test.context.jdbc.Sql.ExecutionPhase.BEFORE_TEST_METH
 import org.springframework.test.web.reactive.server.expectBody
 import uk.gov.justice.digital.hmpps.sentenceplan.config.ErrorResponse
 import uk.gov.justice.digital.hmpps.sentenceplan.data.CreatePlanRequest
+import uk.gov.justice.digital.hmpps.sentenceplan.data.LockPlanRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.data.UserDetails
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.CountersigningStatus
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanType
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionRepository
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.getPlanByUuid
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.RollbackPlanRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.SignRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.SignType
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.response.GetPlanResponse
@@ -31,6 +38,12 @@ class CoordinatorControllerTest : IntegrationTestBase() {
 
   val authenticatedUser = "OASYS|Tom C"
   val userDetails = UserDetails("1", "Tom C")
+
+  @Autowired
+  lateinit var planRepository: PlanRepository
+
+  @Autowired
+  lateinit var planVersionRepository: PlanVersionRepository
 
   @Nested
   @DisplayName("createPlan")
@@ -156,6 +169,129 @@ class CoordinatorControllerTest : IntegrationTestBase() {
           assertThat(responseBody?.status).isEqualTo(HttpStatus.NOT_FOUND.value())
           assertThat(responseBody?.userMessage).startsWith("No resource found failure")
           assertThat(responseBody?.developerMessage).startsWith("No static resource")
+        }
+    }
+  }
+
+  @Nested
+  @DisplayName("lockPlan")
+  inner class LockPlan {
+    val planUuid = UUID.fromString("556db5c8-a1eb-4064-986b-0740d6a83c33")
+    val notFoundUuid = UUID.fromString("0d0f2d85-5b70-4916-9f89-ed248f8d5196")
+
+    val userDetails = UserDetails("1", "Tom C")
+
+    @Sql(scripts = [ "/db/test/oasys_assessment_pk_data.sql" ], executionPhase = BEFORE_TEST_METHOD)
+    @Sql(scripts = [ "/db/test/oasys_assessment_pk_cleanup.sql" ], executionPhase = AFTER_TEST_METHOD)
+    @Test
+    fun `should lock the plan and return a new version`() {
+      val lockRequest = LockPlanRequest(
+        userDetails = userDetails,
+      )
+
+      val beforePlanVersion = planRepository.getPlanByUuid(planUuid).currentVersion
+      val beforeVersionStatus = beforePlanVersion?.status!!
+      val beforeVersion = beforePlanVersion.version
+
+      webTestClient.post()
+        .uri("/coordinator/plan/$planUuid/lock")
+        .bodyValue(lockRequest)
+        .header("Content-Type", "application/json")
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .exchange()
+        .expectStatus().isOk
+        .expectBody<PlanVersionResponse>()
+        .returnResult().run {
+          assertThat(responseBody?.planId).isNotNull
+          assertThat(responseBody?.planVersion).isEqualTo(beforeVersion.toLong())
+        }
+
+      val afterStatus = planVersionRepository.findByPlanUuidAndVersion(planUuid, beforeVersion).status
+      val newPlanVersion = planRepository.getPlanByUuid(planUuid).currentVersion
+
+      assertThat(afterStatus).isNotEqualTo(beforeVersionStatus)
+      assertThat(afterStatus).isEqualTo(CountersigningStatus.LOCKED_INCOMPLETE)
+      assertThat(newPlanVersion?.version).isEqualTo(beforeVersion + 1)
+      assertThat(newPlanVersion?.status).isEqualTo(CountersigningStatus.UNSIGNED)
+    }
+
+    @Test
+    fun `should return 404 not found`() {
+      val lockRequest = LockPlanRequest(
+        userDetails = userDetails,
+      )
+
+      webTestClient.post()
+        .uri("/coordinator/plan/$notFoundUuid/lock")
+        .bodyValue(lockRequest)
+        .header("Content-Type", "application/json")
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .exchange()
+        .expectStatus().isNotFound
+        .expectBody<ErrorResponse>()
+        .returnResult().run {
+          assertThat(responseBody?.status).isEqualTo(HttpStatus.NOT_FOUND.value())
+          assertThat(responseBody?.userMessage).isEqualTo("Plan not found for id 0d0f2d85-5b70-4916-9f89-ed248f8d5196")
+        }
+    }
+  }
+
+  @Nested
+  @DisplayName("Rollback Plan Version")
+  inner class RollbackPlan {
+    val planUuid = UUID.fromString("556db5c8-a1eb-4064-986b-0740d6a83c33")
+    val userDetails = UserDetails("1", "Tom C")
+
+    @Sql(scripts = [ "/db/test/oasys_assessment_pk_data.sql" ], executionPhase = BEFORE_TEST_METHOD)
+    @Sql(scripts = [ "/db/test/oasys_assessment_pk_cleanup.sql" ], executionPhase = AFTER_TEST_METHOD)
+    @Test
+    fun `should set the plan version to ROLLED_BACK`() {
+      val beforePlanVersion = planRepository.getPlanByUuid(planUuid).currentVersion
+      val beforeVersionStatus = beforePlanVersion?.status!!
+      val beforeVersion = beforePlanVersion.version
+
+      val rollbackRequest = RollbackPlanRequest(
+        userDetails = userDetails,
+        sentencePlanVersion = beforeVersion.toLong(),
+      )
+
+      webTestClient.post()
+        .uri("/coordinator/plan/$planUuid/rollback")
+        .bodyValue(rollbackRequest)
+        .header("Content-Type", "application/json")
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .exchange()
+        .expectStatus().isOk
+        .expectBody<PlanVersionResponse>()
+        .returnResult().run {
+          assertThat(responseBody?.planId).isNotNull
+          assertThat(responseBody?.planVersion).isEqualTo(beforeVersion.toLong())
+        }
+
+      val afterStatus = planVersionRepository.findByPlanUuidAndVersion(planUuid, beforeVersion).status
+
+      assertThat(afterStatus).isNotEqualTo(beforeVersionStatus)
+      assertThat(afterStatus).isEqualTo(CountersigningStatus.ROLLED_BACK)
+    }
+
+    @Test
+    fun `should return 404 not found`() {
+      val rollbackRequest = RollbackPlanRequest(
+        userDetails = userDetails,
+        sentencePlanVersion = 999999L,
+      )
+
+      webTestClient.post()
+        .uri("/coordinator/plan/$planUuid/rollback")
+        .bodyValue(rollbackRequest)
+        .header("Content-Type", "application/json")
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .exchange()
+        .expectStatus().isNotFound
+        .expectBody<ErrorResponse>()
+        .returnResult().run {
+          assertThat(responseBody?.status).isEqualTo(HttpStatus.NOT_FOUND.value())
+          assertThat(responseBody?.userMessage).isEqualTo("Plan version 999999 not found for Plan uuid 556db5c8-a1eb-4064-986b-0740d6a83c33")
         }
     }
   }

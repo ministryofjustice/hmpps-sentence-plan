@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.web.server.ResponseStatusException
 import org.springframework.web.servlet.resource.NoResourceFoundException
 import uk.gov.justice.digital.hmpps.sentenceplan.exceptions.ConflictException
+import uk.gov.justice.digital.hmpps.sentenceplan.exceptions.NotFoundException
 
 @RestControllerAdvice
 class HmppsSentencePlanExceptionHandler {
@@ -37,6 +38,17 @@ class HmppsSentencePlanExceptionHandler {
         developerMessage = e.message,
       ),
     ).also { log.info("No resource found exception: {}", e.message) }
+
+  @ExceptionHandler(NotFoundException::class)
+  fun handleNotFoundException(e: NotFoundException): ResponseEntity<ErrorResponse> = ResponseEntity
+    .status(NOT_FOUND)
+    .body(
+      ErrorResponse(
+        status = NOT_FOUND,
+        userMessage = "${e.message}",
+        developerMessage = e.message,
+      ),
+    ).also { log.info(e.message) }
 
   @ExceptionHandler(ConflictException::class)
   fun handleConflictException(e: ConflictException): ResponseEntity<ErrorResponse> = ResponseEntity

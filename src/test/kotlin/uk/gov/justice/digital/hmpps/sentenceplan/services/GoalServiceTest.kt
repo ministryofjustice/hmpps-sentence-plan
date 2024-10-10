@@ -35,8 +35,9 @@ class GoalServiceTest {
   private val areaOfNeedRepository: AreaOfNeedRepository = mockk()
   private val planRepository: PlanRepository = mockk()
   private val stepRepository: StepRepository = mockk()
+  private val versionService: VersionService = mockk()
 
-  private val goalService = GoalService(goalRepository, areaOfNeedRepository, stepRepository, planRepository)
+  private val goalService = GoalService(goalRepository, areaOfNeedRepository, stepRepository, planRepository, versionService)
   private val goalUuid = UUID.fromString("ef74ee4b-5a0b-481b-860f-19187260f2e7")
 
   private val goal: Goal = Goal(
@@ -93,6 +94,7 @@ class GoalServiceTest {
 
   private val planEntity: PlanEntity = PlanEntity()
   private val planVersionEntity: PlanVersionEntity = PlanVersionEntity(plan = planEntity, planId = 0L)
+  private val newPlanVersionEntity: PlanVersionEntity = PlanVersionEntity(plan = planEntity, planId = 1L)
   private val planVersionEntityWithOneGoal: PlanVersionEntity = PlanVersionEntity(plan = planEntity, goals = goalSet, planId = 0L)
 
   @BeforeAll
@@ -119,6 +121,7 @@ class GoalServiceTest {
     fun `create new goal with Area Of Need that doesn't exist should throw Exception`() {
       every { planRepository.findByUuid(any()) } returns planEntity
       every { areaOfNeedRepository.findByNameIgnoreCase(any()) } throws EmptyResultDataAccessException(1)
+      every { versionService.conditionallyCreateNewPlanVersion(any()) } returns newPlanVersionEntity
 
       var exception: Exception? = null
       var goalEntity: GoalEntity? = null
@@ -139,6 +142,7 @@ class GoalServiceTest {
       every { planRepository.findByUuid(any()) } returns planEntity
       every { areaOfNeedRepository.findByNameIgnoreCase(any()) } returns areaOfNeedEntity
       every { areaOfNeedRepository.findAllByNames(any()) } returns null
+      every { versionService.conditionallyCreateNewPlanVersion(any()) } returns newPlanVersionEntity
 
       var exception: Exception? = null
       var goalEntity: GoalEntity? = null
@@ -159,6 +163,7 @@ class GoalServiceTest {
       every { planRepository.findByUuid(any()) } returns planEntity
       every { areaOfNeedRepository.findByNameIgnoreCase(any()) } returns areaOfNeedEntity
       every { areaOfNeedRepository.findAllByNames(any()) } returns null
+      every { versionService.conditionallyCreateNewPlanVersion(any()) } returns newPlanVersionEntity
 
       val goalSlot = slot<GoalEntity>()
       every { goalRepository.save(capture(goalSlot)) } answers { goalSlot.captured }
@@ -174,6 +179,7 @@ class GoalServiceTest {
       every { planRepository.findByUuid(any()) } returns planEntity
       every { areaOfNeedRepository.findByNameIgnoreCase(any()) } returns areaOfNeedEntity
       every { areaOfNeedRepository.findAllByNames(any()) } returns null
+      every { versionService.conditionallyCreateNewPlanVersion(any()) } returns newPlanVersionEntity
 
       val goalSlot = slot<GoalEntity>()
       every { goalRepository.save(capture(goalSlot)) } answers { goalSlot.captured }
@@ -199,6 +205,7 @@ class GoalServiceTest {
       val goalSlot = slot<GoalEntity>()
       every { goalRepository.findByUuid(goalUuid) } returns goalEntityNoSteps
       every { goalRepository.save(capture(goalSlot)) } answers { goalSlot.captured }
+      every { versionService.conditionallyCreateNewPlanVersion(any()) } returns newPlanVersionEntity
 
       val stepsList = goalService.addStepsToGoal(goalUuid, steps)
 
@@ -222,6 +229,7 @@ class GoalServiceTest {
     @Test
     fun `update goal with random Plan UUID should throw Exception`() {
       every { goalRepository.findByUuid(any()) } returns null
+      every { versionService.conditionallyCreateNewPlanVersion(any()) } returns newPlanVersionEntity
 
       val exception = assertThrows<Exception> {
         goalService.updateGoalByUuid(UUID.randomUUID(), goal)
@@ -234,6 +242,7 @@ class GoalServiceTest {
     fun `update goal with related areas of need`() {
       every { goalRepository.findByUuid(any()) } returns goalEntityWithRelatedAreasOfNeed
       every { areaOfNeedRepository.findAllByNames(any()) } returns listOf(areaOfNeedEntity)
+      every { versionService.conditionallyCreateNewPlanVersion(any()) } returns newPlanVersionEntity
 
       val goalSlot = slot<GoalEntity>()
       every { goalRepository.save(capture(goalSlot)) } answers { goalSlot.captured }
@@ -247,6 +256,7 @@ class GoalServiceTest {
     fun `update goal with related areas of need not found should throw Exception`() {
       every { goalRepository.findByUuid(any()) } returns goalEntityWithRelatedAreasOfNeed
       every { areaOfNeedRepository.findAllByNames(any()) } returns null
+      every { versionService.conditionallyCreateNewPlanVersion(any()) } returns newPlanVersionEntity
 
       val exception = assertThrows<Exception> {
         goalService.updateGoalByUuid(UUID.randomUUID(), goal)
@@ -259,6 +269,7 @@ class GoalServiceTest {
     fun `update goal with unmatched related areas of need should throw Exception`() {
       every { goalRepository.findByUuid(any()) } returns goalEntityWithRelatedAreasOfNeed
       every { areaOfNeedRepository.findAllByNames(any()) } returns listOf(areaOfNeedEntity, areaOfNeedEntity)
+      every { versionService.conditionallyCreateNewPlanVersion(any()) } returns newPlanVersionEntity
 
       val exception = assertThrows<Exception> {
         goalService.updateGoalByUuid(UUID.randomUUID(), goal)
@@ -274,6 +285,7 @@ class GoalServiceTest {
     @Test
     fun `update steps for goal that does not exist should throw an exception`() {
       every { goalRepository.findByUuid(any()) } returns null
+      every { versionService.conditionallyCreateNewPlanVersion(any()) } returns newPlanVersionEntity
 
       val exception = assertThrows<Exception> {
         goalService.addStepsToGoal(UUID.randomUUID(), steps, true)
@@ -285,6 +297,7 @@ class GoalServiceTest {
     @Test
     fun `update steps with an empty list should throw an exception`() {
       every { goalRepository.findByUuid(any()) } returns goalEntityNoSteps
+      every { versionService.conditionallyCreateNewPlanVersion(any()) } returns newPlanVersionEntity
 
       val exception = assertThrows<IllegalArgumentException> {
         goalService.addStepsToGoal(UUID.randomUUID(), emptyList(), true)
@@ -296,6 +309,7 @@ class GoalServiceTest {
     @Test
     fun `update steps where a step is incomplete should throw an exception`() {
       every { goalRepository.findByUuid(any()) } returns goalEntityNoSteps
+      every { versionService.conditionallyCreateNewPlanVersion(any()) } returns newPlanVersionEntity
 
       val exception = assertThrows<IllegalArgumentException> {
         goalService.addStepsToGoal(UUID.randomUUID(), incompleteSteps, true)
@@ -310,6 +324,7 @@ class GoalServiceTest {
       every { goalRepository.findByUuid(goalUuid) } returns goalEntityNoSteps
       every { goalRepository.save(capture(goalSlot)) } answers { goalSlot.captured }
       every { stepRepository.deleteAll(any()) } returns Unit
+      every { versionService.conditionallyCreateNewPlanVersion(any()) } returns newPlanVersionEntity
 
       val stepsList = goalService.addStepsToGoal(goalUuid, steps, true)
 
@@ -348,6 +363,7 @@ class GoalServiceTest {
       every { goalRepository.findByUuid(goalUuid) } returns goalEntityNoSteps
       every { goalRepository.save(capture(goalSlot)) } answers { goalSlot.captured }
       every { stepRepository.deleteAll(any()) } returns Unit
+      every { versionService.conditionallyCreateNewPlanVersion(any()) } returns newPlanVersionEntity
 
       val stepsList = goalService.addStepsToGoal(goalUuid, steps, true)
 

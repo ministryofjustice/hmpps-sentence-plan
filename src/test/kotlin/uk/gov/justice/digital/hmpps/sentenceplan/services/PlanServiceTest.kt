@@ -272,7 +272,7 @@ class PlanServiceTest {
 
       val request = CounterSignPlanRequest(
         signType = type,
-        sentencePlanVersion = 0L
+        sentencePlanVersion = 0L,
       )
 
       val exception = assertThrows(ConflictException::class.java) {
@@ -281,7 +281,6 @@ class PlanServiceTest {
 
       assertThat(exception.message).endsWith(ending)
     }
-
   }
 
   private companion object {

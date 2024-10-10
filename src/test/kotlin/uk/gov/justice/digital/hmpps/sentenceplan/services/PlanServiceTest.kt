@@ -11,6 +11,9 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
+import org.junit.jupiter.params.provider.MethodSource
 import org.mockito.kotlin.any
 import org.springframework.dao.EmptyResultDataAccessException
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Agreement
@@ -23,10 +26,14 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanType
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionRepository
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.getVersionByUuidAndVersion
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.CounterSignPlanRequest
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.CountersignType
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.SignRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.SignType
 import uk.gov.justice.digital.hmpps.sentenceplan.exceptions.ConflictException
 import java.util.UUID
+import java.util.stream.Stream
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class PlanServiceTest {
@@ -252,5 +259,38 @@ class PlanServiceTest {
 
       assertThat(planVersion.status).isEqualTo(CountersigningStatus.AWAITING_COUNTERSIGN)
     }
+  }
+
+  @Nested
+  @DisplayName("countersignPlan")
+  inner class CountersignPlan {
+
+    @ParameterizedTest
+    @MethodSource("uk.gov.justice.digital.hmpps.sentenceplan.services.PlanServiceTest#arguments")
+    fun `should throw exception if status already matches`(type: CountersignType, status: CountersigningStatus, ending: String) {
+      every { planVersionRepository.getVersionByUuidAndVersion(any(), any()) } returns newPlanVersionEntity.apply { this.status = status }
+
+      val request = CounterSignPlanRequest(
+        signType = type,
+        sentencePlanVersion = 0L
+      )
+
+      val exception = assertThrows(ConflictException::class.java) {
+        planService.countersignPlan(UUID.randomUUID(), request)
+      }
+
+      assertThat(exception.message).endsWith(ending)
+    }
+
+  }
+
+  private companion object {
+    @JvmStatic
+    fun arguments(): Stream<Arguments> = Stream.of(
+      Arguments.of(CountersignType.COUNTERSIGNED, CountersigningStatus.COUNTERSIGNED, "was already countersigned."),
+      Arguments.of(CountersignType.REJECTED, CountersigningStatus.REJECTED, "was already rejected."),
+      Arguments.of(CountersignType.DOUBLE_COUNTERSIGNED, CountersigningStatus.DOUBLE_COUNTERSIGNED, "was already double countersigned."),
+      Arguments.of(CountersignType.AWAITING_DOUBLE_COUNTERSIGN, CountersigningStatus.AWAITING_DOUBLE_COUNTERSIGN, "was already awaiting double countersign."),
+    )
   }
 }

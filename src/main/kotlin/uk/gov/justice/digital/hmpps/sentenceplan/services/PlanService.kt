@@ -17,7 +17,6 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.getPlanByUuid
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.getVersionByUuidAndVersion
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.CounterSignPlanRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.CountersignType
-import uk.gov.justice.digital.hmpps.sentenceplan.entity.getVersionByUuidAndVersion
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.SignRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.SignType
 import uk.gov.justice.digital.hmpps.sentenceplan.exceptions.ConflictException

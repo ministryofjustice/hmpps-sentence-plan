@@ -14,6 +14,8 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanType
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.getPlanByUuid
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.CounterSignPlanRequest
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.CountersignType
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.SignRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.SignType
 import uk.gov.justice.digital.hmpps.sentenceplan.exceptions.ConflictException
@@ -132,5 +134,36 @@ class PlanService(
 
     // make sure we update the previous version with the new status, not the new one.
     return planVersionRepository.save(plan)
+  }
+
+  fun countersignPlan(planUuid: UUID, countersignPlanRequest: CounterSignPlanRequest): PlanVersionEntity {
+    val version = planVersionRepository.findByPlanUuidAndVersion(planUuid, countersignPlanRequest.sentencePlanVersion.toInt())
+
+    when(countersignPlanRequest.signType) {
+      CountersignType.COUNTERSIGNED -> {
+        if (version.status != CountersigningStatus.AWAITING_COUNTERSIGN) {
+          throw ConflictException("Plan $planUuid was not awaiting countersign.")
+        }
+        version.status = CountersigningStatus.COUNTERSIGNED
+      }
+      CountersignType.REJECTED -> {
+        if (version.status !in arrayOf(CountersigningStatus.AWAITING_COUNTERSIGN, CountersigningStatus.AWAITING_DOUBLE_COUNTERSIGN)) {
+          throw ConflictException("Plan $planUuid was not awaiting countersign or double countersign.")
+        }
+        version.status = CountersigningStatus.REJECTED
+      }
+      CountersignType.DOUBLE_COUNTERSIGNED -> {
+        if (version.status != CountersigningStatus.AWAITING_DOUBLE_COUNTERSIGN) {
+          throw ConflictException("Plan $planUuid was not awaiting double countersign.")
+        }
+        version.status = CountersigningStatus.DOUBLE_COUNTERSIGNED
+      }
+      CountersignType.AWAITING_DOUBLE_COUNTERSIGN -> {
+        // why did this not come in on /sign ?
+        version.status = CountersigningStatus.AWAITING_DOUBLE_COUNTERSIGN
+      }
+    }
+
+    return planVersionRepository.save(version)
   }
 }

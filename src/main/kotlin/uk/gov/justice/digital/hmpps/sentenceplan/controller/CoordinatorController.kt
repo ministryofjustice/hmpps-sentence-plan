@@ -237,7 +237,7 @@ class CoordinatorController(
   )
   fun countersignPlan(
     @PathVariable planUuid: UUID,
-    @RequestBody @Valid body: CounterSignPlanRequest,
+    @RequestBody @Valid countersignPlanRequest: CounterSignPlanRequest,
   ): PlanVersionResponse {
     /**
      * TODO: Implement logic to countersign the specified sentence plan version
@@ -248,10 +248,12 @@ class CoordinatorController(
      *  - Save the changes and return the the plan UUID and version number
      *  - Handle any exceptions or edge cases (i.e plan or version not found, invalid sign type, countersigning failures))
      */
-    return PlanVersionResponse(
-      planId = planUuid,
-      planVersion = body.sentencePlanVersion,
-    )
+    try {
+      return planService.countersignPlan(planUuid, countersignPlanRequest)
+        .run(PlanVersionResponse::from)
+    } catch (_: EmptyResultDataAccessException) {
+      throw NoResourceFoundException(HttpMethod.POST, "Could not find a plan with ID: $planUuid")
+    }
   }
 
   @PostMapping("/{planUuid}/rollback")

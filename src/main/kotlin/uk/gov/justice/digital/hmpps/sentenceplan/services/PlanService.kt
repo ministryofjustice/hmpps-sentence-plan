@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanType
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.getPlanByUuid
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.getVersionByUuidAndVersion
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.SignRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.SignType
 import uk.gov.justice.digital.hmpps.sentenceplan.exceptions.ConflictException
@@ -31,6 +32,12 @@ class PlanService(
   fun getPlanVersionByPlanUuid(planUuid: UUID): PlanVersionEntity {
     val planEntity = planRepository.findByUuid(planUuid)
     return planEntity.currentVersion!!
+  }
+
+  fun rollbackVersion(planUuid: UUID, versionNumber: Int): PlanVersionEntity {
+    val version = planVersionRepository.getVersionByUuidAndVersion(planUuid, versionNumber)
+    version.status = CountersigningStatus.ROLLED_BACK
+    return planVersionRepository.save(version)
   }
 
   fun lockPlan(planUuid: UUID): PlanVersionEntity {

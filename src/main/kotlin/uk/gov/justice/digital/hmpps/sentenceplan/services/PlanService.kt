@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanType
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.getPlanByUuid
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.getVersionByUuidAndVersion
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.CounterSignPlanRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.CountersignType
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.SignRequest
@@ -137,8 +138,33 @@ class PlanService(
   }
 
   fun countersignPlan(planUuid: UUID, countersignPlanRequest: CounterSignPlanRequest): PlanVersionEntity {
-    val version = planVersionRepository.findByPlanUuidAndVersion(planUuid, countersignPlanRequest.sentencePlanVersion.toInt())
+    val version = planVersionRepository.getVersionByUuidAndVersion(planUuid, countersignPlanRequest.sentencePlanVersion.toInt())
 
+    // Duplicate request checking
+    when (countersignPlanRequest.signType) {
+      CountersignType.COUNTERSIGNED -> {
+        if (version.status == CountersigningStatus.COUNTERSIGNED) {
+          throw ConflictException("Plan $planUuid was already countersigned.")
+        }
+      }
+      CountersignType.REJECTED -> {
+        if (version.status == CountersigningStatus.REJECTED) {
+          throw ConflictException("Plan $planUuid was already rejected.")
+        }
+      }
+      CountersignType.DOUBLE_COUNTERSIGNED -> {
+        if (version.status == CountersigningStatus.DOUBLE_COUNTERSIGNED) {
+          throw ConflictException("Plan $planUuid was already double countersigned.")
+        }
+      }
+      CountersignType.AWAITING_DOUBLE_COUNTERSIGN -> {
+        if (version.status == CountersigningStatus.AWAITING_DOUBLE_COUNTERSIGN) {
+          throw ConflictException("Plan $planUuid was already awaiting double countersign.")
+        }
+      }
+    }
+
+    // Valid transitions
     when (countersignPlanRequest.signType) {
       CountersignType.COUNTERSIGNED -> {
         if (version.status != CountersigningStatus.AWAITING_COUNTERSIGN) {

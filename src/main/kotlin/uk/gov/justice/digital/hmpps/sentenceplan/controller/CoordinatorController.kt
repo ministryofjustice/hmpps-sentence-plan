@@ -248,12 +248,8 @@ class CoordinatorController(
      *  - Save the changes and return the the plan UUID and version number
      *  - Handle any exceptions or edge cases (i.e plan or version not found, invalid sign type, countersigning failures))
      */
-    try {
-      return planService.countersignPlan(planUuid, countersignPlanRequest)
-        .run(PlanVersionResponse::from)
-    } catch (_: EmptyResultDataAccessException) {
-      throw NoResourceFoundException(HttpMethod.POST, "Could not find a plan with ID: $planUuid")
-    }
+    return planService.countersignPlan(planUuid, countersignPlanRequest)
+      .run(PlanVersionResponse::from)
   }
 
   @PostMapping("/{planUuid}/rollback")

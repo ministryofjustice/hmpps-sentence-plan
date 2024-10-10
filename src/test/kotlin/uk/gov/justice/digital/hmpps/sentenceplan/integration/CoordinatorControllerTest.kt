@@ -296,5 +296,28 @@ class CoordinatorControllerTest : IntegrationTestBase() {
           assertThat(responseBody?.userMessage).isEqualTo("Plan version 0 not found for Plan uuid 0d0f2d85-5b70-4916-9f89-ed248f8d5196")
         }
     }
+
+    @Sql(scripts = [ "/db/test/oasys_assessment_pk_data.sql" ], executionPhase = BEFORE_TEST_METHOD)
+    @Sql(scripts = [ "/db/test/oasys_assessment_pk_cleanup.sql" ], executionPhase = AFTER_TEST_METHOD)
+    @Test
+    fun `should return 409 conflict`() {
+      val signRequest = CounterSignPlanRequest(
+        signType = CountersignType.REJECTED,
+        sentencePlanVersion = 0L,
+      )
+
+      webTestClient.post()
+        .uri("/coordinator/plan/$planUuid/countersign")
+        .bodyValue(signRequest)
+        .header("Content-Type", "application/json")
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .exchange()
+        .expectStatus().is4xxClientError
+        .expectBody<ErrorResponse>()
+        .returnResult().run {
+          assertThat(responseBody?.status).isEqualTo(HttpStatus.CONFLICT.value())
+          assertThat(responseBody?.developerMessage).isEqualTo("Plan 556db5c8-a1eb-4064-986b-0740d6a83c33 was not awaiting countersign or double countersign.")
+        }
+    }
   }
 }

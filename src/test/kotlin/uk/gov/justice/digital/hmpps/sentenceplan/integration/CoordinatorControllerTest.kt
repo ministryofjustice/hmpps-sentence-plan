@@ -24,6 +24,7 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanType
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.getPlanByUuid
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.RollbackPlanRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.SignRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.SignType
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.response.GetPlanResponse
@@ -216,14 +217,13 @@ class CoordinatorControllerTest : IntegrationTestBase() {
 
     @Test
     fun `should return 404 not found`() {
-      val signRequest = SignRequest(
-        signType = SignType.COUNTERSIGN,
+      val lockRequest = LockPlanRequest(
         userDetails = userDetails,
       )
 
       webTestClient.post()
         .uri("/coordinator/plan/$notFoundUuid/lock")
-        .bodyValue(signRequest)
+        .bodyValue(lockRequest)
         .header("Content-Type", "application/json")
         .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
         .exchange()
@@ -232,6 +232,66 @@ class CoordinatorControllerTest : IntegrationTestBase() {
         .returnResult().run {
           assertThat(responseBody?.status).isEqualTo(HttpStatus.NOT_FOUND.value())
           assertThat(responseBody?.userMessage).isEqualTo("Plan not found for id 0d0f2d85-5b70-4916-9f89-ed248f8d5196")
+        }
+    }
+  }
+
+  @Nested
+  @DisplayName("Rollback Plan Version")
+  inner class RollbackPlan {
+    val planUuid = UUID.fromString("556db5c8-a1eb-4064-986b-0740d6a83c33")
+    val userDetails = UserDetails("1", "Tom C")
+
+    @Sql(scripts = [ "/db/test/oasys_assessment_pk_data.sql" ], executionPhase = BEFORE_TEST_METHOD)
+    @Sql(scripts = [ "/db/test/oasys_assessment_pk_cleanup.sql" ], executionPhase = AFTER_TEST_METHOD)
+    @Test
+    fun `should set the plan version to ROLLED_BACK`() {
+      val beforePlanVersion = planRepository.getPlanByUuid(planUuid).currentVersion
+      val beforeVersionStatus = beforePlanVersion?.status!!
+      val beforeVersion = beforePlanVersion.version
+
+      val rollbackRequest = RollbackPlanRequest(
+        userDetails = userDetails,
+        sentencePlanVersion = beforeVersion.toLong(),
+      )
+
+      webTestClient.post()
+        .uri("/coordinator/plan/$planUuid/rollback")
+        .bodyValue(rollbackRequest)
+        .header("Content-Type", "application/json")
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .exchange()
+        .expectStatus().isOk
+        .expectBody<PlanVersionResponse>()
+        .returnResult().run {
+          assertThat(responseBody?.planId).isNotNull
+          assertThat(responseBody?.planVersion).isEqualTo(beforeVersion.toLong())
+        }
+
+      val afterStatus = planVersionRepository.findByPlanUuidAndVersion(planUuid, beforeVersion).status
+
+      assertThat(afterStatus).isNotEqualTo(beforeVersionStatus)
+      assertThat(afterStatus).isEqualTo(CountersigningStatus.ROLLED_BACK)
+    }
+
+    @Test
+    fun `should return 404 not found`() {
+      val rollbackRequest = RollbackPlanRequest(
+        userDetails = userDetails,
+        sentencePlanVersion = 999999L,
+      )
+
+      webTestClient.post()
+        .uri("/coordinator/plan/$planUuid/rollback")
+        .bodyValue(rollbackRequest)
+        .header("Content-Type", "application/json")
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .exchange()
+        .expectStatus().isNotFound
+        .expectBody<ErrorResponse>()
+        .returnResult().run {
+          assertThat(responseBody?.status).isEqualTo(HttpStatus.NOT_FOUND.value())
+          assertThat(responseBody?.userMessage).isEqualTo("Plan version 999999 not found for Plan uuid 556db5c8-a1eb-4064-986b-0740d6a83c33")
         }
     }
   }

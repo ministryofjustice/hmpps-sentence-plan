@@ -282,21 +282,7 @@ class CoordinatorController(
   fun rollbackPlanVersion(
     @PathVariable planUuid: UUID,
     @RequestBody @Valid body: RollbackPlanRequest,
-  ): PlanVersionResponse {
-    /**
-     * TODO: Implement logic to rollback the specified sentence plan version
-     *  - Retrieve the plan using 'planUuid' and it's specified 'sentencePlanVersion'
-     *  - Check the plan version is in a valid state for rollback (?what are the valid states for a rollback?)
-     *  - Update the countersigning status of the specified plan version to 'ROLLED_BACK'
-     *    - When doing this, make sure you DO NOT update the plan version number
-     *  - Save the changes and return the LATEST plan UUID and version number (?are we sure this is correct?)
-     *  - Handle any exceptions or edge cases (i.e plan or version not found, invalid state for rollback, rollback failures)
-     */
-    return PlanVersionResponse(
-      planId = planUuid,
-      planVersion = body.sentencePlanVersion,
-    )
-  }
+  ): PlanVersionResponse = PlanVersionResponse.from(planService.rollbackVersion(planUuid, body.sentencePlanVersion.toInt()))
 
   /**
    * TODO: Implement logic for soft-deleting and restoring

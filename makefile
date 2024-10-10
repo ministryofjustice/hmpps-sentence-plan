@@ -38,7 +38,7 @@ watch: ## Watches for file changes and live-reloads the API. To be used in conju
 	docker compose ${DEV_COMPOSE_FILES} exec api gradle compileKotlin --continuous --parallel --build-cache --configuration-cache
 
 test: ## Runs all the test suites.
-	docker compose ${DEV_COMPOSE_FILES} exec api gradle test --parallel
+	docker compose ${DEV_COMPOSE_FILES} exec api gradle test jacocoTestReport --parallel
 
 lint: ## Runs the Kotlin linter.
 	docker compose ${DEV_COMPOSE_FILES} exec api gradle ktlintCheck --parallel

@@ -139,7 +139,7 @@ class PlanService(
   fun countersignPlan(planUuid: UUID, countersignPlanRequest: CounterSignPlanRequest): PlanVersionEntity {
     val version = planVersionRepository.findByPlanUuidAndVersion(planUuid, countersignPlanRequest.sentencePlanVersion.toInt())
 
-    when(countersignPlanRequest.signType) {
+    when (countersignPlanRequest.signType) {
       CountersignType.COUNTERSIGNED -> {
         if (version.status != CountersigningStatus.AWAITING_COUNTERSIGN) {
           throw ConflictException("Plan $planUuid was not awaiting countersign.")

@@ -45,7 +45,7 @@ jobs:
             - gradle-{{ checksum "build.gradle.kts" }}
             - gradle-
       - run:
-          command: ./gradlew check
+          command: ./gradlew check jacocoTestReport
       - save_cache:
           paths:
             - ~/.gradle

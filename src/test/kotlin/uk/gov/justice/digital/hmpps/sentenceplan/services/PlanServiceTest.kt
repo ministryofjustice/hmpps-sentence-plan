@@ -201,6 +201,7 @@ class PlanServiceTest {
       planVersionEntity.agreementStatus = PlanAgreementStatus.AGREED
 
       every { planRepository.findByUuid(any()) } returns planEntity
+      every { versionService.conditionallyCreateNewPlanVersion(any()) } returns agreedNewPlanVersionEntity
 
       val exception = assertThrows(ConflictException::class.java) {
         planService.agreeLatestPlanVersion(UUID.fromString("559a2111-832c-4652-a99f-eec9e570640f"), agreement)

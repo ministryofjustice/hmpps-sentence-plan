@@ -15,6 +15,8 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.getPlanByUuid
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.getVersionByUuidAndVersion
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.CounterSignPlanRequest
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.CountersignType
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.SignRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.SignType
 import uk.gov.justice.digital.hmpps.sentenceplan.exceptions.ConflictException
@@ -149,5 +151,64 @@ class PlanService(
 
     // make sure we update the previous version with the new status, not the new one.
     return planVersionRepository.save(plan)
+  }
+
+  fun countersignPlan(planUuid: UUID, countersignPlanRequest: CounterSignPlanRequest): PlanVersionEntity {
+    val version = planVersionRepository.getVersionByUuidAndVersion(planUuid, countersignPlanRequest.sentencePlanVersion.toInt())
+
+    // Duplicate request checking
+    when (countersignPlanRequest.signType) {
+      CountersignType.COUNTERSIGNED -> {
+        if (version.status == CountersigningStatus.COUNTERSIGNED) {
+          throw ConflictException("Plan $planUuid was already countersigned.")
+        }
+      }
+      CountersignType.REJECTED -> {
+        if (version.status == CountersigningStatus.REJECTED) {
+          throw ConflictException("Plan $planUuid was already rejected.")
+        }
+      }
+      CountersignType.DOUBLE_COUNTERSIGNED -> {
+        if (version.status == CountersigningStatus.DOUBLE_COUNTERSIGNED) {
+          throw ConflictException("Plan $planUuid was already double countersigned.")
+        }
+      }
+      CountersignType.AWAITING_DOUBLE_COUNTERSIGN -> {
+        if (version.status == CountersigningStatus.AWAITING_DOUBLE_COUNTERSIGN) {
+          throw ConflictException("Plan $planUuid was already awaiting double countersign.")
+        }
+      }
+    }
+
+    // Valid transitions
+    when (countersignPlanRequest.signType) {
+      CountersignType.COUNTERSIGNED -> {
+        if (version.status != CountersigningStatus.AWAITING_COUNTERSIGN) {
+          throw ConflictException("Plan $planUuid was not awaiting countersign.")
+        }
+        version.status = CountersigningStatus.COUNTERSIGNED
+      }
+      CountersignType.REJECTED -> {
+        if (version.status !in arrayOf(CountersigningStatus.AWAITING_COUNTERSIGN, CountersigningStatus.AWAITING_DOUBLE_COUNTERSIGN)) {
+          throw ConflictException("Plan $planUuid was not awaiting countersign or double countersign.")
+        }
+        version.status = CountersigningStatus.REJECTED
+      }
+      CountersignType.DOUBLE_COUNTERSIGNED -> {
+        if (version.status != CountersigningStatus.AWAITING_DOUBLE_COUNTERSIGN) {
+          throw ConflictException("Plan $planUuid was not awaiting double countersign.")
+        }
+        version.status = CountersigningStatus.DOUBLE_COUNTERSIGNED
+      }
+      CountersignType.AWAITING_DOUBLE_COUNTERSIGN -> {
+        // why did this not come in on /sign ?
+        if (version.status != CountersigningStatus.UNSIGNED) {
+          throw ConflictException("Plan $planUuid was not awaiting double countersign.")
+        }
+        version.status = CountersigningStatus.AWAITING_DOUBLE_COUNTERSIGN
+      }
+    }
+
+    return planVersionRepository.save(version)
   }
 }

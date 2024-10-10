@@ -237,21 +237,10 @@ class CoordinatorController(
   )
   fun countersignPlan(
     @PathVariable planUuid: UUID,
-    @RequestBody @Valid body: CounterSignPlanRequest,
+    @RequestBody @Valid countersignPlanRequest: CounterSignPlanRequest,
   ): PlanVersionResponse {
-    /**
-     * TODO: Implement logic to countersign the specified sentence plan version
-     *  - Retrieve the plan using 'planUuid' and it's specified 'sentencePlanVersion'
-     *  - Check plan is in correct AWAITING_COUNTERSIGN/AWAITING_DOUBLE_COUNTERSIGN/LOCKED countersigning state
-     *  - Update the plan countersigning_status with the 'SignType' from the request body
-     *    - When doing this, make sure you DO NOT update the plan version number
-     *  - Save the changes and return the the plan UUID and version number
-     *  - Handle any exceptions or edge cases (i.e plan or version not found, invalid sign type, countersigning failures))
-     */
-    return PlanVersionResponse(
-      planId = planUuid,
-      planVersion = body.sentencePlanVersion,
-    )
+    return planService.countersignPlan(planUuid, countersignPlanRequest)
+      .run(PlanVersionResponse::from)
   }
 
   @PostMapping("/{planUuid}/rollback")

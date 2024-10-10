@@ -65,31 +65,32 @@ class PlanService(
 
   @Transactional
   fun agreeLatestPlanVersion(planUuid: UUID, agreement: Agreement): PlanVersionEntity {
-    var planVersion: PlanVersionEntity
+    val planVersion: PlanVersionEntity
     try {
       planVersion = planRepository.findByUuid(planUuid).currentVersion!!
     } catch (_: EmptyResultDataAccessException) {
       throw EmptyResultDataAccessException("Plan was not found with UUID: $planUuid", 1)
     }
 
-    when (planVersion.agreementStatus) {
+    val currentPlanVersion = versionService.conditionallyCreateNewPlanVersion(planVersion)
+    val agreedPlanVersion: PlanVersionEntity
+
+    when (currentPlanVersion.agreementStatus) {
       PlanAgreementStatus.DRAFT -> {
-        planVersion.agreementStatus = agreement.agreementStatus
-        planVersion.agreementDate = LocalDateTime.now()
-        planVersion = planVersionRepository.save(planVersion)
-        addPlanAgreementNote(planVersion, agreement)
+        currentPlanVersion.agreementStatus = agreement.agreementStatus
+        currentPlanVersion.agreementDate = LocalDateTime.now()
+        agreedPlanVersion = planVersionRepository.save(currentPlanVersion)
+        addPlanAgreementNote(agreedPlanVersion, agreement)
       }
       else -> throw ConflictException("Plan $planUuid has already been agreed.")
     }
 
-    return planVersion
+    return agreedPlanVersion
   }
 
   private fun addPlanAgreementNote(planVersionEntity: PlanVersionEntity, agreement: Agreement) {
-    val currentPlanVersion = versionService.conditionallyCreateNewPlanVersion(planVersionEntity)
-
     val planAgreementNote = PlanAgreementNoteEntity(
-      planVersion = currentPlanVersion,
+      planVersion = planVersionEntity,
       agreementStatus = agreement.agreementStatus,
       agreementStatusNote = agreement.agreementStatusNote,
       optionalNote = agreement.optionalNote,
@@ -100,6 +101,12 @@ class PlanService(
     planAgreementNoteRepository.save(planAgreementNote)
   }
 
+  /**
+   * Changes the Countersigning Status of the current PlanVersion to the value of the held in the `signRequest` parameter
+   * and creates a new PlanVersion with a Countersigning Status of UNSIGNED which becomes the current PlanVersion.
+   *
+   * Returns the PlanVersion which has been signed, not the current PlanVersion.
+   */
   @Transactional
   fun signPlan(planUuid: UUID, signRequest: SignRequest): PlanVersionEntity {
     val plan = getPlanVersionByPlanUuid(planUuid)

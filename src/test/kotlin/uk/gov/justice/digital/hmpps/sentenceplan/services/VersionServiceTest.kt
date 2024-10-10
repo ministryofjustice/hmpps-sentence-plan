@@ -51,6 +51,6 @@ class VersionServiceTest {
 
     val returnedPlanVersion = versionService.conditionallyCreateNewPlanVersion(planVersionEntity)
 
-    assertThat(returnedPlanVersion.version).isEqualTo(1)
+    assertThat(returnedPlanVersion.version).isEqualTo(newPlanVersionEntity.version)
   }
 }

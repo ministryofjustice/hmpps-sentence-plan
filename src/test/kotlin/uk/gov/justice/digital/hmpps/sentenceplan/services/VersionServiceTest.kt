@@ -53,4 +53,13 @@ class VersionServiceTest {
 
     assertThat(returnedPlanVersion.version).isEqualTo(newPlanVersionEntity.version)
   }
+
+  @Test
+  fun `should make a new version if the last updated date was last year`() {
+    planVersionEntity.updatedDate = LocalDateTime.now().minusYears(1)
+
+    val returnedPlanVersion = versionService.conditionallyCreateNewPlanVersion(planVersionEntity)
+
+    assertThat(returnedPlanVersion.version).isEqualTo(newPlanVersionEntity.version)
+  }
 }

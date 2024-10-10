@@ -9,6 +9,8 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.AreaOfNeedEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepEntity
+import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 @Service
@@ -95,7 +97,11 @@ class VersionService(
       return planVersion
     }
 
-    return createNewPlanVersion(planVersion.uuid)
+    return if (LocalDateTime.now().truncatedTo(ChronoUnit.DAYS).isAfter(planVersion.updatedDate)) {
+      createNewPlanVersion(planVersion.uuid)
+    } else {
+      planVersion
+    }
   }
 
   /**

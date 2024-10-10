@@ -79,7 +79,7 @@ class VersionServiceIntegrationTest : IntegrationTestBase() {
 
     // create a new version
     val planVersion = planVersionRepository.findByUuid(testPlanVersionUuid)
-    val planVersionOne = versionService.conditionallyCreateNewPlanVersion(planVersion)
+    val planVersionOne = versionService.alwaysCreateNewPlanVersion(planVersion)
     newPlanVersionUuid = planVersionOne.uuid
 
     // now check there are two versions
@@ -149,27 +149,7 @@ class VersionServiceIntegrationTest : IntegrationTestBase() {
     assertThat(planVersionRepository.findByPlanUuidAndVersion(testPlanUuid, 1).goals.size).isEqualTo(1)
 
     assertThat(planVersionRepository.findByUuid(testPlanVersionUuid).goals.size).isEqualTo(1)
-
-    // Now add another goal and check the numbers are correct.
-    // We should end with the following version:goal counts:
-    // 0:0
-    // 1:1
-    // 2:2
-    println("=========================================================")
-    val secondGoal = Goal(title = "More version testing", areaOfNeed = "Accommodation", status = GoalStatus.FUTURE)
-
-    goalService.createNewGoal(testPlanUuid, secondGoal)
-
-    assertThat(planVersionRepository.findAll().size).isEqualTo(3)
-
-    assertThat(planVersionRepository.findByPlanUuidAndVersion(testPlanUuid, 0).goals.size).isEqualTo(0)
-    assertThat(planVersionRepository.findByPlanUuidAndVersion(testPlanUuid, 1).goals.size).isEqualTo(1)
-    assertThat(planVersionRepository.findByPlanUuidAndVersion(testPlanUuid, 2).goals.size).isEqualTo(2)
-
-    assertThat(planVersionRepository.findByUuid(testPlanVersionUuid).goals.size).isEqualTo(2)
   }
-
-  // ------------------------------------------------
 
   @Test
   @DisplayName("Adding Steps creates new PlanVersions")

@@ -186,6 +186,9 @@ class PlanService(
       }
       CountersignType.AWAITING_DOUBLE_COUNTERSIGN -> {
         // why did this not come in on /sign ?
+        if (version.status != CountersigningStatus.UNSIGNED) {
+          throw ConflictException("Plan $planUuid was not awaiting double countersign.")
+        }
         version.status = CountersigningStatus.AWAITING_DOUBLE_COUNTERSIGN
       }
     }

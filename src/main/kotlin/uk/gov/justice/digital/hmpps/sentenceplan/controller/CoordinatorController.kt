@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.servlet.resource.NoResourceFoundException
 import uk.gov.justice.digital.hmpps.sentenceplan.config.ErrorResponse
 import uk.gov.justice.digital.hmpps.sentenceplan.data.CreatePlanRequest
+import uk.gov.justice.digital.hmpps.sentenceplan.data.LockPlanRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.CounterSignPlanRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.RollbackPlanRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.SignRequest
@@ -206,21 +207,8 @@ class CoordinatorController(
   )
   fun lockPlan(
     @PathVariable planUuid: UUID,
-  ): PlanVersionResponse {
-    /**
-     * TODO: Implement logic to lock an incomplete sentence plan identified by 'planUuid'
-     *  - Retrieve the plan using 'planUuid'
-     *  - Update the plan's status to 'LOCKED_INCOMPLETE'.
-     *    - When doing this, make sure you DO NOT update the plan version number
-     *  - Create a new plan version with countersigning_status as UNSIGNED (?are we sure this is the correct behaviour?)
-     *  - Save the changes and ensure the LOCKED_INCOMPLETE version number is returned
-     *  - Handle any exceptions or edge cases (i,e, plan not found, locking failures)
-     */
-    return PlanVersionResponse(
-      planId = planUuid,
-      planVersion = 15,
-    )
-  }
+    @RequestBody lockPlanRequest: LockPlanRequest,
+  ): PlanVersionResponse = PlanVersionResponse.from(planService.lockPlan(planUuid))
 
   @PostMapping("/{planUuid}/countersign")
   @Operation(

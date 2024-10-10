@@ -230,9 +230,10 @@ class VersionServiceIntegrationTest : IntegrationTestBase() {
       "Practitioner Name",
       "person Name",
     )
-    val agreedPlanVersion = planService.agreeLatestPlanVersion(testPlanUuid, agreement)
 
-    // we should now have two planversions, original and once made when agreeing the Plan
+    planService.agreeLatestPlanVersion(testPlanUuid, agreement)
+
+    // we should now have two PlanVersions, original and once made when agreeing the Plan
     assertThat(planVersionRepository.findAll().size).isEqualTo(2)
 
     val planVersionZero = planVersionRepository.findByPlanUuidAndVersion(testPlanUuid, 0)

@@ -49,6 +49,11 @@ kotlin {
   jvmToolchain(21)
 }
 
+jacoco {
+  // You may modify the Jacoco version here
+  toolVersion = "0.8.12"
+}
+
 tasks {
   withType<KotlinCompile> {
     compilerOptions.jvmTarget = JvmTarget.JVM_21

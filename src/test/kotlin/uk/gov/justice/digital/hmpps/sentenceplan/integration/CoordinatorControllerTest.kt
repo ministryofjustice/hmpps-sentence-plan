@@ -24,6 +24,8 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanType
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.getPlanByUuid
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.CounterSignPlanRequest
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.CountersignType
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.SignRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.SignType
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.response.GetPlanResponse
@@ -232,6 +234,66 @@ class CoordinatorControllerTest : IntegrationTestBase() {
         .returnResult().run {
           assertThat(responseBody?.status).isEqualTo(HttpStatus.NOT_FOUND.value())
           assertThat(responseBody?.userMessage).isEqualTo("Plan not found for id 0d0f2d85-5b70-4916-9f89-ed248f8d5196")
+        }
+    }
+  }
+
+  @Nested
+  @DisplayName("countersignPlan")
+  inner class CountersignPlan {
+    val planUuid = UUID.fromString("556db5c8-a1eb-4064-986b-0740d6a83c33")
+    val notFoundUuid = UUID.fromString("0d0f2d85-5b70-4916-9f89-ed248f8d5196")
+
+    @Sql(scripts = [ "/db/test/oasys_assessment_pk_data.sql" ], executionPhase = BEFORE_TEST_METHOD)
+    @Sql(scripts = [ "/db/test/oasys_assessment_pk_cleanup.sql" ], executionPhase = AFTER_TEST_METHOD)
+    @Test
+    fun `should countersign the plan and return the same version`() {
+      val signRequest = CounterSignPlanRequest(
+        signType = CountersignType.AWAITING_DOUBLE_COUNTERSIGN,
+        sentencePlanVersion = 0L,
+      )
+
+      val beforePlanVersion = planRepository.getPlanByUuid(planUuid).currentVersion
+      val beforeVersionStatus = beforePlanVersion?.status!!
+      val beforeVersion = beforePlanVersion.version
+
+      webTestClient.post()
+        .uri("/coordinator/plan/$planUuid/countersign")
+        .bodyValue(signRequest)
+        .header("Content-Type", "application/json")
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .exchange()
+        .expectStatus().isOk
+        .expectBody<PlanVersionResponse>()
+        .returnResult().run {
+          assertThat(responseBody?.planId).isNotNull
+          assertThat(responseBody?.planVersion).isEqualTo(beforeVersion.toLong())
+        }
+
+      val afterStatus = planVersionRepository.findByPlanUuidAndVersion(planUuid, beforeVersion).status
+
+      assertThat(afterStatus).isNotEqualTo(beforeVersionStatus)
+      assertThat(afterStatus).isEqualTo(CountersigningStatus.AWAITING_DOUBLE_COUNTERSIGN)
+    }
+
+    @Test
+    fun `should return 404 not found`() {
+      val signRequest = CounterSignPlanRequest(
+        signType = CountersignType.AWAITING_DOUBLE_COUNTERSIGN,
+        sentencePlanVersion = 0L,
+      )
+
+      webTestClient.post()
+        .uri("/coordinator/plan/$notFoundUuid/countersign")
+        .bodyValue(signRequest)
+        .header("Content-Type", "application/json")
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .exchange()
+        .expectStatus().isNotFound
+        .expectBody<ErrorResponse>()
+        .returnResult().run {
+          assertThat(responseBody?.status).isEqualTo(HttpStatus.NOT_FOUND.value())
+          assertThat(responseBody?.userMessage).isEqualTo("Plan version 0 not found for Plan uuid 0d0f2d85-5b70-4916-9f89-ed248f8d5196")
         }
     }
   }

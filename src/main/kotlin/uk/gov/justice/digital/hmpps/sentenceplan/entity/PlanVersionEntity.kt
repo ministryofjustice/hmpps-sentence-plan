@@ -25,6 +25,7 @@ import org.springframework.data.annotation.CreatedDate
 import org.springframework.data.annotation.LastModifiedBy
 import org.springframework.data.annotation.LastModifiedDate
 import org.springframework.data.jpa.domain.support.AuditingEntityListener
+import org.springframework.data.jpa.repository.EntityGraph
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import uk.gov.justice.digital.hmpps.sentenceplan.exceptions.NotFoundException
@@ -162,7 +163,7 @@ interface PlanVersionRepository : JpaRepository<PlanVersionEntity, Long> {
 
   fun findPlanVersionByPlanUuidAndVersion(planUuid: UUID, versionNumber: Int): PlanVersionEntity?
 
-  @org.springframework.data.jpa.repository.EntityGraph(value = "graph.planversion.eager", type = org.springframework.data.jpa.repository.EntityGraph.EntityGraphType.FETCH)
+  @EntityGraph(value = "graph.planversion.eager", type = EntityGraph.EntityGraphType.FETCH)
   fun getWholePlanVersionByUuid(planVersionUuid: UUID): PlanVersionEntity
 }
 

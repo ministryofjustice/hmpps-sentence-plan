@@ -11,6 +11,9 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
+import org.junit.jupiter.params.provider.MethodSource
 import org.mockito.kotlin.any
 import org.springframework.dao.EmptyResultDataAccessException
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Agreement
@@ -23,10 +26,14 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanType
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionRepository
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.getVersionByUuidAndVersion
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.CounterSignPlanRequest
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.CountersignType
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.SignRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.SignType
 import uk.gov.justice.digital.hmpps.sentenceplan.exceptions.ConflictException
 import java.util.UUID
+import java.util.stream.Stream
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class PlanServiceTest {
@@ -260,6 +267,99 @@ class PlanServiceTest {
       val planVersion = planService.signPlan(UUID.randomUUID(), signRequest)
 
       assertThat(planVersion.status).isEqualTo(CountersigningStatus.AWAITING_COUNTERSIGN)
+    }
+  }
+
+  @Nested
+  @DisplayName("countersignPlan")
+  inner class CountersignPlan {
+
+    @ParameterizedTest
+    @MethodSource("uk.gov.justice.digital.hmpps.sentenceplan.services.PlanServiceTest#statusAlreadyMatches")
+    fun `should throw exception if status already matches`(type: CountersignType, status: CountersigningStatus, ending: String) {
+      every { planVersionRepository.getVersionByUuidAndVersion(any(), any()) } returns newPlanVersionEntity.apply { this.status = status }
+
+      val request = CounterSignPlanRequest(
+        signType = type,
+        sentencePlanVersion = 0L,
+      )
+
+      val exception = assertThrows(ConflictException::class.java) {
+        planService.countersignPlan(UUID.randomUUID(), request)
+      }
+
+      assertThat(exception.message).endsWith(ending)
+    }
+
+    @ParameterizedTest
+    @MethodSource("uk.gov.justice.digital.hmpps.sentenceplan.services.PlanServiceTest#validStateTransitions")
+    fun `valid requests based on given state`(type: CountersignType, initialStatus: CountersigningStatus, finalStatus: CountersigningStatus) {
+      every { planVersionRepository.getVersionByUuidAndVersion(any(), any()) } returns newPlanVersionEntity.apply { this.status = initialStatus }
+      every { planVersionRepository.save(any()) } returnsArgument 0
+
+      val request = CounterSignPlanRequest(
+        signType = type,
+        sentencePlanVersion = 0L,
+      )
+
+      val version = planService.countersignPlan(UUID.randomUUID(), request)
+
+      assertThat(version.status).isEqualTo(finalStatus)
+    }
+
+    @ParameterizedTest
+    @MethodSource("uk.gov.justice.digital.hmpps.sentenceplan.services.PlanServiceTest#invalidStateTransitions")
+    fun `invalid requests based on given state`(type: CountersignType, status: CountersigningStatus, ending: String) {
+      every { planVersionRepository.getVersionByUuidAndVersion(any(), any()) } returns newPlanVersionEntity.apply { this.status = status }
+      every { planVersionRepository.save(any()) } returnsArgument 0
+
+      val request = CounterSignPlanRequest(
+        signType = type,
+        sentencePlanVersion = 0L,
+      )
+
+      val exception = assertThrows(ConflictException::class.java) {
+        planService.countersignPlan(UUID.randomUUID(), request)
+      }
+
+      assertThat(exception.message).endsWith(ending)
+    }
+  }
+
+  private companion object {
+    @JvmStatic
+    fun statusAlreadyMatches(): Stream<Arguments> = Stream.of(
+      Arguments.of(CountersignType.COUNTERSIGNED, CountersigningStatus.COUNTERSIGNED, "was already countersigned."),
+      Arguments.of(CountersignType.REJECTED, CountersigningStatus.REJECTED, "was already rejected."),
+      Arguments.of(CountersignType.DOUBLE_COUNTERSIGNED, CountersigningStatus.DOUBLE_COUNTERSIGNED, "was already double countersigned."),
+      Arguments.of(CountersignType.AWAITING_DOUBLE_COUNTERSIGN, CountersigningStatus.AWAITING_DOUBLE_COUNTERSIGN, "was already awaiting double countersign."),
+    )
+
+    @JvmStatic
+    fun validStateTransitions(): Stream<Arguments> = Stream.of(
+      Arguments.of(CountersignType.COUNTERSIGNED, CountersigningStatus.AWAITING_COUNTERSIGN, CountersigningStatus.COUNTERSIGNED),
+      Arguments.of(CountersignType.REJECTED, CountersigningStatus.AWAITING_COUNTERSIGN, CountersigningStatus.REJECTED),
+      Arguments.of(CountersignType.REJECTED, CountersigningStatus.AWAITING_DOUBLE_COUNTERSIGN, CountersigningStatus.REJECTED),
+      Arguments.of(CountersignType.DOUBLE_COUNTERSIGNED, CountersigningStatus.AWAITING_DOUBLE_COUNTERSIGN, CountersigningStatus.DOUBLE_COUNTERSIGNED),
+      Arguments.of(CountersignType.AWAITING_DOUBLE_COUNTERSIGN, CountersigningStatus.UNSIGNED, CountersigningStatus.AWAITING_DOUBLE_COUNTERSIGN),
+    )
+
+    @JvmStatic
+    fun invalidStateTransitions(): Stream<Arguments> {
+      val list = mutableListOf<Arguments>()
+      for (status in CountersigningStatus.entries.filter { it !in arrayOf(CountersigningStatus.AWAITING_COUNTERSIGN, CountersigningStatus.COUNTERSIGNED) }) {
+        list.add(Arguments.of(CountersignType.COUNTERSIGNED, status, "was not awaiting countersign."))
+      }
+      for (status in CountersigningStatus.entries.filter { it !in arrayOf(CountersigningStatus.AWAITING_COUNTERSIGN, CountersigningStatus.AWAITING_DOUBLE_COUNTERSIGN, CountersigningStatus.REJECTED) }) {
+        list.add(Arguments.of(CountersignType.REJECTED, status, "was not awaiting countersign or double countersign."))
+      }
+      for (status in CountersigningStatus.entries.filter { it !in arrayOf(CountersigningStatus.AWAITING_DOUBLE_COUNTERSIGN, CountersigningStatus.DOUBLE_COUNTERSIGNED) }) {
+        list.add(Arguments.of(CountersignType.DOUBLE_COUNTERSIGNED, status, "was not awaiting double countersign."))
+      }
+      for (status in CountersigningStatus.entries.filter { it !in arrayOf(CountersigningStatus.UNSIGNED, CountersigningStatus.AWAITING_DOUBLE_COUNTERSIGN) }) {
+        list.add(Arguments.of(CountersignType.AWAITING_DOUBLE_COUNTERSIGN, status, "was not awaiting double countersign."))
+      }
+      return list.stream()
     }
   }
 }

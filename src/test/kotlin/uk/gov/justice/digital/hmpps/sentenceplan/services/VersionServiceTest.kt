@@ -34,6 +34,7 @@ class VersionServiceTest {
     every { planVersionRepository.getWholePlanVersionByUuid(any()) } returns planVersionEntity
     every { planVersionRepository.findByUuid(any()) } returns planVersionEntity
     every { planVersionRepository.save(any()) } returns newPlanVersionEntity
+    every { planVersionRepository.findLatestPlanVersion(any()) } returns newPlanVersionEntity.version.inc()
 
     versionService.entityManager = mockk<EntityManager>(relaxed = true)
   }

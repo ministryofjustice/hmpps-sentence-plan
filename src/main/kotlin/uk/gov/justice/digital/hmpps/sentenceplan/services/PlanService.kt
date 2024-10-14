@@ -129,8 +129,12 @@ class PlanService(
    * Returns the PlanVersion which has been signed, not the current PlanVersion.
    */
   @Transactional
-  fun signPlan(planUuid: UUID, signRequest: SignRequest): PlanVersionEntity {
+  fun signPlan(planUuid: UUID, signRequest: SignRequest): PlanEntity {
     val plan = getPlanVersionByPlanUuid(planUuid)
+
+    if (plan.agreementStatus == PlanAgreementStatus.DRAFT) {
+      throw ConflictException("Plan $planUuid is in a DRAFT state, and not eligible for signing.")
+    }
 
     when (signRequest.signType) {
       SignType.SELF -> {
@@ -141,16 +145,18 @@ class PlanService(
       }
     }
 
+    // make sure we update the previous version with the new status, not the new one.
+    val previousPlan = planVersionRepository.save(plan)
+
     // make a new version in the UNSIGNED state
-    val versionedPlan = versionService.alwaysCreateNewPlanVersion(plan)
+    val newPlan = versionService.alwaysCreateNewPlanVersion(plan)
       .apply {
         status = CountersigningStatus.UNSIGNED
       }
 
-    planVersionRepository.save(versionedPlan)
+    planVersionRepository.save(newPlan)
 
-    // make sure we update the previous version with the new status, not the new one.
-    return planVersionRepository.save(plan)
+    return previousPlan.plan!!
   }
 
   fun countersignPlan(planUuid: UUID, countersignPlanRequest: CounterSignPlanRequest): PlanVersionEntity {

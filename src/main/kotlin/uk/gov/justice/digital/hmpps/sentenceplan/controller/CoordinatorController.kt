@@ -174,10 +174,6 @@ class CoordinatorController(
     } catch (_: EmptyResultDataAccessException) {
       throw NoResourceFoundException(HttpMethod.GET, "Could not find a plan with ID: $planUuid")
     }
-    return PlanVersionResponse(
-      planId = planUuid,
-      planVersion = 10,
-    )
   }
 
   @PostMapping("/{planUuid}/lock")

@@ -239,6 +239,38 @@ class PlanServiceTest {
 
     @Test
     fun `should mark plan as self-signed`() {
+      every { planRepository.findByUuid(any()) } returns planEntity.apply { currentVersion?.agreementStatus = PlanAgreementStatus.AGREED }
+      every { planVersionRepository.save(any()) } returnsArgument 0
+      every { versionService.alwaysCreateNewPlanVersion(any()) } returns newPlanVersionEntity
+
+      val signRequest = SignRequest(
+        signType = SignType.SELF,
+        userDetails = userDetails,
+      )
+
+      val plan = planService.signPlan(UUID.randomUUID(), signRequest)
+
+      assertThat(plan.currentVersion?.status).isEqualTo(CountersigningStatus.SELF_SIGNED)
+    }
+
+    @Test
+    fun `should mark plan as awaiting-countersign`() {
+      every { planRepository.findByUuid(any()) } returns planEntity.apply { currentVersion?.agreementStatus = PlanAgreementStatus.AGREED }
+      every { planVersionRepository.save(any()) } returnsArgument 0
+      every { versionService.conditionallyCreateNewPlanVersion(any()) } returns newPlanVersionEntity
+
+      val signRequest = SignRequest(
+        signType = SignType.COUNTERSIGN,
+        userDetails = userDetails,
+      )
+
+      val plan = planService.signPlan(UUID.randomUUID(), signRequest)
+
+      assertThat(plan.currentVersion?.status).isEqualTo(CountersigningStatus.AWAITING_COUNTERSIGN)
+    }
+
+    @Test
+    fun `should prevent signing, as plan is in a draft state`() {
       every { planRepository.findByUuid(any()) } returns planEntity
       every { planVersionRepository.save(any()) } returnsArgument 0
       every { versionService.alwaysCreateNewPlanVersion(any()) } returns newPlanVersionEntity
@@ -248,25 +280,11 @@ class PlanServiceTest {
         userDetails = userDetails,
       )
 
-      val planVersion = planService.signPlan(UUID.randomUUID(), signRequest)
+      val exception = assertThrows(ConflictException::class.java) {
+        planService.signPlan(UUID.randomUUID(), signRequest)
+      }
 
-      assertThat(planVersion.status).isEqualTo(CountersigningStatus.SELF_SIGNED)
-    }
-
-    @Test
-    fun `should mark plan as awaiting-countersign`() {
-      every { planRepository.findByUuid(any()) } returns planEntity
-      every { planVersionRepository.save(any()) } returnsArgument 0
-      every { versionService.conditionallyCreateNewPlanVersion(any()) } returns newPlanVersionEntity
-
-      val signRequest = SignRequest(
-        signType = SignType.COUNTERSIGN,
-        userDetails = userDetails,
-      )
-
-      val planVersion = planService.signPlan(UUID.randomUUID(), signRequest)
-
-      assertThat(planVersion.status).isEqualTo(CountersigningStatus.AWAITING_COUNTERSIGN)
+      assertThat(exception.message).endsWith("is in a DRAFT state, and not eligible for signing.")
     }
   }
 

@@ -1,0 +1,1 @@
+alter table plan_version add column soft_deleted boolean not null default false;

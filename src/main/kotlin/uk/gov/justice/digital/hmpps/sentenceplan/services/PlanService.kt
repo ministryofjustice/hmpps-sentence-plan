@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.sentenceplan.services
 
+import jakarta.validation.ValidationException
 import org.springframework.dao.EmptyResultDataAccessException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -19,6 +20,7 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.CounterSignPlanR
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.CountersignType
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.SignRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.SignType
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.response.SoftDeletePlanVersionsResponse
 import uk.gov.justice.digital.hmpps.sentenceplan.exceptions.ConflictException
 import java.time.LocalDateTime
 import java.util.UUID
@@ -40,6 +42,48 @@ class PlanService(
     val version = planVersionRepository.getVersionByUuidAndVersion(planUuid, versionNumber)
     version.status = CountersigningStatus.ROLLED_BACK
     return planVersionRepository.save(version)
+  }
+
+  private fun validateRange(from: Int, to: Int, available: List<Int>, softDelete: Boolean): IntRange {
+    val specifiedRange = when {
+      available.isEmpty() -> throw ValidationException("No plans available or all plan versions have already had soft_deleted set to $softDelete")
+      from > to -> throw ValidationException("Invalid range specified, from ($from) cannot be greater than to ($to)")
+      else -> (from..to)
+    }
+    val availableInRange = available.filter { it in from..to }
+    val unableToUpdate = specifiedRange.partition { !availableInRange.contains(it) }.first.sorted()
+    if (unableToUpdate.isNotEmpty()) {
+      throw ValidationException("The specified range contains version(s) (${unableToUpdate.joinToString()}) that do not exist or have already had soft_deleted set to $softDelete")
+    }
+    return specifiedRange
+  }
+
+  @Transactional
+  fun softDelete(planUuid: UUID, from: Int, versionTo: Int?, softDelete: Boolean): SoftDeletePlanVersionsResponse {
+    val plan = planRepository.getPlanByUuid(planUuid)
+    val versions = planVersionRepository.findAllByPlanId(plan.id!!)
+    val availableForUpdate = versions.filter { it.softDeleted != softDelete }.map { it.version }.sorted()
+    val to = versionTo ?: versions.maxByOrNull { it.version }?.version ?: 0
+    val range = validateRange(from, to, availableForUpdate, softDelete)
+    val versionsToUpdate = versions.filter { it.version in range }.map { it.apply { it.softDeleted = softDelete } }
+    planVersionRepository.saveAll(versionsToUpdate)
+
+    if (plan.currentVersion?.version in from..to && softDelete) {
+      val maxAvailableVersion =
+        versions.maxByOrNull { !it.softDeleted && it.version < from } ?: versions.firstOrNull { it.version == 0 }
+      val updatedPlan = maxAvailableVersion?.let {
+        plan.currentVersion = versionService.alwaysCreateNewPlanVersion(it)
+        planRepository.save(plan)
+      }!!
+      return SoftDeletePlanVersionsResponse.from(
+        updatedPlan.currentVersion!!,
+        planUuid,
+        true,
+        range.toList(),
+        maxAvailableVersion.version.toLong(),
+      )
+    }
+    return SoftDeletePlanVersionsResponse.from(plan.currentVersion!!, planUuid, softDelete, range.toList())
   }
 
   fun lockPlan(planUuid: UUID): PlanVersionEntity {

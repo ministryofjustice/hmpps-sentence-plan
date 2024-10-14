@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.sentenceplan.services
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import jakarta.validation.ValidationException
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
@@ -11,6 +12,7 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
@@ -37,8 +39,8 @@ import java.util.stream.Stream
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class PlanServiceTest {
-  private val planRepository: PlanRepository = mockk()
-  private val planVersionRepository: PlanVersionRepository = mockk()
+  private val planRepository: PlanRepository = mockk(relaxed = true)
+  private val planVersionRepository: PlanVersionRepository = mockk(relaxed = true)
   private val planAgreementNoteRepository: PlanAgreementNoteRepository = mockk()
   private val versionService: VersionService = mockk<VersionService>(relaxed = true)
   private val planService = PlanService(planRepository, planVersionRepository, planAgreementNoteRepository, versionService)
@@ -46,6 +48,7 @@ class PlanServiceTest {
   private lateinit var planVersionEntity: PlanVersionEntity
   private lateinit var newPlanVersionEntity: PlanVersionEntity
   private lateinit var agreedNewPlanVersionEntity: PlanVersionEntity
+  private lateinit var planVersionEntities: List<PlanVersionEntity>
 
   @BeforeEach
   fun setup() {
@@ -349,35 +352,162 @@ class PlanServiceTest {
     fun statusAlreadyMatches(): Stream<Arguments> = Stream.of(
       Arguments.of(CountersignType.COUNTERSIGNED, CountersigningStatus.COUNTERSIGNED, "was already countersigned."),
       Arguments.of(CountersignType.REJECTED, CountersigningStatus.REJECTED, "was already rejected."),
-      Arguments.of(CountersignType.DOUBLE_COUNTERSIGNED, CountersigningStatus.DOUBLE_COUNTERSIGNED, "was already double countersigned."),
-      Arguments.of(CountersignType.AWAITING_DOUBLE_COUNTERSIGN, CountersigningStatus.AWAITING_DOUBLE_COUNTERSIGN, "was already awaiting double countersign."),
+      Arguments.of(
+        CountersignType.DOUBLE_COUNTERSIGNED,
+        CountersigningStatus.DOUBLE_COUNTERSIGNED,
+        "was already double countersigned.",
+      ),
+      Arguments.of(
+        CountersignType.AWAITING_DOUBLE_COUNTERSIGN,
+        CountersigningStatus.AWAITING_DOUBLE_COUNTERSIGN,
+        "was already awaiting double countersign.",
+      ),
     )
 
     @JvmStatic
     fun validStateTransitions(): Stream<Arguments> = Stream.of(
-      Arguments.of(CountersignType.COUNTERSIGNED, CountersigningStatus.AWAITING_COUNTERSIGN, CountersigningStatus.COUNTERSIGNED),
+      Arguments.of(
+        CountersignType.COUNTERSIGNED,
+        CountersigningStatus.AWAITING_COUNTERSIGN,
+        CountersigningStatus.COUNTERSIGNED,
+      ),
       Arguments.of(CountersignType.REJECTED, CountersigningStatus.AWAITING_COUNTERSIGN, CountersigningStatus.REJECTED),
-      Arguments.of(CountersignType.REJECTED, CountersigningStatus.AWAITING_DOUBLE_COUNTERSIGN, CountersigningStatus.REJECTED),
-      Arguments.of(CountersignType.DOUBLE_COUNTERSIGNED, CountersigningStatus.AWAITING_DOUBLE_COUNTERSIGN, CountersigningStatus.DOUBLE_COUNTERSIGNED),
-      Arguments.of(CountersignType.AWAITING_DOUBLE_COUNTERSIGN, CountersigningStatus.UNSIGNED, CountersigningStatus.AWAITING_DOUBLE_COUNTERSIGN),
+      Arguments.of(
+        CountersignType.REJECTED,
+        CountersigningStatus.AWAITING_DOUBLE_COUNTERSIGN,
+        CountersigningStatus.REJECTED,
+      ),
+      Arguments.of(
+        CountersignType.DOUBLE_COUNTERSIGNED,
+        CountersigningStatus.AWAITING_DOUBLE_COUNTERSIGN,
+        CountersigningStatus.DOUBLE_COUNTERSIGNED,
+      ),
+      Arguments.of(
+        CountersignType.AWAITING_DOUBLE_COUNTERSIGN,
+        CountersigningStatus.UNSIGNED,
+        CountersigningStatus.AWAITING_DOUBLE_COUNTERSIGN,
+      ),
     )
 
     @JvmStatic
     fun invalidStateTransitions(): Stream<Arguments> {
       val list = mutableListOf<Arguments>()
-      for (status in CountersigningStatus.entries.filter { it !in arrayOf(CountersigningStatus.AWAITING_COUNTERSIGN, CountersigningStatus.COUNTERSIGNED) }) {
+      for (status in CountersigningStatus.entries.filter {
+        it !in arrayOf(
+          CountersigningStatus.AWAITING_COUNTERSIGN,
+          CountersigningStatus.COUNTERSIGNED,
+        )
+      }) {
         list.add(Arguments.of(CountersignType.COUNTERSIGNED, status, "was not awaiting countersign."))
       }
-      for (status in CountersigningStatus.entries.filter { it !in arrayOf(CountersigningStatus.AWAITING_COUNTERSIGN, CountersigningStatus.AWAITING_DOUBLE_COUNTERSIGN, CountersigningStatus.REJECTED) }) {
+      for (status in CountersigningStatus.entries.filter {
+        it !in arrayOf(
+          CountersigningStatus.AWAITING_COUNTERSIGN,
+          CountersigningStatus.AWAITING_DOUBLE_COUNTERSIGN,
+          CountersigningStatus.REJECTED,
+        )
+      }) {
         list.add(Arguments.of(CountersignType.REJECTED, status, "was not awaiting countersign or double countersign."))
       }
-      for (status in CountersigningStatus.entries.filter { it !in arrayOf(CountersigningStatus.AWAITING_DOUBLE_COUNTERSIGN, CountersigningStatus.DOUBLE_COUNTERSIGNED) }) {
+      for (status in CountersigningStatus.entries.filter {
+        it !in arrayOf(
+          CountersigningStatus.AWAITING_DOUBLE_COUNTERSIGN,
+          CountersigningStatus.DOUBLE_COUNTERSIGNED,
+        )
+      }) {
         list.add(Arguments.of(CountersignType.DOUBLE_COUNTERSIGNED, status, "was not awaiting double countersign."))
       }
-      for (status in CountersigningStatus.entries.filter { it !in arrayOf(CountersigningStatus.UNSIGNED, CountersigningStatus.AWAITING_DOUBLE_COUNTERSIGN) }) {
-        list.add(Arguments.of(CountersignType.AWAITING_DOUBLE_COUNTERSIGN, status, "was not awaiting double countersign."))
+      for (status in CountersigningStatus.entries.filter {
+        it !in arrayOf(
+          CountersigningStatus.UNSIGNED,
+          CountersigningStatus.AWAITING_DOUBLE_COUNTERSIGN,
+        )
+      }) {
+        list.add(
+          Arguments.of(
+            CountersignType.AWAITING_DOUBLE_COUNTERSIGN,
+            status,
+            "was not awaiting double countersign.",
+          ),
+        )
       }
       return list.stream()
     }
+  }
+
+  @Nested
+  @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+  @DisplayName("softDelete and restore")
+  inner class SoftDeletedPlan {
+
+    @BeforeEach
+    fun setup() {
+    }
+
+    @ParameterizedTest
+    @MethodSource("softDeleteExceptionTestData")
+    fun `should throw exception `(versions: List<Int>, from: Int, to: Int?, softDelete: Boolean, expected: String) {
+      planVersionEntities = (0..9).toList().map { PlanVersionEntity(plan = planEntity, planId = 1L, version = it, softDeleted = softDelete) }
+      planVersionEntities.forEach {
+        if (versions.contains(it.version)) {
+          it.softDeleted = !softDelete
+        }
+      }
+      planEntity.apply { currentVersion = planVersionEntities.filter { !it.softDeleted }.maxByOrNull { it.version } }
+      every { planRepository.findPlanByUuid(any()) } returns planEntity
+      every { planRepository.save(any()) } returns planEntity
+      every { planVersionRepository.findAllByPlanId(any()) } returns planVersionEntities
+      val result = assertThrows<ValidationException> { planService.softDelete(UUID.randomUUID(), from, to, softDelete) }
+      assertThat(result.message).isEqualTo(expected)
+    }
+
+    @ParameterizedTest
+    @MethodSource("softDeleteSuccessTestData")
+    fun `should successfully set soft_delete `(versions: List<Int>, from: Int, to: Int?, softDelete: Boolean, expected: List<Int>) {
+      planVersionEntities = (0..9).toList().map { PlanVersionEntity(plan = planEntity, planId = 1L, version = it, softDeleted = softDelete) }
+      planVersionEntities.forEach {
+        if (versions.contains(it.version)) {
+          it.apply { it.softDeleted = !softDelete }
+        }
+      }
+      planEntity.apply { currentVersion = planVersionEntities.filter { !it.softDeleted }.maxByOrNull { it.version } }
+      every { planRepository.findPlanByUuid(any()) } returns planEntity
+      every { planRepository.save(any()) } returns planEntity
+      val nextVersion = planVersionEntities.maxOfOrNull { it.version }?.inc() ?: 0
+      every { versionService.alwaysCreateNewPlanVersion(any()) } returns PlanVersionEntity(plan = planEntity, planId = 1L, version = nextVersion)
+      every { planVersionRepository.findAllByPlanId(any()) } returns planVersionEntities
+      val result = planService.softDelete(UUID.randomUUID(), from, to, softDelete)
+      if (softDelete) {
+        assertThat(result.versionsSoftDeleted).isEqualTo(expected)
+      } else {
+        assertThat(result.versionsRestored).isEqualTo(expected)
+      }
+    }
+    private fun softDeleteExceptionTestData() = listOf(
+      Arguments.of(listOf(3, 4, 5, 7), 2, 1, true, "Invalid range specified, from (2) cannot be greater than to (1)"),
+      Arguments.of(listOf(3, 4, 5, 7), 2, 5, true, "The specified range contains version(s) (2) that do not exist or have already had soft_deleted set to true"),
+      Arguments.of(listOf(3, 4, 5, 7), 3, 6, true, "The specified range contains version(s) (6) that do not exist or have already had soft_deleted set to true"),
+      Arguments.of(listOf(3, 4, 5, 7), 0, 8, true, "The specified range contains version(s) (0, 1, 2, 6, 8) that do not exist or have already had soft_deleted set to true"),
+      Arguments.of(listOf(3, 4, 5, 7), 3, null, true, "The specified range contains version(s) (6, 8, 9) that do not exist or have already had soft_deleted set to true"),
+      Arguments.of(listOf(3, 4, 5, 6, 8, 9), 4, 8, true, "The specified range contains version(s) (7) that do not exist or have already had soft_deleted set to true"),
+      Arguments.of(emptyList<Int>(), 4, 8, true, "No plans available or all plan versions have already had soft_deleted set to true"),
+//      // undelete
+      Arguments.of(listOf(3, 4, 5, 7), 2, 1, false, "Invalid range specified, from (2) cannot be greater than to (1)"),
+      Arguments.of(listOf(3, 4, 5, 7), 2, 5, false, "The specified range contains version(s) (2) that do not exist or have already had soft_deleted set to false"),
+      Arguments.of(listOf(3, 4, 5, 7), 3, 6, false, "The specified range contains version(s) (6) that do not exist or have already had soft_deleted set to false"),
+      Arguments.of(listOf(3, 4, 5, 7), 0, 8, false, "The specified range contains version(s) (0, 1, 2, 6, 8) that do not exist or have already had soft_deleted set to false"),
+      Arguments.of(listOf(3, 4, 5, 7), 3, null, false, "The specified range contains version(s) (6, 8, 9) that do not exist or have already had soft_deleted set to false"),
+      Arguments.of(listOf(3, 4, 5, 6, 8, 9), 4, 8, false, "The specified range contains version(s) (7) that do not exist or have already had soft_deleted set to false"),
+      Arguments.of(emptyList<Int>(), 4, 8, false, "No plans available or all plan versions have already had soft_deleted set to false"),
+    )
+    private fun softDeleteSuccessTestData() = listOf(
+      Arguments.of(listOf(3, 4, 5, 6, 7, 8, 9), 3, null, true, listOf(3, 4, 5, 6, 7, 8, 9)),
+      Arguments.of(listOf(3, 4, 5, 6, 7, 8, 9), 4, 8, true, listOf(4, 5, 6, 7, 8)),
+      Arguments.of(listOf(3, 4, 5, 6, 7, 8, 9), 4, 4, true, listOf(4)),
+      // undelete
+      Arguments.of(listOf(3, 4, 5, 6, 7, 8, 9), 3, null, false, listOf(3, 4, 5, 6, 7, 8, 9)),
+      Arguments.of(listOf(3, 4, 5, 6, 7, 8, 9), 4, 8, false, listOf(4, 5, 6, 7, 8)),
+      Arguments.of(listOf(3, 4, 5, 6, 7, 8, 9), 4, 4, false, listOf(4)),
+    )
   }
 }

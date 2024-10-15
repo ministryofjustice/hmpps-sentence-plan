@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.sentenceplan.services
 
+import jakarta.validation.ValidationException
 import org.springframework.dao.EmptyResultDataAccessException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -15,8 +16,11 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.getPlanByUuid
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.getVersionByUuidAndVersion
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.CounterSignPlanRequest
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.CountersignType
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.SignRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.SignType
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.response.SoftDeletePlanVersionsResponse
 import uk.gov.justice.digital.hmpps.sentenceplan.exceptions.ConflictException
 import java.time.LocalDateTime
 import java.util.UUID
@@ -38,6 +42,48 @@ class PlanService(
     val version = planVersionRepository.getVersionByUuidAndVersion(planUuid, versionNumber)
     version.status = CountersigningStatus.ROLLED_BACK
     return planVersionRepository.save(version)
+  }
+
+  private fun validateRange(from: Int, to: Int, available: List<Int>, softDelete: Boolean): IntRange {
+    val specifiedRange = when {
+      available.isEmpty() -> throw ValidationException("No plans available or all plan versions have already had soft_deleted set to $softDelete")
+      from > to -> throw ValidationException("Invalid range specified, from ($from) cannot be greater than to ($to)")
+      else -> (from..to)
+    }
+    val availableInRange = available.filter { it in from..to }
+    val unableToUpdate = specifiedRange.partition { !availableInRange.contains(it) }.first.sorted()
+    if (unableToUpdate.isNotEmpty()) {
+      throw ValidationException("The specified range contains version(s) (${unableToUpdate.joinToString()}) that do not exist or have already had soft_deleted set to $softDelete")
+    }
+    return specifiedRange
+  }
+
+  @Transactional
+  fun softDelete(planUuid: UUID, from: Int, versionTo: Int?, softDelete: Boolean): SoftDeletePlanVersionsResponse {
+    val plan = planRepository.getPlanByUuid(planUuid)
+    val versions = planVersionRepository.findAllByPlanId(plan.id!!)
+    val availableForUpdate = versions.filter { it.softDeleted != softDelete }.map { it.version }.sorted()
+    val to = versionTo ?: versions.maxByOrNull { it.version }?.version ?: 0
+    val range = validateRange(from, to, availableForUpdate, softDelete)
+    val versionsToUpdate = versions.filter { it.version in range }.map { it.apply { it.softDeleted = softDelete } }
+    planVersionRepository.saveAll(versionsToUpdate)
+
+    if (plan.currentVersion?.version in from..to && softDelete) {
+      val maxAvailableVersion =
+        versions.maxByOrNull { !it.softDeleted && it.version < from } ?: versions.firstOrNull { it.version == 0 }
+      val updatedPlan = maxAvailableVersion?.let {
+        plan.currentVersion = versionService.alwaysCreateNewPlanVersion(it)
+        planRepository.save(plan)
+      }!!
+      return SoftDeletePlanVersionsResponse.from(
+        updatedPlan.currentVersion!!,
+        planUuid,
+        true,
+        range.toList(),
+        maxAvailableVersion.version.toLong(),
+      )
+    }
+    return SoftDeletePlanVersionsResponse.from(plan.currentVersion!!, planUuid, softDelete, range.toList())
   }
 
   fun lockPlan(planUuid: UUID): PlanVersionEntity {
@@ -149,5 +195,64 @@ class PlanService(
 
     // make sure we update the previous version with the new status, not the new one.
     return planVersionRepository.save(plan)
+  }
+
+  fun countersignPlan(planUuid: UUID, countersignPlanRequest: CounterSignPlanRequest): PlanVersionEntity {
+    val version = planVersionRepository.getVersionByUuidAndVersion(planUuid, countersignPlanRequest.sentencePlanVersion.toInt())
+
+    // Duplicate request checking
+    when (countersignPlanRequest.signType) {
+      CountersignType.COUNTERSIGNED -> {
+        if (version.status == CountersigningStatus.COUNTERSIGNED) {
+          throw ConflictException("Plan $planUuid was already countersigned.")
+        }
+      }
+      CountersignType.REJECTED -> {
+        if (version.status == CountersigningStatus.REJECTED) {
+          throw ConflictException("Plan $planUuid was already rejected.")
+        }
+      }
+      CountersignType.DOUBLE_COUNTERSIGNED -> {
+        if (version.status == CountersigningStatus.DOUBLE_COUNTERSIGNED) {
+          throw ConflictException("Plan $planUuid was already double countersigned.")
+        }
+      }
+      CountersignType.AWAITING_DOUBLE_COUNTERSIGN -> {
+        if (version.status == CountersigningStatus.AWAITING_DOUBLE_COUNTERSIGN) {
+          throw ConflictException("Plan $planUuid was already awaiting double countersign.")
+        }
+      }
+    }
+
+    // Valid transitions
+    when (countersignPlanRequest.signType) {
+      CountersignType.COUNTERSIGNED -> {
+        if (version.status != CountersigningStatus.AWAITING_COUNTERSIGN) {
+          throw ConflictException("Plan $planUuid was not awaiting countersign.")
+        }
+        version.status = CountersigningStatus.COUNTERSIGNED
+      }
+      CountersignType.REJECTED -> {
+        if (version.status !in arrayOf(CountersigningStatus.AWAITING_COUNTERSIGN, CountersigningStatus.AWAITING_DOUBLE_COUNTERSIGN)) {
+          throw ConflictException("Plan $planUuid was not awaiting countersign or double countersign.")
+        }
+        version.status = CountersigningStatus.REJECTED
+      }
+      CountersignType.DOUBLE_COUNTERSIGNED -> {
+        if (version.status != CountersigningStatus.AWAITING_DOUBLE_COUNTERSIGN) {
+          throw ConflictException("Plan $planUuid was not awaiting double countersign.")
+        }
+        version.status = CountersigningStatus.DOUBLE_COUNTERSIGNED
+      }
+      CountersignType.AWAITING_DOUBLE_COUNTERSIGN -> {
+        // why did this not come in on /sign ?
+        if (version.status != CountersigningStatus.UNSIGNED) {
+          throw ConflictException("Plan $planUuid was not awaiting double countersign.")
+        }
+        version.status = CountersigningStatus.AWAITING_DOUBLE_COUNTERSIGN
+      }
+    }
+
+    return planVersionRepository.save(version)
   }
 }

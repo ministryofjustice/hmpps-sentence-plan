@@ -25,6 +25,7 @@ import org.springframework.data.annotation.CreatedDate
 import org.springframework.data.annotation.LastModifiedBy
 import org.springframework.data.annotation.LastModifiedDate
 import org.springframework.data.jpa.domain.support.AuditingEntityListener
+import org.springframework.data.jpa.repository.EntityGraph
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import uk.gov.justice.digital.hmpps.sentenceplan.exceptions.NotFoundException
@@ -121,6 +122,10 @@ class PlanVersionEntity(
   @OneToMany(mappedBy = "planVersion", cascade = [CascadeType.PERSIST], fetch = FetchType.EAGER)
   @OrderBy("goalOrder ASC")
   val goals: Set<GoalEntity> = emptySet(),
+
+  @Column(name = "soft_deleted")
+  var softDeleted: Boolean = false,
+
 )
 
 enum class CountersigningStatus {
@@ -160,10 +165,24 @@ interface PlanVersionRepository : JpaRepository<PlanVersionEntity, Long> {
   )
   fun findByPlanUuidAndVersion(planUuid: UUID, versionNumber: Int): PlanVersionEntity
 
+  @Query(
+    """
+        select max(pv.version) 
+        from plan_version pv
+        where pv.plan_id = :planId
+    """,
+    nativeQuery = true,
+  )
+  fun findLatestPlanVersion(planId: Long): Int?
+
+  fun findAllByPlanId(planId: Long): List<PlanVersionEntity>
+
   fun findPlanVersionByPlanUuidAndVersion(planUuid: UUID, versionNumber: Int): PlanVersionEntity?
 
-  @org.springframework.data.jpa.repository.EntityGraph(value = "graph.planversion.eager", type = org.springframework.data.jpa.repository.EntityGraph.EntityGraphType.FETCH)
+  @EntityGraph(value = "graph.planversion.eager", type = EntityGraph.EntityGraphType.FETCH)
   fun getWholePlanVersionByUuid(planVersionUuid: UUID): PlanVersionEntity
 }
 
 fun PlanVersionRepository.getVersionByUuidAndVersion(planUuid: UUID, versionNumber: Int) = findPlanVersionByPlanUuidAndVersion(planUuid, versionNumber) ?: throw NotFoundException("Plan version $versionNumber not found for Plan uuid $planUuid")
+
+fun PlanVersionRepository.getNextPlanVersion(planId: Long) = findLatestPlanVersion(planId)?.inc() ?: 0

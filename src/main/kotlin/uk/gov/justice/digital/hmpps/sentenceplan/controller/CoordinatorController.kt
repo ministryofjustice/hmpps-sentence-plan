@@ -21,8 +21,10 @@ import uk.gov.justice.digital.hmpps.sentenceplan.config.ErrorResponse
 import uk.gov.justice.digital.hmpps.sentenceplan.data.CreatePlanRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.data.LockPlanRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.CounterSignPlanRequest
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.RestorePlanVersionsRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.RollbackPlanRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.SignRequest
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.SoftDeletePlanVersionsRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.response.GetPlanResponse
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.response.PlanVersionResponse
 import uk.gov.justice.digital.hmpps.sentenceplan.services.PlanService
@@ -97,48 +99,6 @@ class CoordinatorController(
     }
   }
 
-  @PostMapping("/{planUuid}/clone")
-  @Operation(
-    description = "Clones an existing sentence plan, creating a new plan with the same structure and details as the specified plan.",
-    tags = ["Integrations"],
-  )
-  @ApiResponses(
-    value = [
-      ApiResponse(responseCode = "200", description = "Plan cloned successfully"),
-      ApiResponse(
-        responseCode = "404",
-        description = "Plan not found",
-        content = arrayOf(Content(schema = Schema(implementation = ErrorResponse::class))),
-      ),
-      ApiResponse(
-        responseCode = "409",
-        description = "The plan could not be cloned. See details in error message.",
-        content = arrayOf(Content(schema = Schema(implementation = ErrorResponse::class))),
-      ),
-      ApiResponse(
-        responseCode = "500",
-        description = "Unexpected error",
-        content = arrayOf(Content(schema = Schema(implementation = ErrorResponse::class))),
-      ),
-    ],
-  )
-  fun clonePlan(
-    @PathVariable planUuid: UUID,
-  ): PlanVersionResponse {
-    /**
-     * TODO: Implement logic to clone the existing sentence plan identified by 'planUuid'.
-     *  - Retrieve the original plan using 'planUuid'.
-     *  - Duplicate the plan's structure and details (goals, steps, ?notes?)
-     *  - Set plan version back to 0, countersigning_status to UNSIGNED
-     *  - Save cloned plan and return the new UUID and version.
-     *  - Handle any exceptions or edge cases (i.e plan not found, cloning failures).
-     */
-    return PlanVersionResponse(
-      planId = UUID.randomUUID(),
-      planVersion = 0,
-    )
-  }
-
   @PostMapping("/{planUuid}/sign")
   @Operation(
     description = "Signs the specified sentence plan, updating its status to 'AWAITING_COUNTERSIGN' and returning the latest version of the plan.",
@@ -174,10 +134,6 @@ class CoordinatorController(
     } catch (_: EmptyResultDataAccessException) {
       throw NoResourceFoundException(HttpMethod.GET, "Could not find a plan with ID: $planUuid")
     }
-    return PlanVersionResponse(
-      planId = planUuid,
-      planVersion = 10,
-    )
   }
 
   @PostMapping("/{planUuid}/lock")
@@ -237,21 +193,10 @@ class CoordinatorController(
   )
   fun countersignPlan(
     @PathVariable planUuid: UUID,
-    @RequestBody @Valid body: CounterSignPlanRequest,
+    @RequestBody @Valid countersignPlanRequest: CounterSignPlanRequest,
   ): PlanVersionResponse {
-    /**
-     * TODO: Implement logic to countersign the specified sentence plan version
-     *  - Retrieve the plan using 'planUuid' and it's specified 'sentencePlanVersion'
-     *  - Check plan is in correct AWAITING_COUNTERSIGN/AWAITING_DOUBLE_COUNTERSIGN/LOCKED countersigning state
-     *  - Update the plan countersigning_status with the 'SignType' from the request body
-     *    - When doing this, make sure you DO NOT update the plan version number
-     *  - Save the changes and return the the plan UUID and version number
-     *  - Handle any exceptions or edge cases (i.e plan or version not found, invalid sign type, countersigning failures))
-     */
-    return PlanVersionResponse(
-      planId = planUuid,
-      planVersion = body.sentencePlanVersion,
-    )
+    return planService.countersignPlan(planUuid, countersignPlanRequest)
+      .run(PlanVersionResponse::from)
   }
 
   @PostMapping("/{planUuid}/rollback")
@@ -284,15 +229,75 @@ class CoordinatorController(
     @RequestBody @Valid body: RollbackPlanRequest,
   ): PlanVersionResponse = PlanVersionResponse.from(planService.rollbackVersion(planUuid, body.sentencePlanVersion.toInt()))
 
-  /**
-   * TODO: Implement logic for soft-deleting and restoring
-   *  - A conversation regarding where this occurs needs to happen (could be inside the coordinator)
-   */
-//  fun softDeleteAllPlanVersions () {
-//
-//  }
-//
-//  fun restorePlanAllPlanVersions () {
-//
-//  }
+  @PostMapping("/{planUuid}/soft-delete")
+  @Operation(
+    description = "Sets the specified range of plan versions to soft deleted if all versions in specified range are not already set to soft deleted. If no upper range specified, the latest version is assumumed." +
+      "",
+    tags = ["Integrations"],
+  )
+  @ApiResponses(
+    value = [
+      ApiResponse(responseCode = "200", description = "Plan versions in the specified range have been set to soft deleted"),
+      ApiResponse(
+        responseCode = "404",
+        description = "Plan not found for the provided planUuid",
+        content = arrayOf(Content(schema = Schema(implementation = ErrorResponse::class))),
+      ),
+      ApiResponse(
+        responseCode = "500",
+        description = "Unexpected error",
+        content = arrayOf(Content(schema = Schema(implementation = ErrorResponse::class))),
+      ),
+      ApiResponse(
+        responseCode = "400",
+        description = "Bad request. The range is invalid or one or more versions in the specified range have already been set to soft deleted",
+        content = arrayOf(Content(schema = Schema(implementation = ErrorResponse::class))),
+      ),
+    ],
+  )
+  fun softDeletePlanVersions(
+    @PathVariable planUuid: UUID,
+    @RequestBody @Valid body: SoftDeletePlanVersionsRequest,
+  ) = planService.softDelete(
+    planUuid,
+    body.from.toInt(),
+    body.to?.toInt(),
+    true,
+  )
+
+  @PostMapping("/{planUuid}/restore")
+  @Operation(
+    description = "Unsets the soft deleted flag for the specified range of plan versions to if all versions in specified range are already set to soft deleted. If no upper range specified, the latest version is assumumed." +
+      "",
+    tags = ["Integrations"],
+  )
+  @ApiResponses(
+    value = [
+      ApiResponse(responseCode = "200", description = "Plan versions in the specified range have had the set to soft deleted flag unset"),
+      ApiResponse(
+        responseCode = "404",
+        description = "Plan not found for the provided planUuid",
+        content = arrayOf(Content(schema = Schema(implementation = ErrorResponse::class))),
+      ),
+      ApiResponse(
+        responseCode = "500",
+        description = "Unexpected error",
+        content = arrayOf(Content(schema = Schema(implementation = ErrorResponse::class))),
+      ),
+      ApiResponse(
+        responseCode = "400",
+        description = "Bad request. The range is invalid or one or more versions in the specified range are not set to soft deleted",
+        content = arrayOf(Content(schema = Schema(implementation = ErrorResponse::class))),
+      ),
+    ],
+  )
+  fun restorePlanVersions(
+    @PathVariable planUuid: UUID,
+    @RequestBody @Valid body: RestorePlanVersionsRequest,
+  ) = planService.softDelete(
+    planUuid,
+    body.from.toInt(),
+    body.to?.toInt(),
+    false,
+  )
 }

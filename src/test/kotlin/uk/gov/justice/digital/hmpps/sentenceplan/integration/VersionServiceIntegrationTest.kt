@@ -250,6 +250,7 @@ class VersionServiceIntegrationTest : IntegrationTestBase() {
 
   @Test
   @DisplayName("Signing a Plan updates the original version and creates a new version.")
+  @WithMockUser(username = "UserId|Username")
   @Sql(scripts = [ "/db/test/coordinator_sign_plan_data.sql" ], executionPhase = BEFORE_TEST_METHOD)
   @Sql(scripts = [ "/db/test/coordinator_sign_plan_cleanup.sql" ], executionPhase = AFTER_TEST_METHOD)
   fun `signing a plan creates new goals and plan versions correctly`() {

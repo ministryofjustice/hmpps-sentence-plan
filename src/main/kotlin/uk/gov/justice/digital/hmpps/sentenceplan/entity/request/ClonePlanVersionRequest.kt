@@ -1,7 +1,9 @@
 package uk.gov.justice.digital.hmpps.sentenceplan.entity.request
 
 import uk.gov.justice.digital.hmpps.sentenceplan.data.UserDetails
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanType
 
-class ClonePlanVersionRequest (
-  userDetails: UserDetails
+data class ClonePlanVersionRequest(
+  val planType: PlanType,
+  val userDetails: UserDetails,
 )

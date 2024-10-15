@@ -311,7 +311,8 @@ class CoordinatorController(
     value = [
       ApiResponse(
         responseCode = "200",
-        description = "Returns the latest plan version number and the plan UUID"),
+        description = "Returns the latest plan version number and the plan UUID",
+      ),
       ApiResponse(
         responseCode = "404",
         description = "Plan not found for the provided planUuid",
@@ -321,24 +322,11 @@ class CoordinatorController(
         responseCode = "500",
         description = "Unexpected error",
         content = arrayOf(Content(schema = Schema(implementation = ErrorResponse::class))),
-      )
+      ),
     ],
   )
   fun cloneLatestPlanVersion(
     @PathVariable planUuid: UUID,
     @RequestBody @Valid body: ClonePlanVersionRequest,
-  ): PlanVersionResponse {
-    /**
-     * TODO: Clone the latest version of a plan into a new version
-     *  1. Find the latest plan version for the provided planUuid
-     *  2. Duplicate the data from this plan version into a new plan version
-     *  3. Save it as a new plan version (with an incremented version number)
-     *  4. Return the planId and new latest planVersion number
-     */
-
-    return PlanVersionResponse(
-      UUID.randomUUID(),
-      10L
-    )
-  }
+  ): PlanVersionResponse = PlanVersionResponse(planVersion = planService.clone(planUuid, body.planType).version.toLong(), planId = planUuid)
 }

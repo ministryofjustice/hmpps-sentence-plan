@@ -505,9 +505,10 @@ class PlanServiceTest {
       }
       every { planRepository.findPlanByUuid(any()) } returns planEntity
       every { versionService.alwaysCreateNewPlanVersion(any()) } returns updatedPlanEntity.currentVersion!!
+      every { planVersionRepository.save(any()) } returns updatedPlanEntity.currentVersion
       val result = planService.clone(planUUID, PlanType.OTHER)
-      assertThat(result.plan?.uuid).isEqualTo(planUUID)
       assertThat(result.version).isEqualTo(1L)
+      assertThat(result.planType).isEqualTo(PlanType.OTHER)
     }
   }
 }

@@ -169,8 +169,6 @@ class PlanService(
   /**
    * Changes the Countersigning Status of the current PlanVersion to the value of the held in the `signRequest` parameter
    * and creates a new PlanVersion with a Countersigning Status of UNSIGNED which becomes the current PlanVersion.
-   *
-   * Returns the PlanVersion which has been signed, not the current PlanVersion.
    */
   @Transactional
   fun signPlan(planUuid: UUID, signRequest: SignRequest): PlanEntity {

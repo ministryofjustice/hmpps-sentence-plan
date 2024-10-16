@@ -131,8 +131,8 @@ class CoordinatorControllerTest : IntegrationTestBase() {
 
     val userDetails = UserDetails("1", "Tom C")
 
-    @Sql(scripts = [ "/db/test/coordinator_sign_plan_data.sql" ], executionPhase = BEFORE_TEST_METHOD)
-    @Sql(scripts = [ "/db/test/coordinator_sign_plan_cleanup.sql" ], executionPhase = AFTER_TEST_METHOD)
+    @Sql(scripts = [ "/db/test/oasys_assessment_pk_data.sql", "/db/test/oasys_assessment_pk_data_agreed.sql" ], executionPhase = BEFORE_TEST_METHOD)
+    @Sql(scripts = [ "/db/test/oasys_assessment_pk_cleanup.sql" ], executionPhase = AFTER_TEST_METHOD)
     @ParameterizedTest
     @EnumSource(SignType::class)
     fun `should update the status of the plan`(signType: SignType) {

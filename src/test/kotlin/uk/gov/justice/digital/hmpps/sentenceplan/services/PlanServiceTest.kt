@@ -253,7 +253,7 @@ class PlanServiceTest {
 
       val plan = planService.signPlan(UUID.randomUUID(), signRequest)
 
-      assertThat(plan.currentVersion?.status).isEqualTo(CountersigningStatus.SELF_SIGNED)
+      assertThat(plan.status).isEqualTo(CountersigningStatus.SELF_SIGNED)
     }
 
     @Test
@@ -269,7 +269,7 @@ class PlanServiceTest {
 
       val plan = planService.signPlan(UUID.randomUUID(), signRequest)
 
-      assertThat(plan.currentVersion?.status).isEqualTo(CountersigningStatus.AWAITING_COUNTERSIGN)
+      assertThat(plan.status).isEqualTo(CountersigningStatus.AWAITING_COUNTERSIGN)
     }
 
     @Test

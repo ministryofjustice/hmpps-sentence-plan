@@ -171,7 +171,7 @@ class PlanService(
    * and creates a new PlanVersion with a Countersigning Status of UNSIGNED which becomes the current PlanVersion.
    */
   @Transactional
-  fun signPlan(planUuid: UUID, signRequest: SignRequest): PlanEntity {
+  fun signPlan(planUuid: UUID, signRequest: SignRequest): PlanVersionEntity {
     val plan = getPlanVersionByPlanUuid(planUuid)
 
     if (plan.agreementStatus == PlanAgreementStatus.DRAFT) {
@@ -198,7 +198,7 @@ class PlanService(
 
     planVersionRepository.save(newPlan)
 
-    return previousPlan.plan!!
+    return previousPlan
   }
 
   fun countersignPlan(planUuid: UUID, countersignPlanRequest: CounterSignPlanRequest): PlanVersionEntity {

@@ -274,7 +274,7 @@ class VersionServiceIntegrationTest : IntegrationTestBase() {
 
     assertThat(planVersionZero.status).isEqualTo(CountersigningStatus.SELF_SIGNED)
     assertThat(planVersionOne.status).isEqualTo(CountersigningStatus.UNSIGNED)
-    assertThat(plan.currentVersion?.version).isEqualTo(0L)
-    assertThat(plan.currentVersion?.status).isEqualTo(CountersigningStatus.SELF_SIGNED)
+    assertThat(plan.version).isEqualTo(0L)
+    assertThat(plan.status).isEqualTo(CountersigningStatus.SELF_SIGNED)
   }
 }

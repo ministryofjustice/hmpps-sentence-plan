@@ -130,7 +130,7 @@ class CoordinatorController(
   ): PlanVersionResponse {
     try {
       return planService.signPlan(planUuid, signRequest)
-        .run(PlanVersionResponse::from)
+        .let { PlanVersionResponse.from(it, planUuid) }
     } catch (_: EmptyResultDataAccessException) {
       throw NoResourceFoundException(HttpMethod.GET, "Could not find a plan with ID: $planUuid")
     }

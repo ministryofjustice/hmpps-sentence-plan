@@ -244,6 +244,7 @@ class PlanServiceTest {
     fun `should mark plan as self-signed`() {
       every { planRepository.findByUuid(any()) } returns planEntity.apply { currentVersion?.agreementStatus = PlanAgreementStatus.AGREED }
       every { planVersionRepository.save(any()) } returnsArgument 0
+      every { planVersionRepository.findByPlanUuidAndVersion(any(), any()) } returns newPlanVersionEntity
       every { versionService.alwaysCreateNewPlanVersion(any()) } returns newPlanVersionEntity
 
       val signRequest = SignRequest(
@@ -260,6 +261,7 @@ class PlanServiceTest {
     fun `should mark plan as awaiting-countersign`() {
       every { planRepository.findByUuid(any()) } returns planEntity.apply { currentVersion?.agreementStatus = PlanAgreementStatus.AGREED }
       every { planVersionRepository.save(any()) } returnsArgument 0
+      every { planVersionRepository.findByPlanUuidAndVersion(any(), any()) } returns newPlanVersionEntity
       every { versionService.conditionallyCreateNewPlanVersion(any()) } returns newPlanVersionEntity
 
       val signRequest = SignRequest(

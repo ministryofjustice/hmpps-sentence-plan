@@ -53,6 +53,7 @@ class VersionService(
       goal.id = null
       goal.uuid = UUID.randomUUID()
       goal.planVersion = newPlanVersionEntity
+      goal.notes = goal.notes.toMutableSet() // copy the list
 
       val stepsList: List<StepEntity> = goal.steps.toList() // copy the list
       stepsList.forEach { step ->

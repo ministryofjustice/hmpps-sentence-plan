@@ -22,12 +22,5 @@ data class PlanVersionResponse(
         planVersion = planVersionEntity.version.toLong(),
       )
     }
-
-    fun from(planVersionEntity: PlanVersionEntity, planUuid: UUID): PlanVersionResponse {
-      return PlanVersionResponse(
-        planId = planUuid,
-        planVersion = planVersionEntity.version.toLong(),
-      )
-    }
   }
 }

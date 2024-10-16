@@ -14,6 +14,8 @@ import org.springframework.test.context.jdbc.Sql.ExecutionPhase.BEFORE_TEST_METH
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Agreement
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Goal
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Step
+import uk.gov.justice.digital.hmpps.sentenceplan.data.UserDetails
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.CountersigningStatus
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalStatus
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanAgreementStatus
@@ -21,6 +23,8 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanProgressNotesReposit
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepStatus
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.SignRequest
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.SignType
 import uk.gov.justice.digital.hmpps.sentenceplan.services.GoalService
 import uk.gov.justice.digital.hmpps.sentenceplan.services.PlanService
 import uk.gov.justice.digital.hmpps.sentenceplan.services.VersionService
@@ -242,5 +246,35 @@ class VersionServiceIntegrationTest : IntegrationTestBase() {
     assertThat(planVersionZero.agreementNote).isNull()
     assertThat(planVersionOne.agreementNote).isNotNull
     assertThat(planVersionOne.agreementNote?.agreementStatus).isEqualTo(PlanAgreementStatus.AGREED)
+  }
+
+  @Test
+  @DisplayName("Signing a Plan updates the original version and creates a new version.")
+  @WithMockUser(username = "UserId|Username")
+  @Sql(scripts = [ "/db/test/oasys_assessment_pk_data.sql", "/db/test/oasys_assessment_pk_data_agreed.sql" ], executionPhase = BEFORE_TEST_METHOD)
+  @Sql(scripts = [ "/db/test/oasys_assessment_pk_cleanup.sql" ], executionPhase = AFTER_TEST_METHOD)
+  fun `signing a plan creates new goals and plan versions correctly`() {
+    val userDetails = UserDetails(
+      id = "UserId",
+      name = "Username",
+    )
+
+    val signRequest = SignRequest(
+      signType = SignType.SELF,
+      userDetails = userDetails,
+    )
+
+    val plan = planService.signPlan(testPlanUuid, signRequest)
+
+    // we should now have two plan versions, original and one made before signing the Plan
+    assertThat(planVersionRepository.findAll().size).isEqualTo(2)
+
+    val planVersionZero = planVersionRepository.findByPlanUuidAndVersion(testPlanUuid, 0)
+    val planVersionOne = planVersionRepository.findByPlanUuidAndVersion(testPlanUuid, 1)
+
+    assertThat(planVersionZero.status).isEqualTo(CountersigningStatus.SELF_SIGNED)
+    assertThat(planVersionOne.status).isEqualTo(CountersigningStatus.UNSIGNED)
+    assertThat(plan.version).isEqualTo(0L)
+    assertThat(plan.status).isEqualTo(CountersigningStatus.SELF_SIGNED)
   }
 }

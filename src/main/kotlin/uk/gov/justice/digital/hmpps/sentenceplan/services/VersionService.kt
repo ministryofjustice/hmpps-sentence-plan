@@ -4,6 +4,7 @@ import jakarta.persistence.EntityManager
 import jakarta.persistence.NoResultException
 import jakarta.persistence.PersistenceContext
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Propagation
 import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.AreaOfNeedEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionEntity
@@ -108,7 +109,7 @@ class VersionService(
   /**
    * Always creates a new PlanVersion, regardless of the criteria that apply in `conditionallyCreateNewPlanVersion`
    */
-  @Transactional
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
   fun alwaysCreateNewPlanVersion(planVersion: PlanVersionEntity): PlanVersionEntity {
     // Don't try and make a new version if the passed-in reference hasn't been saved yet.
     if (planVersion.id == null) {

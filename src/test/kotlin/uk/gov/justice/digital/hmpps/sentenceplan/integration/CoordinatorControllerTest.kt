@@ -132,11 +132,11 @@ class CoordinatorControllerTest : IntegrationTestBase() {
 
     val userDetails = UserDetails("1", "Tom C")
 
-    @Sql(scripts = [ "/db/test/oasys_assessment_pk_data.sql" ], executionPhase = BEFORE_TEST_METHOD)
+    @Sql(scripts = [ "/db/test/oasys_assessment_pk_data.sql", "/db/test/oasys_assessment_pk_data_agreed.sql" ], executionPhase = BEFORE_TEST_METHOD)
     @Sql(scripts = [ "/db/test/oasys_assessment_pk_cleanup.sql" ], executionPhase = AFTER_TEST_METHOD)
     @ParameterizedTest
     @EnumSource(SignType::class)
-    fun `should do something`(signType: SignType) {
+    fun `should update the status of the plan`(signType: SignType) {
       val signRequest = SignRequest(
         signType = signType,
         userDetails = userDetails,
@@ -175,6 +175,29 @@ class CoordinatorControllerTest : IntegrationTestBase() {
           assertThat(responseBody?.status).isEqualTo(HttpStatus.NOT_FOUND.value())
           assertThat(responseBody?.userMessage).startsWith("No resource found failure")
           assertThat(responseBody?.developerMessage).startsWith("No static resource")
+        }
+    }
+
+    @Sql(scripts = [ "/db/test/oasys_assessment_pk_data.sql" ], executionPhase = BEFORE_TEST_METHOD)
+    @Sql(scripts = [ "/db/test/oasys_assessment_pk_cleanup.sql" ], executionPhase = AFTER_TEST_METHOD)
+    @Test
+    fun `should return 409 conflict`() {
+      val signRequest = SignRequest(
+        signType = SignType.SELF,
+        userDetails = userDetails,
+      )
+
+      webTestClient.post()
+        .uri("/coordinator/plan/$planUuid/sign")
+        .bodyValue(signRequest)
+        .header("Content-Type", "application/json")
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .exchange()
+        .expectStatus().is4xxClientError
+        .expectBody<ErrorResponse>()
+        .returnResult().run {
+          assertThat(responseBody?.status).isEqualTo(HttpStatus.CONFLICT.value())
+          assertThat(responseBody?.developerMessage).isEqualTo("Plan $planUuid is in a DRAFT state, and not eligible for signing.")
         }
     }
   }

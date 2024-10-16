@@ -20,6 +20,7 @@ import org.springframework.web.servlet.resource.NoResourceFoundException
 import uk.gov.justice.digital.hmpps.sentenceplan.config.ErrorResponse
 import uk.gov.justice.digital.hmpps.sentenceplan.data.CreatePlanRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.data.LockPlanRequest
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.ClonePlanVersionRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.CounterSignPlanRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.RestorePlanVersionsRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.RollbackPlanRequest
@@ -300,4 +301,32 @@ class CoordinatorController(
     body.to?.toInt(),
     false,
   )
+
+  @PostMapping("/{planUuid}/clone")
+  @Operation(
+    description = "Clone the latest plan version data into a new version",
+    tags = ["Integrations"],
+  )
+  @ApiResponses(
+    value = [
+      ApiResponse(
+        responseCode = "200",
+        description = "Returns the latest plan version number and the plan UUID",
+      ),
+      ApiResponse(
+        responseCode = "404",
+        description = "Plan not found for the provided planUuid",
+        content = arrayOf(Content(schema = Schema(implementation = ErrorResponse::class))),
+      ),
+      ApiResponse(
+        responseCode = "500",
+        description = "Unexpected error",
+        content = arrayOf(Content(schema = Schema(implementation = ErrorResponse::class))),
+      ),
+    ],
+  )
+  fun cloneLatestPlanVersion(
+    @PathVariable planUuid: UUID,
+    @RequestBody @Valid body: ClonePlanVersionRequest,
+  ): PlanVersionResponse = PlanVersionResponse(planVersion = planService.clone(planUuid, body.planType).version.toLong(), planId = planUuid)
 }

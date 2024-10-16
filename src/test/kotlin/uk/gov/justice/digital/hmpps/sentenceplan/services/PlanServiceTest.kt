@@ -422,10 +422,6 @@ class PlanServiceTest {
   @DisplayName("softDelete and restore")
   inner class SoftDeletedPlan {
 
-    @BeforeEach
-    fun setup() {
-    }
-
     @ParameterizedTest
     @MethodSource("softDeleteExceptionTestData")
     fun `should throw exception `(versions: List<Int>, from: Int, to: Int?, softDelete: Boolean, expected: String) {
@@ -491,5 +487,28 @@ class PlanServiceTest {
       Arguments.of(listOf(3, 4, 5, 6, 7, 8, 9), 4, 8, false, listOf(4, 5, 6, 7, 8)),
       Arguments.of(listOf(3, 4, 5, 6, 7, 8, 9), 4, 4, false, listOf(4)),
     )
+  }
+
+  @Nested
+  @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+  @DisplayName("clone plan version")
+  inner class ClonePlanVersion {
+
+    @Test
+    fun `should create a new version of the plan with a new version`() {
+      val planUUID = planEntity.uuid
+      val updatedPlanEntity = planEntity.apply {
+        currentVersion = PlanVersionEntity(
+          id = 1, plan = planEntity, planId = 0L,
+          version = planEntity.currentVersion!!.version.inc(),
+        )
+      }
+      every { planRepository.findPlanByUuid(any()) } returns planEntity
+      every { versionService.alwaysCreateNewPlanVersion(any()) } returns updatedPlanEntity.currentVersion!!
+      every { planVersionRepository.save(any()) } returns updatedPlanEntity.currentVersion
+      val result = planService.clone(planUUID, PlanType.OTHER)
+      assertThat(result.version).isEqualTo(1L)
+      assertThat(result.planType).isEqualTo(PlanType.OTHER)
+    }
   }
 }

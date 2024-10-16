@@ -93,7 +93,7 @@ class GoalEntity(
 
   @OneToMany(mappedBy = "goal", cascade = [CascadeType.ALL])
   @OrderBy("createdDate ASC")
-  var notes: MutableList<GoalNoteEntity> = mutableListOf(),
+  var notes: Set<GoalNoteEntity> = emptySet(),
 
   @ManyToMany
   @JoinTable(

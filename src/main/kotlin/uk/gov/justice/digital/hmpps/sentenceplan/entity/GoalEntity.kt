@@ -91,6 +91,10 @@ class GoalEntity(
   @OrderBy("createdDate ASC")
   var steps: List<StepEntity> = emptyList(),
 
+  @OneToMany(mappedBy = "goal", cascade = [CascadeType.ALL])
+  @OrderBy("createdDate ASC")
+  var notes: MutableList<GoalNoteEntity> = mutableListOf(),
+
   @ManyToMany
   @JoinTable(
     name = "related_area_of_need",

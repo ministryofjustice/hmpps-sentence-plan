@@ -44,6 +44,14 @@ class PlanService(
     return planVersionRepository.save(version)
   }
 
+  fun clone(planUuid: UUID, planType: PlanType): PlanVersionEntity {
+    val plan = planRepository.getPlanByUuid(planUuid)
+    return versionService.alwaysCreateNewPlanVersion(plan.currentVersion!!).apply {
+      this.planType = planType
+      planVersionRepository.save(this)
+    }
+  }
+
   private fun validateRange(from: Int, to: Int, available: List<Int>, softDelete: Boolean): IntRange {
     val specifiedRange = when {
       available.isEmpty() -> throw ValidationException("No plans available or all plan versions have already had soft_deleted set to $softDelete")

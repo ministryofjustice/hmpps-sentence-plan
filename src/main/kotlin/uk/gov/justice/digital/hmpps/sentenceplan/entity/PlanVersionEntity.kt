@@ -177,6 +177,11 @@ interface PlanVersionRepository : JpaRepository<PlanVersionEntity, Long> {
 
   fun findAllByPlanId(planId: Long): List<PlanVersionEntity>
 
+  @Query(
+    "select plan_version.* from plan_version inner join plan p on p.id = plan_version.plan_id " +
+      "where p.uuid = :planUuid and plan_version.version = :versionNumber",
+    nativeQuery = true,
+  )
   fun findPlanVersionByPlanUuidAndVersion(planUuid: UUID, versionNumber: Int): PlanVersionEntity?
 
   @EntityGraph(value = "graph.planversion.eager", type = EntityGraph.EntityGraphType.FETCH)

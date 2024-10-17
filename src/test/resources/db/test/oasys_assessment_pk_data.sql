@@ -13,16 +13,11 @@ SELECT '9f2aaa46-e544-4bcd-8db6-fbe7842ddb64', plan.id, 'INITIAL', 0, 'UNSIGNED'
 from plan, practitioner
 where plan.uuid = '556db5c8-a1eb-4064-986b-0740d6a83c33' and practitioner.external_id = 'test';
 
-INSERT INTO plan_version(uuid, plan_id, plan_type, version, countersigning_status, agreement_status, created_date, created_by_id, last_updated_date, last_updated_by_id, read_only)
-SELECT '3573c9eb-7129-43a3-a544-d128f7500bd0', plan.id, 'INITIAL', 1, 'UNSIGNED', 'DRAFT', now() - interval '1 day', practitioner.id, now() - interval '1 day', practitioner.id, false
-from plan, practitioner
-where plan.uuid = '556db5c8-a1eb-4064-986b-0740d6a83c33' and practitioner.external_id = 'test';
-
 -- Update current_plan_version_id in plan
 UPDATE plan
 SET current_plan_version_id = (
     SELECT id FROM plan_version
-    WHERE uuid = '3573c9eb-7129-43a3-a544-d128f7500bd0'
+    WHERE uuid = '9f2aaa46-e544-4bcd-8db6-fbe7842ddb64'
 )
 WHERE uuid = '556db5c8-a1eb-4064-986b-0740d6a83c33';
 

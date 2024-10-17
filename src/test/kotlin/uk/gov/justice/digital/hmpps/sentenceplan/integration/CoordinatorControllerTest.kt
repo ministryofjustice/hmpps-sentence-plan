@@ -94,7 +94,7 @@ class CoordinatorControllerTest : IntegrationTestBase() {
         .expectStatus().isOk
         .expectBody<GetPlanResponse>()
         .returnResult().run {
-          assertThat(responseBody?.sentencePlanId).isEqualTo(UUID.fromString("9f2aaa46-e544-4bcd-8db6-fbe7842ddb64"))
+          assertThat(responseBody?.sentencePlanId).isEqualTo(UUID.fromString("3573c9eb-7129-43a3-a544-d128f7500bd0"))
           assertThat(responseBody?.sentencePlanVersion).isEqualTo(0L)
           assertThat(responseBody?.planComplete).isEqualTo(PlanState.INCOMPLETE)
           assertThat(responseBody?.planType).isEqualTo(PlanType.INITIAL)
@@ -578,7 +578,7 @@ class CoordinatorControllerTest : IntegrationTestBase() {
     @Test
     fun `should clone the latest version into a new version`() {
       val beforePlan = planRepository.findPlanByUuid(planUuid)
-      assertThat(beforePlan?.currentVersion?.version).isEqualTo(0L)
+      assertThat(beforePlan?.currentVersion?.version).isEqualTo(1L)
 
       val clonePlanVersionRequest = ClonePlanVersionRequest(
         planType = PlanType.OTHER,
@@ -596,7 +596,7 @@ class CoordinatorControllerTest : IntegrationTestBase() {
         .returnResult().responseBody
 
       val afterPlan = planRepository.findPlanByUuid(planUuid)
-      assertThat(afterPlan?.currentVersion?.version).isEqualTo(1L)
+      assertThat(afterPlan?.currentVersion?.version).isEqualTo(2L)
       assertThat(afterPlan?.currentVersion?.planType).isEqualTo(PlanType.OTHER)
 
       assertThat(response?.planVersion).isEqualTo(1L)

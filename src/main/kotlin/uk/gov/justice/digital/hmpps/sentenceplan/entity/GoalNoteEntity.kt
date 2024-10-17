@@ -39,7 +39,7 @@ class GoalNoteEntity(
 
   @Column(name = "note_type")
   @Enumerated(EnumType.STRING)
-  var type: NoteType = NoteType.PROGRESS,
+  var type: GoalNoteType = GoalNoteType.PROGRESS,
 
   @CreatedDate
   @Column(name = "created_date")
@@ -57,7 +57,7 @@ class GoalNoteEntity(
   }
 }
 
-enum class NoteType {
+enum class GoalNoteType {
   PROGRESS,
   REMOVED,
   ACHIEVED,

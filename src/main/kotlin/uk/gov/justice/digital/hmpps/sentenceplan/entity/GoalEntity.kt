@@ -127,9 +127,9 @@ class GoalEntity(
     goal.note?.let { note ->
       val goalNoteEntity = GoalNoteEntity(note = note, goal = this).apply {
         type = when (goal.status) {
-          GoalStatus.REMOVED -> NoteType.REMOVED
-          GoalStatus.ACHIEVED -> NoteType.ACHIEVED
-          else -> NoteType.PROGRESS
+          GoalStatus.REMOVED -> GoalNoteType.REMOVED
+          GoalStatus.ACHIEVED -> GoalNoteType.ACHIEVED
+          else -> GoalNoteType.PROGRESS
         }
       }
 

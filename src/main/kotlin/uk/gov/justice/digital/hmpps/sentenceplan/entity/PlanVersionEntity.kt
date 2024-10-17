@@ -47,6 +47,7 @@ import java.util.UUID
       name = "goals-subgraph",
       attributeNodes = [
         NamedAttributeNode("steps"),
+        NamedAttributeNode("notes"),
         NamedAttributeNode("relatedAreasOfNeed"),
       ],
     ),

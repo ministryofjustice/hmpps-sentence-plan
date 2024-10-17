@@ -91,6 +91,10 @@ class GoalEntity(
   @OrderBy("createdDate ASC")
   var steps: List<StepEntity> = emptyList(),
 
+  @OneToMany(mappedBy = "goal", cascade = [CascadeType.ALL])
+  @OrderBy("createdDate ASC")
+  var notes: MutableSet<GoalNoteEntity> = mutableSetOf(),
+
   @ManyToMany
   @JoinTable(
     name = "related_area_of_need",
@@ -118,8 +122,24 @@ class GoalEntity(
       this.targetDate = null
     }
 
-    if (goal.status != null) {
-      this.status = goal.status
+    // If we receive a goal note, check if there is an ACHIEVED or REMOVED status and create a note with that.
+    // Otherwise make it a progress note
+    goal.note?.let { note ->
+      val goalNoteEntity = GoalNoteEntity(note = note, goal = this).apply {
+        type = when (goal.status) {
+          GoalStatus.REMOVED -> GoalNoteType.REMOVED
+          GoalStatus.ACHIEVED -> GoalNoteType.ACHIEVED
+          else -> GoalNoteType.PROGRESS
+        }
+      }
+
+      goalNoteEntity.type.let {
+        this.notes.add(goalNoteEntity)
+      }
+    }
+
+    goal.status?.let { status ->
+      this.status = status
       this.statusDate = LocalDateTime.now()
     }
 

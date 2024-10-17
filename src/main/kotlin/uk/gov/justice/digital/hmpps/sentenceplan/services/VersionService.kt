@@ -55,6 +55,11 @@ class VersionService(
       goal.planVersion = newPlanVersionEntity
       goal.notes = goal.notes.toMutableSet() // copy the list
 
+      goal.notes.forEach { note ->
+        note.id = null
+        note.goal = goal
+      }
+
       val stepsList: List<StepEntity> = goal.steps.toList() // copy the list
       stepsList.forEach { step ->
         entityManager.detach(step)

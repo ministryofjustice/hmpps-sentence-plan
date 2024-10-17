@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.sentenceplan.entity
 
 import com.fasterxml.jackson.annotation.JsonIgnore
+import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
@@ -52,6 +53,7 @@ class GoalNoteEntity(
   var createdBy: PractitionerEntity? = null,
 ) {
   @JsonProperty("createdBy")
+  @JsonInclude(JsonInclude.Include.NON_NULL)
   fun getCreatedBy(): String? {
     return createdBy?.username
   }

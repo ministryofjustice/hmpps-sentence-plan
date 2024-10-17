@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.sentenceplan.entity
 
 import com.fasterxml.jackson.annotation.JsonIgnore
+import com.fasterxml.jackson.annotation.JsonProperty
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.EntityListeners
@@ -47,8 +48,14 @@ class GoalNoteEntity(
   @CreatedBy
   @ManyToOne
   @JoinColumn(name = "created_by_id")
+  @JsonIgnore
   var createdBy: PractitionerEntity? = null,
-)
+) {
+  @JsonProperty("createdBy")
+  fun getCreatedBy(): String? {
+    return createdBy?.username
+  }
+}
 
 enum class NoteType {
   PROGRESS,

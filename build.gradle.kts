@@ -31,8 +31,8 @@ dependencies {
   }
   implementation("org.springframework.cloud:spring-cloud-dependencies:2023.0.3")
   implementation("com.vladmihalcea:hibernate-types-60:2.21.1")
-  implementation("org.flywaydb:flyway-core:10.19.0")
-  runtimeOnly("org.flywaydb:flyway-database-postgresql:10.19.0")
+  implementation("org.flywaydb:flyway-core:10.20.0")
+  runtimeOnly("org.flywaydb:flyway-database-postgresql:10.20.0")
   runtimeOnly("org.postgresql:postgresql")
 
   // Test dependencies

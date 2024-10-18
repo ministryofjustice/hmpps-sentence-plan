@@ -52,9 +52,9 @@ class GoalNoteEntity(
   @JsonIgnore
   var createdBy: PractitionerEntity? = null,
 ) {
-  @JsonProperty("createdBy")
+  @JsonProperty("practitionerName")
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  fun getCreatedBy(): String? {
+  fun getPractitionerName(): String? {
     return createdBy?.username
   }
 }

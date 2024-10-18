@@ -8,4 +8,5 @@ data class Goal(
   val targetDate: String? = null,
   val relatedAreasOfNeed: List<String> = emptyList(),
   val status: GoalStatus? = null,
+  val note: String? = null,
 )

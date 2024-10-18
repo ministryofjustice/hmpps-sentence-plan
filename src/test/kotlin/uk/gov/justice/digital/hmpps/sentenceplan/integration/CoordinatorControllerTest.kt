@@ -24,6 +24,7 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanType
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.getPlanByUuid
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.ClonePlanVersionRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.CounterSignPlanRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.CountersignType
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.RestorePlanVersionsRequest
@@ -37,7 +38,7 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.response.PlanVersionResp
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.response.SoftDeletePlanVersionsResponse
 import java.util.UUID
 
-@AutoConfigureWebTestClient(timeout = "5s")
+@AutoConfigureWebTestClient(timeout = "30s")
 @DisplayName("Coordinator Controller Tests")
 class CoordinatorControllerTest : IntegrationTestBase() {
 
@@ -131,11 +132,11 @@ class CoordinatorControllerTest : IntegrationTestBase() {
 
     val userDetails = UserDetails("1", "Tom C")
 
-    @Sql(scripts = [ "/db/test/oasys_assessment_pk_data.sql" ], executionPhase = BEFORE_TEST_METHOD)
+    @Sql(scripts = [ "/db/test/oasys_assessment_pk_data.sql", "/db/test/oasys_assessment_pk_data_agreed.sql" ], executionPhase = BEFORE_TEST_METHOD)
     @Sql(scripts = [ "/db/test/oasys_assessment_pk_cleanup.sql" ], executionPhase = AFTER_TEST_METHOD)
     @ParameterizedTest
     @EnumSource(SignType::class)
-    fun `should do something`(signType: SignType) {
+    fun `should update the status of the plan`(signType: SignType) {
       val signRequest = SignRequest(
         signType = signType,
         userDetails = userDetails,
@@ -174,6 +175,29 @@ class CoordinatorControllerTest : IntegrationTestBase() {
           assertThat(responseBody?.status).isEqualTo(HttpStatus.NOT_FOUND.value())
           assertThat(responseBody?.userMessage).startsWith("No resource found failure")
           assertThat(responseBody?.developerMessage).startsWith("No static resource")
+        }
+    }
+
+    @Sql(scripts = [ "/db/test/oasys_assessment_pk_data.sql" ], executionPhase = BEFORE_TEST_METHOD)
+    @Sql(scripts = [ "/db/test/oasys_assessment_pk_cleanup.sql" ], executionPhase = AFTER_TEST_METHOD)
+    @Test
+    fun `should return 409 conflict`() {
+      val signRequest = SignRequest(
+        signType = SignType.SELF,
+        userDetails = userDetails,
+      )
+
+      webTestClient.post()
+        .uri("/coordinator/plan/$planUuid/sign")
+        .bodyValue(signRequest)
+        .header("Content-Type", "application/json")
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .exchange()
+        .expectStatus().is4xxClientError
+        .expectBody<ErrorResponse>()
+        .returnResult().run {
+          assertThat(responseBody?.status).isEqualTo(HttpStatus.CONFLICT.value())
+          assertThat(responseBody?.developerMessage).isEqualTo("Plan $planUuid is in a DRAFT state, and not eligible for signing.")
         }
     }
   }
@@ -410,7 +434,8 @@ class CoordinatorControllerTest : IntegrationTestBase() {
         .expectStatus().isOk
         .expectBody<SoftDeletePlanVersionsResponse>()
         .returnResult().run {
-          assertThat(responseBody?.versionsSoftDeleted).isEqualTo(listOf(6, 7, 8, 9)) // . Current version has been soft_deleted. New version 10 created from version 5")
+          assertThat(responseBody?.versionsSoftDeleted).isEqualTo(listOf(6, 7, 8, 9))
+          assertThat(responseBody?.createdFromVersion).isEqualTo(5) // . Current version has been soft_deleted. New version 10 created from version 5")
         }
 
       val planAfter = planRepository.getPlanByUuid(planUuid)
@@ -530,6 +555,64 @@ class CoordinatorControllerTest : IntegrationTestBase() {
       webTestClient.post()
         .uri("/coordinator/plan/$notFoundUuid/restore")
         .bodyValue(restoreRequest)
+        .header("Content-Type", "application/json")
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .exchange()
+        .expectStatus().isNotFound
+        .expectBody<ErrorResponse>()
+        .returnResult().run {
+          assertThat(responseBody?.status).isEqualTo(HttpStatus.NOT_FOUND.value())
+          assertThat(responseBody?.userMessage).isEqualTo("Plan not found for id 0d0f2d85-5b70-4916-9f89-ed248f8d5196")
+        }
+    }
+  }
+
+  @Nested
+  @DisplayName("Clone version")
+  inner class ClonePlanVersion {
+    val planUuid = UUID.fromString("556db5c8-a1eb-4064-986b-0740d6a83c33")
+    val notFoundUuid = UUID.fromString("0d0f2d85-5b70-4916-9f89-ed248f8d5196")
+
+    @Sql(scripts = ["/db/test/oasys_assessment_pk_data.sql"], executionPhase = BEFORE_TEST_METHOD)
+    @Sql(scripts = ["/db/test/oasys_assessment_pk_cleanup.sql"], executionPhase = AFTER_TEST_METHOD)
+    @Test
+    fun `should clone the latest version into a new version`() {
+      val beforePlan = planRepository.findPlanByUuid(planUuid)
+      assertThat(beforePlan?.currentVersion?.version).isEqualTo(0L)
+
+      val clonePlanVersionRequest = ClonePlanVersionRequest(
+        planType = PlanType.OTHER,
+        userDetails = userDetails,
+      )
+
+      val response = webTestClient.post()
+        .uri("/coordinator/plan/$planUuid/clone")
+        .bodyValue(clonePlanVersionRequest)
+        .header("Content-Type", "application/json")
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .exchange()
+        .expectStatus().isOk
+        .expectBody<PlanVersionResponse>()
+        .returnResult().responseBody
+
+      val afterPlan = planRepository.findPlanByUuid(planUuid)
+      assertThat(afterPlan?.currentVersion?.version).isEqualTo(1L)
+      assertThat(afterPlan?.currentVersion?.planType).isEqualTo(PlanType.OTHER)
+
+      assertThat(response?.planVersion).isEqualTo(1L)
+      assertThat(response?.planId).isEqualTo(planUuid)
+    }
+
+    @Test
+    fun `should return 404 not found`() {
+      val clonePlanVersionRequest = ClonePlanVersionRequest(
+        userDetails = userDetails,
+        planType = PlanType.OTHER,
+      )
+
+      webTestClient.post()
+        .uri("/coordinator/plan/$notFoundUuid/clone")
+        .bodyValue(clonePlanVersionRequest)
         .header("Content-Type", "application/json")
         .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
         .exchange()

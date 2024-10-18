@@ -44,6 +44,14 @@ class PlanService(
     return planVersionRepository.save(version)
   }
 
+  fun clone(planUuid: UUID, planType: PlanType): PlanVersionEntity {
+    val plan = planRepository.getPlanByUuid(planUuid)
+    return versionService.alwaysCreateNewPlanVersion(plan.currentVersion!!).apply {
+      this.planType = planType
+      planVersionRepository.save(this)
+    }
+  }
+
   private fun validateRange(from: Int, to: Int, available: List<Int>, softDelete: Boolean): IntRange {
     val specifiedRange = when {
       available.isEmpty() -> throw ValidationException("No plans available or all plan versions have already had soft_deleted set to $softDelete")
@@ -169,32 +177,31 @@ class PlanService(
   /**
    * Changes the Countersigning Status of the current PlanVersion to the value of the held in the `signRequest` parameter
    * and creates a new PlanVersion with a Countersigning Status of UNSIGNED which becomes the current PlanVersion.
-   *
-   * Returns the PlanVersion which has been signed, not the current PlanVersion.
    */
   @Transactional
   fun signPlan(planUuid: UUID, signRequest: SignRequest): PlanVersionEntity {
-    val plan = getPlanVersionByPlanUuid(planUuid)
+    val planVersion = getPlanVersionByPlanUuid(planUuid)
+
+    if (planVersion.agreementStatus == PlanAgreementStatus.DRAFT) {
+      throw ConflictException("Plan $planUuid is in a DRAFT state, and not eligible for signing.")
+    }
+
+    versionService.alwaysCreateNewPlanVersion(planVersion)
+
+    val signedPlan = planVersionRepository.findByPlanUuidAndVersion(planUuid, planVersion.version)
 
     when (signRequest.signType) {
       SignType.SELF -> {
-        plan.status = CountersigningStatus.SELF_SIGNED
+        signedPlan.status = CountersigningStatus.SELF_SIGNED
       }
       SignType.COUNTERSIGN -> {
-        plan.status = CountersigningStatus.AWAITING_COUNTERSIGN
+        signedPlan.status = CountersigningStatus.AWAITING_COUNTERSIGN
       }
     }
 
-    // make a new version in the UNSIGNED state
-    val versionedPlan = versionService.alwaysCreateNewPlanVersion(plan)
-      .apply {
-        status = CountersigningStatus.UNSIGNED
-      }
+    planVersionRepository.save(signedPlan)
 
-    planVersionRepository.save(versionedPlan)
-
-    // make sure we update the previous version with the new status, not the new one.
-    return planVersionRepository.save(plan)
+    return signedPlan
   }
 
   fun countersignPlan(planUuid: UUID, countersignPlanRequest: CounterSignPlanRequest): PlanVersionEntity {

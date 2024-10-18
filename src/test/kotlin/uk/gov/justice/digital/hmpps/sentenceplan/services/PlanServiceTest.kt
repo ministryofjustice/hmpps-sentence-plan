@@ -242,6 +242,40 @@ class PlanServiceTest {
 
     @Test
     fun `should mark plan as self-signed`() {
+      every { planRepository.findByUuid(any()) } returns planEntity.apply { currentVersion?.agreementStatus = PlanAgreementStatus.AGREED }
+      every { planVersionRepository.save(any()) } returnsArgument 0
+      every { planVersionRepository.findByPlanUuidAndVersion(any(), any()) } returns newPlanVersionEntity
+      every { versionService.alwaysCreateNewPlanVersion(any()) } returns newPlanVersionEntity
+
+      val signRequest = SignRequest(
+        signType = SignType.SELF,
+        userDetails = userDetails,
+      )
+
+      val plan = planService.signPlan(UUID.randomUUID(), signRequest)
+
+      assertThat(plan.status).isEqualTo(CountersigningStatus.SELF_SIGNED)
+    }
+
+    @Test
+    fun `should mark plan as awaiting-countersign`() {
+      every { planRepository.findByUuid(any()) } returns planEntity.apply { currentVersion?.agreementStatus = PlanAgreementStatus.AGREED }
+      every { planVersionRepository.save(any()) } returnsArgument 0
+      every { planVersionRepository.findByPlanUuidAndVersion(any(), any()) } returns newPlanVersionEntity
+      every { versionService.conditionallyCreateNewPlanVersion(any()) } returns newPlanVersionEntity
+
+      val signRequest = SignRequest(
+        signType = SignType.COUNTERSIGN,
+        userDetails = userDetails,
+      )
+
+      val plan = planService.signPlan(UUID.randomUUID(), signRequest)
+
+      assertThat(plan.status).isEqualTo(CountersigningStatus.AWAITING_COUNTERSIGN)
+    }
+
+    @Test
+    fun `should prevent signing, as plan is in a draft state`() {
       every { planRepository.findByUuid(any()) } returns planEntity
       every { planVersionRepository.save(any()) } returnsArgument 0
       every { versionService.alwaysCreateNewPlanVersion(any()) } returns newPlanVersionEntity
@@ -251,25 +285,11 @@ class PlanServiceTest {
         userDetails = userDetails,
       )
 
-      val planVersion = planService.signPlan(UUID.randomUUID(), signRequest)
+      val exception = assertThrows(ConflictException::class.java) {
+        planService.signPlan(UUID.randomUUID(), signRequest)
+      }
 
-      assertThat(planVersion.status).isEqualTo(CountersigningStatus.SELF_SIGNED)
-    }
-
-    @Test
-    fun `should mark plan as awaiting-countersign`() {
-      every { planRepository.findByUuid(any()) } returns planEntity
-      every { planVersionRepository.save(any()) } returnsArgument 0
-      every { versionService.conditionallyCreateNewPlanVersion(any()) } returns newPlanVersionEntity
-
-      val signRequest = SignRequest(
-        signType = SignType.COUNTERSIGN,
-        userDetails = userDetails,
-      )
-
-      val planVersion = planService.signPlan(UUID.randomUUID(), signRequest)
-
-      assertThat(planVersion.status).isEqualTo(CountersigningStatus.AWAITING_COUNTERSIGN)
+      assertThat(exception.message).endsWith("is in a DRAFT state, and not eligible for signing.")
     }
   }
 
@@ -422,10 +442,6 @@ class PlanServiceTest {
   @DisplayName("softDelete and restore")
   inner class SoftDeletedPlan {
 
-    @BeforeEach
-    fun setup() {
-    }
-
     @ParameterizedTest
     @MethodSource("softDeleteExceptionTestData")
     fun `should throw exception `(versions: List<Int>, from: Int, to: Int?, softDelete: Boolean, expected: String) {
@@ -491,5 +507,28 @@ class PlanServiceTest {
       Arguments.of(listOf(3, 4, 5, 6, 7, 8, 9), 4, 8, false, listOf(4, 5, 6, 7, 8)),
       Arguments.of(listOf(3, 4, 5, 6, 7, 8, 9), 4, 4, false, listOf(4)),
     )
+  }
+
+  @Nested
+  @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+  @DisplayName("clone plan version")
+  inner class ClonePlanVersion {
+
+    @Test
+    fun `should create a new version of the plan with a new version`() {
+      val planUUID = planEntity.uuid
+      val updatedPlanEntity = planEntity.apply {
+        currentVersion = PlanVersionEntity(
+          id = 1, plan = planEntity, planId = 0L,
+          version = planEntity.currentVersion!!.version.inc(),
+        )
+      }
+      every { planRepository.findPlanByUuid(any()) } returns planEntity
+      every { versionService.alwaysCreateNewPlanVersion(any()) } returns updatedPlanEntity.currentVersion!!
+      every { planVersionRepository.save(any()) } returns updatedPlanEntity.currentVersion
+      val result = planService.clone(planUUID, PlanType.OTHER)
+      assertThat(result.version).isEqualTo(1L)
+      assertThat(result.planType).isEqualTo(PlanType.OTHER)
+    }
   }
 }

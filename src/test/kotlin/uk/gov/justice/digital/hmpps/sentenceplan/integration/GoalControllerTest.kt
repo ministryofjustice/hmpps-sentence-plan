@@ -12,6 +12,7 @@ import org.springframework.test.context.jdbc.Sql.ExecutionPhase.AFTER_TEST_CLASS
 import org.springframework.test.context.jdbc.Sql.ExecutionPhase.AFTER_TEST_METHOD
 import org.springframework.test.context.jdbc.Sql.ExecutionPhase.BEFORE_TEST_CLASS
 import org.springframework.test.context.jdbc.Sql.ExecutionPhase.BEFORE_TEST_METHOD
+import org.springframework.test.context.jdbc.SqlMergeMode
 import org.springframework.test.web.reactive.server.expectBody
 import org.springframework.test.web.reactive.server.expectBodyList
 import uk.gov.justice.digital.hmpps.sentenceplan.config.ErrorResponse
@@ -19,6 +20,7 @@ import uk.gov.justice.digital.hmpps.sentenceplan.data.Goal
 import uk.gov.justice.digital.hmpps.sentenceplan.data.GoalOrder
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Step
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalEntity
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalNoteType
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalStatus
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepStatus
@@ -279,7 +281,7 @@ class GoalControllerTest : IntegrationTestBase() {
   inner class GoalControllerDeleteTests {
 
     @Test
-    @Sql(scripts = [ "/db/test/goal_deletion_data.sql" ], executionPhase = BEFORE_TEST_METHOD)
+    @Sql(scripts = ["/db/test/goal_deletion_data.sql"], executionPhase = BEFORE_TEST_METHOD)
     fun `delete goal should return no content and confirm goal and steps deleted`() {
       webTestClient.delete().uri("/goals/ede47f7f-8431-4ff9-80ec-2dd3a8db3841")
         .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
@@ -309,8 +311,8 @@ class GoalControllerTest : IntegrationTestBase() {
 
   @Nested
   @DisplayName("updateGoal")
-  @Sql(scripts = [ "/db/test/oasys_assessment_pk_data.sql", "/db/test/goals_data.sql" ], executionPhase = BEFORE_TEST_CLASS)
-  @Sql(scripts = [ "/db/test/goals_cleanup.sql", "/db/test/oasys_assessment_pk_cleanup.sql" ], executionPhase = AFTER_TEST_CLASS)
+  @Sql(scripts = [ "/db/test/oasys_assessment_pk_data.sql", "/db/test/goals_data.sql" ], executionPhase = BEFORE_TEST_METHOD)
+  @Sql(scripts = [ "/db/test/goals_cleanup.sql", "/db/test/oasys_assessment_pk_cleanup.sql" ], executionPhase = AFTER_TEST_METHOD)
   inner class UpdateGoalTests {
 
     @Test
@@ -428,7 +430,79 @@ class GoalControllerTest : IntegrationTestBase() {
     }
 
     @Test
+    fun `should add a note to a goal without updating status`() {
+      val goalRequestBody = Goal(
+        note = "An exciting note",
+      )
+
+      val goalUuid = "31d7e986-4078-4f5c-af1d-115f9ba3722d"
+
+      val goalEntity: GoalEntity? =
+        webTestClient.patch().uri("/goals/$goalUuid").header("Content-Type", "application/json")
+          .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+          .bodyValue(goalRequestBody)
+          .exchange()
+          .expectStatus().isOk
+          .expectBody<GoalEntity>()
+          .returnResult().responseBody
+
+      assertThat(goalEntity?.notes?.size).isEqualTo(1)
+      assertThat(goalEntity?.notes?.first()?.note).isEqualTo("An exciting note")
+      assertThat(goalEntity?.notes?.first()?.type).isEqualTo(GoalNoteType.PROGRESS)
+      assertThat(goalEntity?.status).isEqualTo(GoalStatus.ACTIVE)
+    }
+
+    @Test
+    fun `should add a note to a goal and update status to ACHIEVED`() {
+      val goalRequestBody = Goal(
+        note = "An exciting note",
+        status = GoalStatus.ACHIEVED,
+      )
+
+      val goalUuid = "31d7e986-4078-4f5c-af1d-115f9ba3722d"
+
+      val goalEntity: GoalEntity? =
+        webTestClient.patch().uri("/goals/$goalUuid").header("Content-Type", "application/json")
+          .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+          .bodyValue(goalRequestBody)
+          .exchange()
+          .expectStatus().isOk
+          .expectBody<GoalEntity>()
+          .returnResult().responseBody
+
+      assertThat(goalEntity?.notes?.size).isEqualTo(1)
+      assertThat(goalEntity?.notes?.first()?.note).isEqualTo("An exciting note")
+      assertThat(goalEntity?.notes?.first()?.type).isEqualTo(GoalNoteType.ACHIEVED)
+      assertThat(goalEntity?.status).isEqualTo(GoalStatus.ACHIEVED)
+    }
+
+    @Test
+    fun `should add a note to a goal and update status to REMOVED`() {
+      val goalRequestBody = Goal(
+        note = "An exciting note",
+        status = GoalStatus.REMOVED,
+      )
+
+      val goalUuid = "31d7e986-4078-4f5c-af1d-115f9ba3722d"
+
+      val goalEntity: GoalEntity? =
+        webTestClient.patch().uri("/goals/$goalUuid").header("Content-Type", "application/json")
+          .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+          .bodyValue(goalRequestBody)
+          .exchange()
+          .expectStatus().isOk
+          .expectBody<GoalEntity>()
+          .returnResult().responseBody
+
+      assertThat(goalEntity?.notes?.size).isEqualTo(1)
+      assertThat(goalEntity?.notes?.first()?.note).isEqualTo("An exciting note")
+      assertThat(goalEntity?.notes?.first()?.type).isEqualTo(GoalNoteType.REMOVED)
+      assertThat(goalEntity?.status).isEqualTo(GoalStatus.REMOVED)
+    }
+
+    @Test
     @Sql(scripts = [ "/db/test/related_area_of_need_deletion_data.sql" ], executionPhase = BEFORE_TEST_METHOD)
+    @SqlMergeMode(SqlMergeMode.MergeMode.MERGE)
     fun `should update goal and delete related areas of need`() {
       val goalRequestBody = Goal(
         title = "update goal and delete related areas of need",

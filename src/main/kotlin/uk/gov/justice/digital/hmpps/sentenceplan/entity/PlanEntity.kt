@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.sentenceplan.entity
 
+import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonIgnore
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
@@ -46,6 +47,7 @@ class PlanEntity(
 
   @CreatedDate
   @Column(name = "created_date")
+  @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'")
   var createdDate: LocalDateTime = LocalDateTime.now(),
 
   @CreatedBy
@@ -55,6 +57,7 @@ class PlanEntity(
 
   @LastModifiedDate
   @Column(name = "last_updated_date", nullable = false)
+  @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'")
   var lastUpdatedDate: LocalDateTime = LocalDateTime.now(),
 
   @LastModifiedBy

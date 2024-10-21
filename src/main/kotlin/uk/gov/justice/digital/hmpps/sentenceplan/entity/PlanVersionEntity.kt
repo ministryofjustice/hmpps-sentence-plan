@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.sentenceplan.entity
 
+import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonIgnore
 import jakarta.persistence.CascadeType
 import jakarta.persistence.Column
@@ -89,6 +90,7 @@ class PlanVersionEntity(
 
   @CreatedDate
   @Column(name = "created_date")
+  @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'")
   val createdDate: LocalDateTime = LocalDateTime.now(),
 
   @CreatedBy
@@ -98,6 +100,7 @@ class PlanVersionEntity(
 
   @LastModifiedDate
   @Column(name = "last_updated_date")
+  @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'")
   var updatedDate: LocalDateTime = LocalDateTime.now(),
 
   @LastModifiedBy
@@ -106,6 +109,7 @@ class PlanVersionEntity(
   var updatedBy: PractitionerEntity? = null,
 
   @Column(name = "agreement_date")
+  @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'")
   var agreementDate: LocalDateTime? = null,
 
   @Column(name = "read_only")

@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.sentenceplan.entity
 
+import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonIgnore
 import jakarta.persistence.CascadeType
 import jakarta.persistence.Column
@@ -55,6 +56,7 @@ class GoalEntity(
   var targetDate: LocalDate? = null,
 
   @Column(name = "created_date")
+  @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'")
   val createdDate: LocalDateTime = LocalDateTime.now(),
 
   @CreatedBy
@@ -64,6 +66,7 @@ class GoalEntity(
 
   @LastModifiedDate
   @Column(name = "last_updated_date")
+  @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'")
   var updatedDate: LocalDateTime = LocalDateTime.now(),
 
   @LastModifiedBy
@@ -76,6 +79,7 @@ class GoalEntity(
   var status: GoalStatus = GoalStatus.FUTURE,
 
   @Column(name = "status_date")
+  @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'")
   var statusDate: LocalDateTime? = null,
 
   // this is nullable in the declaration to enable ignoring the field in JSON serialisation

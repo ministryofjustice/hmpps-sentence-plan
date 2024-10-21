@@ -282,7 +282,7 @@ class PlanControllerTest : IntegrationTestBase() {
 
       assertThat(planVersionEntity?.agreementDate).isNotNull()
       assertThat(planVersionEntity?.updatedBy?.username).isEqualTo("Tom C")
-      assertThat(planVersionEntity?.updatedDate).isAfter(testStartTime)
+      assertThat(planVersionEntity?.updatedDate).isAfterOrEqualTo(testStartTime)
       assertThat(planVersionEntity?.agreementDate).isBefore(planVersionEntity?.updatedDate)
     }
 

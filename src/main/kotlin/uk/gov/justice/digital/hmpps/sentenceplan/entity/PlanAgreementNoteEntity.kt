@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.sentenceplan.entity
 
+import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonIgnore
 import jakarta.persistence.CascadeType
 import jakarta.persistence.Column
@@ -52,6 +53,7 @@ class PlanAgreementNoteEntity(
   var personName: String,
 
   @Column(name = "created_date")
+  @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'")
   val createdDate: LocalDateTime = LocalDateTime.now(),
 
   @CreatedBy

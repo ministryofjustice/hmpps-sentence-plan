@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.sentenceplan.entity
 
+import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
@@ -44,6 +45,7 @@ class GoalNoteEntity(
 
   @CreatedDate
   @Column(name = "created_date")
+  @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'")
   val createdDate: LocalDateTime = LocalDateTime.now(),
 
   @CreatedBy

@@ -27,6 +27,7 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanAgreementStatus
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionEntity
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 @AutoConfigureWebTestClient(timeout = "5s")
@@ -269,7 +270,7 @@ class PlanControllerTest : IntegrationTestBase() {
     @Test
     @Order(1)
     fun `agree plan`() {
-      val testStartTime = LocalDateTime.now()
+      val testStartTime = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)
 
       val planVersionEntity: PlanVersionEntity? = webTestClient.post().uri("/plans/$testPlanUuid/agree")
         .header("Content-Type", "application/json")
@@ -282,8 +283,8 @@ class PlanControllerTest : IntegrationTestBase() {
 
       assertThat(planVersionEntity?.agreementDate).isNotNull()
       assertThat(planVersionEntity?.updatedBy?.username).isEqualTo("Tom C")
-      assertThat(planVersionEntity?.updatedDate).isAfter(testStartTime)
-      assertThat(planVersionEntity?.agreementDate).isBefore(planVersionEntity?.updatedDate)
+      assertThat(planVersionEntity?.updatedDate).isAfterOrEqualTo(testStartTime)
+      assertThat(planVersionEntity?.agreementDate).isBeforeOrEqualTo(planVersionEntity?.updatedDate)
     }
 
     @Test

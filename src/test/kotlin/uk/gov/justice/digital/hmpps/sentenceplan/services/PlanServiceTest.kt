@@ -386,7 +386,7 @@ class PlanServiceTest {
       ),
       Arguments.of(
         CountersignType.AWAITING_DOUBLE_COUNTERSIGN,
-        CountersigningStatus.UNSIGNED,
+        CountersigningStatus.AWAITING_COUNTERSIGN,
         CountersigningStatus.AWAITING_DOUBLE_COUNTERSIGN,
       ),
     )
@@ -421,7 +421,7 @@ class PlanServiceTest {
       }
       for (status in CountersigningStatus.entries.filter {
         it !in arrayOf(
-          CountersigningStatus.UNSIGNED,
+          CountersigningStatus.AWAITING_COUNTERSIGN,
           CountersigningStatus.AWAITING_DOUBLE_COUNTERSIGN,
         )
       }) {
@@ -429,7 +429,7 @@ class PlanServiceTest {
           Arguments.of(
             CountersignType.AWAITING_DOUBLE_COUNTERSIGN,
             status,
-            "was not awaiting double countersign.",
+            "was not awaiting countersign.",
           ),
         )
       }

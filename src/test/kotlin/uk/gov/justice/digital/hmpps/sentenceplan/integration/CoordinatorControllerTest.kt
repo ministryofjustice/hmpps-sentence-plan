@@ -331,7 +331,7 @@ class CoordinatorControllerTest : IntegrationTestBase() {
     val planUuid = UUID.fromString("556db5c8-a1eb-4064-986b-0740d6a83c33")
     val notFoundUuid = UUID.fromString("0d0f2d85-5b70-4916-9f89-ed248f8d5196")
 
-    @Sql(scripts = [ "/db/test/oasys_assessment_pk_data.sql" ], executionPhase = BEFORE_TEST_METHOD)
+    @Sql(scripts = [ "/db/test/oasys_assessment_pk_data.sql", "/db/test/oasys_assessment_pk_data_awaiting_countersign.sql" ], executionPhase = BEFORE_TEST_METHOD)
     @Sql(scripts = [ "/db/test/oasys_assessment_pk_cleanup.sql" ], executionPhase = AFTER_TEST_METHOD)
     @Test
     fun `should countersign the plan and return the same version`() {

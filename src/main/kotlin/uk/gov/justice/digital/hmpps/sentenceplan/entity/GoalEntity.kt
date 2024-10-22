@@ -92,7 +92,7 @@ class GoalEntity(
   var steps: List<StepEntity> = emptyList(),
 
   @OneToMany(mappedBy = "goal", cascade = [CascadeType.ALL])
-  @OrderBy("createdDate ASC")
+  @OrderBy("createdDate DESC")
   var notes: MutableSet<GoalNoteEntity> = mutableSetOf(),
 
   @ManyToMany

@@ -94,7 +94,7 @@ class CoordinatorControllerTest : IntegrationTestBase() {
         .expectStatus().isOk
         .expectBody<GetPlanResponse>()
         .returnResult().run {
-          assertThat(responseBody?.sentencePlanId).isEqualTo(UUID.fromString("9f2aaa46-e544-4bcd-8db6-fbe7842ddb64"))
+          assertThat(responseBody?.sentencePlanId).isEqualTo(UUID.fromString("556db5c8-a1eb-4064-986b-0740d6a83c33"))
           assertThat(responseBody?.sentencePlanVersion).isEqualTo(0L)
           assertThat(responseBody?.planComplete).isEqualTo(PlanState.INCOMPLETE)
           assertThat(responseBody?.planType).isEqualTo(PlanType.INITIAL)

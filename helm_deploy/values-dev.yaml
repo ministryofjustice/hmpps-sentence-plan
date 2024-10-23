@@ -8,7 +8,7 @@ generic-service:
     host: sentence-plan-api-dev.hmpps.service.justice.gov.uk
 
   env:
-    SPRING_PROFILES_ACTIVE: "dev"
+    SPRING_PROFILES_ACTIVE: "logstash, dev"
     APPLICATIONINSIGHTS_CONFIGURATION_FILE: applicationinsights.dev.json
     HMPPS_AUTH_BASE_URL: https://sign-in-dev.hmpps.service.justice.gov.uk
     ARNS_API_BASE_URL: https://assess-risks-and-needs-dev.hmpps.service.justice.gov.uk

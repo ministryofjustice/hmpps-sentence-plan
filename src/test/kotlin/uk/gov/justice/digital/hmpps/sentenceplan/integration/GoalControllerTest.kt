@@ -537,7 +537,7 @@ class GoalControllerTest : IntegrationTestBase() {
       val steps: List<StepEntity>? = webTestClient.put().uri("/goals/$goalWithNoStepsUuid/steps")
         .header("Content-Type", "application/json")
         .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
-        .bodyValue(stepList)
+        .bodyValue(Goal(steps = stepList))
         .exchange()
         .expectStatus().isOk
         .expectBody<List<StepEntity>>()
@@ -557,7 +557,7 @@ class GoalControllerTest : IntegrationTestBase() {
       val steps: List<StepEntity>? = webTestClient.put().uri("/goals/$goalWithOneStepUuid/steps")
         .header("Content-Type", "application/json")
         .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
-        .bodyValue(stepList)
+        .bodyValue(Goal(steps = stepList))
         .exchange()
         .expectStatus().isOk
         .expectBody<List<StepEntity>>()

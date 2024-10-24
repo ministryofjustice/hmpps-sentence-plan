@@ -174,7 +174,7 @@ class VersionServiceIntegrationTest : IntegrationTestBase() {
     // add a step to the goal
     val step = Step(description = "Step description", status = StepStatus.NOT_STARTED, actor = "Step actor")
     val steps: List<Step> = listOf(step)
-    goalService.addStepsToGoal(UUID.fromString("31d7e986-4078-4f5c-af1d-115f9ba3722d"), steps)
+    goalService.addStepsToGoal(UUID.fromString("31d7e986-4078-4f5c-af1d-115f9ba3722d"), Goal(steps = steps))
 
     // we should now have two versions, original and once made when adding steps
     assertThat(planVersionRepository.findAll().size).isEqualTo(2)
@@ -202,7 +202,7 @@ class VersionServiceIntegrationTest : IntegrationTestBase() {
     // add a step to the goal
     val step = Step(description = "New step description", status = StepStatus.NOT_STARTED, actor = "Step actor")
     val steps: List<Step> = listOf(step)
-    goalService.addStepsToGoal(UUID.fromString("31d7e986-4078-4f5c-af1d-115f9ba3722d"), steps)
+    goalService.addStepsToGoal(UUID.fromString("31d7e986-4078-4f5c-af1d-115f9ba3722d"), Goal(steps = steps))
 
     // we should now have two planversions, original and once made when adding the new step
     assertThat(planVersionRepository.findAll().size).isEqualTo(2)

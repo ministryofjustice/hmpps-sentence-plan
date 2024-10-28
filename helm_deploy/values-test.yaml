@@ -2,7 +2,7 @@
 # Per environment values which override defaults in hmpps-sentence-plan/values.yaml
 
 generic-service:
-  replicaCount: 2
+  replicaCount: 4
 
   ingress:
     host: sentence-plan-api-test.hmpps.service.justice.gov.uk

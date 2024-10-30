@@ -220,7 +220,7 @@ class GoalServiceTest {
       every { goalRepository.save(capture(goalSlot)) } answers { goalSlot.captured }
       every { versionService.conditionallyCreateNewPlanVersion(any()) } returns newPlanVersionEntity
 
-      val stepsList = goalService.addStepsToGoal(goalUuid, steps)
+      val stepsList = goalService.addStepsToGoal(goalUuid, Goal(steps = steps))
 
       assertThat(stepsList.size).isEqualTo(2)
 
@@ -363,7 +363,7 @@ class GoalServiceTest {
       every { versionService.conditionallyCreateNewPlanVersion(any()) } returns newPlanVersionEntity
 
       val exception = assertThrows<Exception> {
-        goalService.addStepsToGoal(UUID.randomUUID(), steps, true)
+        goalService.addStepsToGoal(UUID.randomUUID(), Goal(steps = steps), true)
       }
 
       assertThat(exception.message).startsWith("This Goal was not found:")
@@ -375,7 +375,7 @@ class GoalServiceTest {
       every { versionService.conditionallyCreateNewPlanVersion(any()) } returns newPlanVersionEntity
 
       val exception = assertThrows<IllegalArgumentException> {
-        goalService.addStepsToGoal(UUID.randomUUID(), emptyList(), true)
+        goalService.addStepsToGoal(UUID.randomUUID(), Goal(steps = emptyList()), true)
       }
 
       assertThat(exception.message).startsWith("At least one Step must be provided")
@@ -387,7 +387,7 @@ class GoalServiceTest {
       every { versionService.conditionallyCreateNewPlanVersion(any()) } returns newPlanVersionEntity
 
       val exception = assertThrows<IllegalArgumentException> {
-        goalService.addStepsToGoal(UUID.randomUUID(), incompleteSteps, true)
+        goalService.addStepsToGoal(UUID.randomUUID(), Goal(steps = incompleteSteps), true)
       }
 
       assertThat(exception.message).startsWith("All Steps must contain all the required information")
@@ -401,7 +401,7 @@ class GoalServiceTest {
       every { stepRepository.deleteAll(any()) } returns Unit
       every { versionService.conditionallyCreateNewPlanVersion(any()) } returns newPlanVersionEntity
 
-      val stepsList = goalService.addStepsToGoal(goalUuid, steps, true)
+      val stepsList = goalService.addStepsToGoal(goalUuid, Goal(steps = steps), true)
 
       assertThat(stepsList.size).isEqualTo(2)
 
@@ -440,7 +440,7 @@ class GoalServiceTest {
       every { stepRepository.deleteAll(any()) } returns Unit
       every { versionService.conditionallyCreateNewPlanVersion(any()) } returns newPlanVersionEntity
 
-      val stepsList = goalService.addStepsToGoal(goalUuid, steps, true)
+      val stepsList = goalService.addStepsToGoal(goalUuid, Goal(steps = steps), true)
 
       assertThat(stepsList.size).isEqualTo(2)
 

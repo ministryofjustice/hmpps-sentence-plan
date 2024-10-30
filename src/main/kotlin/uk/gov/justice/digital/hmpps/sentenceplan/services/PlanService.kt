@@ -77,17 +77,17 @@ class PlanService(
     planVersionRepository.saveAll(versionsToUpdate)
 
     if (plan.currentVersion?.version in from..to && softDelete) {
-      //The current version has been deleted.
+      // The current version has been deleted.
       // Find the latest version that has not been deleted, to be used for base of the new version
       val maxAvailableVersion = versions.filter { !it.softDeleted && it.version < from }.maxByOrNull { it.version }
 
       val updatedPlan = maxAvailableVersion.let { availableVersion ->
         plan.currentVersion =
           if (availableVersion != null) {
-            //Use the available version to base new version on
+            // Use the available version to base new version on
             versionService.alwaysCreateNewPlanVersion(availableVersion)
           } else {
-            //No version available to base new version on. Create a new version
+            // No version available to base new version on. Create a new version
             planVersionRepository.save(
               PlanVersionEntity(
                 plan = plan,

@@ -82,7 +82,9 @@ class PlanService(
 
       val updatedPlan = maxAvailableVersion.let { availableVersion ->
         plan.currentVersion =
-          if (availableVersion != null) versionService.alwaysCreateNewPlanVersion(availableVersion) else {
+          if (availableVersion != null) {
+            versionService.alwaysCreateNewPlanVersion(availableVersion)
+          } else {
             planVersionRepository.save(
               PlanVersionEntity(
                 plan = plan,

@@ -23,7 +23,7 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.SignType
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.response.SoftDeletePlanVersionsResponse
 import uk.gov.justice.digital.hmpps.sentenceplan.exceptions.ConflictException
 import java.time.LocalDateTime
-import java.util.*
+import java.util.UUID
 
 @Service
 class PlanService(
@@ -77,14 +77,17 @@ class PlanService(
     planVersionRepository.saveAll(versionsToUpdate)
 
     if (plan.currentVersion?.version in from..to && softDelete) {
+      //The current version has been deleted.
+      // Find the latest version that has not been deleted, to be used for base of the new version
       val maxAvailableVersion = versions.filter { !it.softDeleted && it.version < from }.maxByOrNull { it.version }
-        ?: versions.firstOrNull { !it.softDeleted && it.version > 0 }
 
       val updatedPlan = maxAvailableVersion.let { availableVersion ->
         plan.currentVersion =
           if (availableVersion != null) {
+            //Use the available version to base new version on
             versionService.alwaysCreateNewPlanVersion(availableVersion)
           } else {
+            //No version available to base new version on. Create a new version
             planVersionRepository.save(
               PlanVersionEntity(
                 plan = plan,

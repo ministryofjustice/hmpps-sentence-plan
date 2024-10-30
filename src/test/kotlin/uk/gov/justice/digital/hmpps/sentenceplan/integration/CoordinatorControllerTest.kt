@@ -36,7 +36,7 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.response.GetPlanResponse
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.response.PlanState
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.response.PlanVersionResponse
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.response.SoftDeletePlanVersionsResponse
-import java.util.*
+import java.util.UUID
 
 @AutoConfigureWebTestClient(timeout = "30s")
 @DisplayName("Coordinator Controller Tests")

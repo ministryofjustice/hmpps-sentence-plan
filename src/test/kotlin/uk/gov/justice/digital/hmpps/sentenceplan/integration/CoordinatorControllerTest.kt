@@ -79,8 +79,8 @@ class CoordinatorControllerTest : IntegrationTestBase() {
 
   @Nested
   @DisplayName("getPlan")
-  @Sql(scripts = [ "/db/test/oasys_assessment_pk_data.sql" ], executionPhase = BEFORE_TEST_CLASS)
-  @Sql(scripts = [ "/db/test/oasys_assessment_pk_cleanup.sql" ], executionPhase = AFTER_TEST_CLASS)
+  @Sql(scripts = ["/db/test/oasys_assessment_pk_data.sql"], executionPhase = BEFORE_TEST_CLASS)
+  @Sql(scripts = ["/db/test/oasys_assessment_pk_cleanup.sql"], executionPhase = AFTER_TEST_CLASS)
   inner class GetPlan {
     val staticPlanUuid = UUID.fromString("556db5c8-a1eb-4064-986b-0740d6a83c33")
 
@@ -132,8 +132,11 @@ class CoordinatorControllerTest : IntegrationTestBase() {
 
     val userDetails = UserDetails("1", "Tom C")
 
-    @Sql(scripts = [ "/db/test/oasys_assessment_pk_data.sql", "/db/test/oasys_assessment_pk_data_agreed.sql" ], executionPhase = BEFORE_TEST_METHOD)
-    @Sql(scripts = [ "/db/test/oasys_assessment_pk_cleanup.sql" ], executionPhase = AFTER_TEST_METHOD)
+    @Sql(
+      scripts = ["/db/test/oasys_assessment_pk_data.sql", "/db/test/oasys_assessment_pk_data_agreed.sql"],
+      executionPhase = BEFORE_TEST_METHOD,
+    )
+    @Sql(scripts = ["/db/test/oasys_assessment_pk_cleanup.sql"], executionPhase = AFTER_TEST_METHOD)
     @ParameterizedTest
     @EnumSource(SignType::class)
     fun `should update the status of the plan`(signType: SignType) {
@@ -178,8 +181,8 @@ class CoordinatorControllerTest : IntegrationTestBase() {
         }
     }
 
-    @Sql(scripts = [ "/db/test/oasys_assessment_pk_data.sql" ], executionPhase = BEFORE_TEST_METHOD)
-    @Sql(scripts = [ "/db/test/oasys_assessment_pk_cleanup.sql" ], executionPhase = AFTER_TEST_METHOD)
+    @Sql(scripts = ["/db/test/oasys_assessment_pk_data.sql"], executionPhase = BEFORE_TEST_METHOD)
+    @Sql(scripts = ["/db/test/oasys_assessment_pk_cleanup.sql"], executionPhase = AFTER_TEST_METHOD)
     @Test
     fun `should return 409 conflict`() {
       val signRequest = SignRequest(
@@ -210,8 +213,8 @@ class CoordinatorControllerTest : IntegrationTestBase() {
 
     val userDetails = UserDetails("1", "Tom C")
 
-    @Sql(scripts = [ "/db/test/oasys_assessment_pk_data.sql" ], executionPhase = BEFORE_TEST_METHOD)
-    @Sql(scripts = [ "/db/test/oasys_assessment_pk_cleanup.sql" ], executionPhase = AFTER_TEST_METHOD)
+    @Sql(scripts = ["/db/test/oasys_assessment_pk_data.sql"], executionPhase = BEFORE_TEST_METHOD)
+    @Sql(scripts = ["/db/test/oasys_assessment_pk_cleanup.sql"], executionPhase = AFTER_TEST_METHOD)
     @Test
     fun `should lock the plan and return a new version`() {
       val lockRequest = LockPlanRequest(
@@ -271,8 +274,8 @@ class CoordinatorControllerTest : IntegrationTestBase() {
     val planUuid = UUID.fromString("556db5c8-a1eb-4064-986b-0740d6a83c33")
     val userDetails = UserDetails("1", "Tom C")
 
-    @Sql(scripts = [ "/db/test/oasys_assessment_pk_data.sql" ], executionPhase = BEFORE_TEST_METHOD)
-    @Sql(scripts = [ "/db/test/oasys_assessment_pk_cleanup.sql" ], executionPhase = AFTER_TEST_METHOD)
+    @Sql(scripts = ["/db/test/oasys_assessment_pk_data.sql"], executionPhase = BEFORE_TEST_METHOD)
+    @Sql(scripts = ["/db/test/oasys_assessment_pk_cleanup.sql"], executionPhase = AFTER_TEST_METHOD)
     @Test
     fun `should set the plan version to ROLLED_BACK`() {
       val beforePlanVersion = planRepository.getPlanByUuid(planUuid).currentVersion
@@ -331,8 +334,11 @@ class CoordinatorControllerTest : IntegrationTestBase() {
     val planUuid = UUID.fromString("556db5c8-a1eb-4064-986b-0740d6a83c33")
     val notFoundUuid = UUID.fromString("0d0f2d85-5b70-4916-9f89-ed248f8d5196")
 
-    @Sql(scripts = [ "/db/test/oasys_assessment_pk_data.sql", "/db/test/oasys_assessment_pk_data_awaiting_countersign.sql" ], executionPhase = BEFORE_TEST_METHOD)
-    @Sql(scripts = [ "/db/test/oasys_assessment_pk_cleanup.sql" ], executionPhase = AFTER_TEST_METHOD)
+    @Sql(
+      scripts = ["/db/test/oasys_assessment_pk_data.sql", "/db/test/oasys_assessment_pk_data_awaiting_countersign.sql"],
+      executionPhase = BEFORE_TEST_METHOD,
+    )
+    @Sql(scripts = ["/db/test/oasys_assessment_pk_cleanup.sql"], executionPhase = AFTER_TEST_METHOD)
     @Test
     fun `should countersign the plan and return the same version`() {
       val signRequest = CounterSignPlanRequest(
@@ -384,8 +390,8 @@ class CoordinatorControllerTest : IntegrationTestBase() {
         }
     }
 
-    @Sql(scripts = [ "/db/test/oasys_assessment_pk_data.sql" ], executionPhase = BEFORE_TEST_METHOD)
-    @Sql(scripts = [ "/db/test/oasys_assessment_pk_cleanup.sql" ], executionPhase = AFTER_TEST_METHOD)
+    @Sql(scripts = ["/db/test/oasys_assessment_pk_data.sql"], executionPhase = BEFORE_TEST_METHOD)
+    @Sql(scripts = ["/db/test/oasys_assessment_pk_cleanup.sql"], executionPhase = AFTER_TEST_METHOD)
     @Test
     fun `should return 409 conflict`() {
       val signRequest = CounterSignPlanRequest(
@@ -414,7 +420,7 @@ class CoordinatorControllerTest : IntegrationTestBase() {
     val planUuid = UUID.fromString("556db5c8-a1eb-4064-986b-0740d6a83c33")
     val notFoundUuid = UUID.fromString("0d0f2d85-5b70-4916-9f89-ed248f8d5196")
 
-    @Sql(scripts = ["/db/test/oasys_assessment_pk_soft_deleted_data.sql"], executionPhase = BEFORE_TEST_METHOD)
+    @Sql(scripts = ["/db/test/oasys_assessment_pk_partial_soft_deleted_data.sql"], executionPhase = BEFORE_TEST_METHOD)
     @Sql(scripts = ["/db/test/oasys_assessment_pk_cleanup.sql"], executionPhase = AFTER_TEST_METHOD)
     @Test
     fun `should successfully set all the remaining versions to soft deleted`() {
@@ -444,7 +450,37 @@ class CoordinatorControllerTest : IntegrationTestBase() {
       assertThat(planAfter.currentVersion?.version).isEqualTo(10)
     }
 
-    @Sql(scripts = ["/db/test/oasys_assessment_pk_soft_deleted_data.sql"], executionPhase = BEFORE_TEST_METHOD)
+    @Sql(scripts = ["/db/test/oasys_assessment_pk_no_soft_deleted_data.sql"], executionPhase = BEFORE_TEST_METHOD)
+    @Sql(scripts = ["/db/test/oasys_assessment_pk_cleanup.sql"], executionPhase = AFTER_TEST_METHOD)
+    @Test
+    fun `should create a brand new version based on nothing if all records have been soft deleted`() {
+      val plan = planRepository.getPlanByUuid(planUuid)
+      val allVersionsBefore = planVersionRepository.findAllByPlanId(plan.id!!).filter { !it.softDeleted }
+      assertThat(allVersionsBefore.size).isEqualTo(10)
+      val softDeletePlanVersionsRequest = SoftDeletePlanVersionsRequest(
+        userDetails = userDetails,
+        from = 0,
+      )
+      webTestClient.post()
+        .uri("/coordinator/plan/$planUuid/soft-delete")
+        .bodyValue(softDeletePlanVersionsRequest)
+        .header("Content-Type", "application/json")
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .exchange()
+        .expectStatus().isOk
+        .expectBody<SoftDeletePlanVersionsResponse>()
+        .returnResult().run {
+          assertThat(responseBody?.versionsSoftDeleted).isEqualTo(listOf(0, 1, 2, 3, 4, 5, 6, 7, 8, 9))
+          assertThat(responseBody?.createdFromVersion).isEqualTo(null)
+        }
+
+      val planAfter = planRepository.getPlanByUuid(planUuid)
+      val allVersionsAfter = planVersionRepository.findAllByPlanId(plan.id!!).filter { !it.softDeleted }
+      assertThat(allVersionsAfter.size).isEqualTo(1)
+      assertThat(planAfter.currentVersion?.version).isEqualTo(10)
+    }
+
+    @Sql(scripts = ["/db/test/oasys_assessment_pk_partial_soft_deleted_data.sql"], executionPhase = BEFORE_TEST_METHOD)
     @Sql(scripts = ["/db/test/oasys_assessment_pk_cleanup.sql"], executionPhase = AFTER_TEST_METHOD)
     @Test
     fun `should throw an error stating the supplied range contains versions already soft deleted`() {
@@ -493,7 +529,7 @@ class CoordinatorControllerTest : IntegrationTestBase() {
     val planUuid = UUID.fromString("556db5c8-a1eb-4064-986b-0740d6a83c33")
     val notFoundUuid = UUID.fromString("0d0f2d85-5b70-4916-9f89-ed248f8d5196")
 
-    @Sql(scripts = ["/db/test/oasys_assessment_pk_soft_deleted_data.sql"], executionPhase = BEFORE_TEST_METHOD)
+    @Sql(scripts = ["/db/test/oasys_assessment_pk_partial_soft_deleted_data.sql"], executionPhase = BEFORE_TEST_METHOD)
     @Sql(scripts = ["/db/test/oasys_assessment_pk_cleanup.sql"], executionPhase = AFTER_TEST_METHOD)
     @Test
     fun `should successfully restore the set of soft_deleted records`() {
@@ -522,7 +558,7 @@ class CoordinatorControllerTest : IntegrationTestBase() {
       assertThat(allSoftDeletedVersionsAfter.size).isEqualTo(1)
     }
 
-    @Sql(scripts = ["/db/test/oasys_assessment_pk_soft_deleted_data.sql"], executionPhase = BEFORE_TEST_METHOD)
+    @Sql(scripts = ["/db/test/oasys_assessment_pk_partial_soft_deleted_data.sql"], executionPhase = BEFORE_TEST_METHOD)
     @Sql(scripts = ["/db/test/oasys_assessment_pk_cleanup.sql"], executionPhase = AFTER_TEST_METHOD)
     @Test
     fun `should throw an error stating the supplied range contains versions that are not soft deleted`() {

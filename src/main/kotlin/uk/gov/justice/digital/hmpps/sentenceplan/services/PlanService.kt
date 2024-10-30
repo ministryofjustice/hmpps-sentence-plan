@@ -77,18 +77,35 @@ class PlanService(
     planVersionRepository.saveAll(versionsToUpdate)
 
     if (plan.currentVersion?.version in from..to && softDelete) {
-      val maxAvailableVersion =
-        versions.maxByOrNull { !it.softDeleted && it.version < from } ?: versions.firstOrNull { it.version == 0 }
-      val updatedPlan = maxAvailableVersion?.let {
-        plan.currentVersion = versionService.alwaysCreateNewPlanVersion(it)
+      // The current version has been deleted.
+      // Find the latest version that has not been deleted, to be used for base of the new version
+      val maxAvailableVersion = versions.filter { !it.softDeleted && it.version < from }.maxByOrNull { it.version }
+
+      val updatedPlan = maxAvailableVersion.let { availableVersion ->
+        plan.currentVersion =
+          if (availableVersion != null) {
+            // Use the available version to base new version on
+            versionService.alwaysCreateNewPlanVersion(availableVersion)
+          } else {
+            // No version available to base new version on. Create a new version
+            planVersionRepository.save(
+              PlanVersionEntity(
+                plan = plan,
+                planId = plan.id!!,
+                planType = PlanType.INITIAL,
+                version = versions.maxByOrNull { it.version }?.version?.inc() ?: 0,
+              ),
+            )
+          }
         planRepository.save(plan)
-      }!!
+      }
+
       return SoftDeletePlanVersionsResponse.from(
         updatedPlan.currentVersion!!,
         planUuid,
         true,
         range.toList(),
-        maxAvailableVersion.version.toLong(),
+        maxAvailableVersion?.version?.toLong(),
       )
     }
     return SoftDeletePlanVersionsResponse.from(plan.currentVersion!!, planUuid, softDelete, range.toList())
@@ -99,7 +116,8 @@ class PlanService(
     planEntity.currentVersion?.status = CountersigningStatus.LOCKED_INCOMPLETE
     planRepository.save(planEntity)
 
-    val newVersion = versionService.alwaysCreateNewPlanVersion(planEntity.currentVersion!!).apply { status = CountersigningStatus.UNSIGNED }
+    val newVersion = versionService.alwaysCreateNewPlanVersion(planEntity.currentVersion!!)
+      .apply { status = CountersigningStatus.UNSIGNED }
     planVersionRepository.save(newVersion)
 
     return planEntity.currentVersion!!
@@ -155,6 +173,7 @@ class PlanService(
         agreedPlanVersion = planVersionRepository.save(currentPlanVersion)
         addPlanAgreementNote(agreedPlanVersion, agreement)
       }
+
       else -> throw ConflictException("Plan $planUuid has already been agreed.")
     }
 
@@ -194,6 +213,7 @@ class PlanService(
       SignType.SELF -> {
         signedPlan.status = CountersigningStatus.SELF_SIGNED
       }
+
       SignType.COUNTERSIGN -> {
         signedPlan.status = CountersigningStatus.AWAITING_COUNTERSIGN
       }
@@ -205,7 +225,8 @@ class PlanService(
   }
 
   fun countersignPlan(planUuid: UUID, countersignPlanRequest: CounterSignPlanRequest): PlanVersionEntity {
-    val version = planVersionRepository.getVersionByUuidAndVersion(planUuid, countersignPlanRequest.sentencePlanVersion.toInt())
+    val version =
+      planVersionRepository.getVersionByUuidAndVersion(planUuid, countersignPlanRequest.sentencePlanVersion.toInt())
 
     // Duplicate request checking
     when (countersignPlanRequest.signType) {
@@ -214,16 +235,19 @@ class PlanService(
           throw ConflictException("Plan $planUuid was already countersigned.")
         }
       }
+
       CountersignType.REJECTED -> {
         if (version.status == CountersigningStatus.REJECTED) {
           throw ConflictException("Plan $planUuid was already rejected.")
         }
       }
+
       CountersignType.DOUBLE_COUNTERSIGNED -> {
         if (version.status == CountersigningStatus.DOUBLE_COUNTERSIGNED) {
           throw ConflictException("Plan $planUuid was already double countersigned.")
         }
       }
+
       CountersignType.AWAITING_DOUBLE_COUNTERSIGN -> {
         if (version.status == CountersigningStatus.AWAITING_DOUBLE_COUNTERSIGN) {
           throw ConflictException("Plan $planUuid was already awaiting double countersign.")
@@ -239,18 +263,25 @@ class PlanService(
         }
         version.status = CountersigningStatus.COUNTERSIGNED
       }
+
       CountersignType.REJECTED -> {
-        if (version.status !in arrayOf(CountersigningStatus.AWAITING_COUNTERSIGN, CountersigningStatus.AWAITING_DOUBLE_COUNTERSIGN)) {
+        if (version.status !in arrayOf(
+            CountersigningStatus.AWAITING_COUNTERSIGN,
+            CountersigningStatus.AWAITING_DOUBLE_COUNTERSIGN,
+          )
+        ) {
           throw ConflictException("Plan $planUuid was not awaiting countersign or double countersign.")
         }
         version.status = CountersigningStatus.REJECTED
       }
+
       CountersignType.DOUBLE_COUNTERSIGNED -> {
         if (version.status != CountersigningStatus.AWAITING_DOUBLE_COUNTERSIGN) {
           throw ConflictException("Plan $planUuid was not awaiting double countersign.")
         }
         version.status = CountersigningStatus.DOUBLE_COUNTERSIGNED
       }
+
       CountersignType.AWAITING_DOUBLE_COUNTERSIGN -> {
         if (version.status != CountersigningStatus.AWAITING_COUNTERSIGN) {
           throw ConflictException("Plan $planUuid was not awaiting countersign.")

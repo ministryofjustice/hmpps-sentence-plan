@@ -9,4 +9,5 @@ data class Goal(
   val relatedAreasOfNeed: List<String> = emptyList(),
   val status: GoalStatus? = null,
   val note: String? = null,
+  val steps: List<Step> = emptyList(),
 )

@@ -453,5 +453,31 @@ class GoalServiceTest {
       assertThat(stepsList.last().goal?.uuid).isEqualTo(goalUuid)
       assertThat(stepsList.last().description).isEqualTo("description 2")
     }
+
+    @Test
+    fun `update steps with no steps and a note saves the note`() {
+      val goalSlot = slot<GoalEntity>()
+
+      val goalEntityWithNoSteps = GoalEntity(
+        title = "Mock Goal",
+        areaOfNeed = mockk<AreaOfNeedEntity>(),
+        planVersion = null,
+        uuid = goalUuid,
+        goalOrder = 1,
+      )
+
+      val noteToAdd = "This is a new note"
+
+      every { goalRepository.findByUuid(goalUuid) } returns goalEntityNoSteps
+      every { goalRepository.save(capture(goalSlot)) } answers { goalSlot.captured }
+      every { stepRepository.deleteAll(any()) } returns Unit
+      every { versionService.conditionallyCreateNewPlanVersion(any()) } returns newPlanVersionEntity
+
+      val stepsList = goalService.addStepsToGoal(goalUuid, Goal(note = noteToAdd), true)
+
+      assertThat(stepsList.size).isEqualTo(0)
+      assertThat(goalSlot.captured.notes.size).isEqualTo(1)
+      assertThat(goalSlot.captured.notes.first().note).isEqualTo(noteToAdd)
+    }
   }
 }

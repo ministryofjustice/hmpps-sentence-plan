@@ -126,6 +126,7 @@ class GoalService(
         GoalNoteEntity(
           note = note,
           type = GoalNoteType.PROGRESS,
+          goal = goalEntity,
         ),
       )
     }

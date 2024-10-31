@@ -378,7 +378,7 @@ class GoalServiceTest {
         goalService.addStepsToGoal(UUID.randomUUID(), Goal(steps = emptyList()), true)
       }
 
-      assertThat(exception.message).startsWith("At least one Step must be provided")
+      assertThat(exception.message).startsWith("A Step or Note must be provided")
     }
 
     @Test

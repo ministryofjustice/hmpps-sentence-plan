@@ -105,9 +105,13 @@ class GoalService(
     var goalEntity: GoalEntity = goalRepository.findByUuid(goalUuid)
       ?: throw Exception("This Goal was not found: $goalUuid")
 
-    require(goal.steps.isNotEmpty()) { "At least one Step must be provided" }
+    if (goal.steps.isEmpty() && goal.note == null) {
+      throw IllegalArgumentException("A Step or Note must be provided")
+    }
 
-    requireStepsAreValid(goal.steps)
+    if (goal.steps.isNotEmpty()) {
+      requireStepsAreValid(goal.steps)
+    }
 
     val planVersion = goalEntity.planVersion
     versionService.conditionallyCreateNewPlanVersion(planVersion)
@@ -115,11 +119,12 @@ class GoalService(
     // the planversion has changed, so refetch the goal to make sure we have the right version tree
     goalEntity = goalRepository.findByUuid(goalUuid)!!
 
-    if (replaceExistingSteps) {
-      stepRepository.deleteAll(goalEntity.steps)
+    if (goal.steps.isNotEmpty()) {
+      if (replaceExistingSteps) {
+        stepRepository.deleteAll(goalEntity.steps)
+      }
+      goalEntity.steps = createStepEntitiesFromSteps(goalEntity, goal.steps)
     }
-
-    goalEntity.steps = createStepEntitiesFromSteps(goalEntity, goal.steps)
 
     goal.note?.let { note ->
       goalEntity.notes.add(

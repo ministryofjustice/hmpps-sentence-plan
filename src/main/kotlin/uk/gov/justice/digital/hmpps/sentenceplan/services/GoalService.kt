@@ -105,7 +105,7 @@ class GoalService(
     var goalEntity: GoalEntity = goalRepository.findByUuid(goalUuid)
       ?: throw Exception("This Goal was not found: $goalUuid")
 
-    if (goal.steps.isEmpty() && goal.note == null) {
+    if (goal.steps.isEmpty() && goal.note.isNullOrEmpty()) {
       throw IllegalArgumentException("A Step or Note must be provided")
     }
 
@@ -126,7 +126,7 @@ class GoalService(
       goalEntity.steps = createStepEntitiesFromSteps(goalEntity, goal.steps)
     }
 
-    goal.note?.let { note ->
+    goal.note?.takeIf { it.isNotEmpty() }?.let { note ->
       goalEntity.notes.add(
         GoalNoteEntity(
           note = note,

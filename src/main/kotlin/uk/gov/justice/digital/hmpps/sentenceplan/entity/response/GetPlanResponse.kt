@@ -27,7 +27,7 @@ data class GetPlanResponse(
       }
 
       return GetPlanResponse(
-        sentencePlanId = planVersionEntity.uuid,
+        sentencePlanId = planVersionEntity.plan!!.uuid,
         sentencePlanVersion = planVersionEntity.version.toLong(),
         lastUpdatedTimestampSP = planVersionEntity.updatedDate,
         planComplete = planComplete,

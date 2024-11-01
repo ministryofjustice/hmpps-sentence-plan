@@ -62,7 +62,7 @@ class GoalController(private val service: GoalService) {
     @PathVariable goalUuid: UUID,
     @RequestBody steps: List<Step>,
   ): List<StepEntity> {
-    return service.addStepsToGoal(goalUuid, steps)
+    return service.addStepsToGoal(goalUuid, Goal(steps = steps))
   }
 
   @GetMapping("/{goalUuid}/steps")
@@ -78,9 +78,9 @@ class GoalController(private val service: GoalService) {
   @ResponseStatus(HttpStatus.OK)
   fun updateStep(
     @PathVariable goalUuid: UUID,
-    @RequestBody steps: List<Step>,
+    @RequestBody goal: Goal,
   ): List<StepEntity>? {
-    return service.addStepsToGoal(goalUuid, steps, true)
+    return service.addStepsToGoal(goalUuid, goal, true)
   }
 
   @PostMapping("/order")

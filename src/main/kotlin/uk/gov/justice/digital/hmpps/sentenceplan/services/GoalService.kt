@@ -9,6 +9,8 @@ import uk.gov.justice.digital.hmpps.sentenceplan.data.Step
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.AreaOfNeedEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.AreaOfNeedRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalEntity
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalNoteEntity
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalNoteType
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalStatus
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
@@ -99,27 +101,42 @@ class GoalService(
   }
 
   @Transactional
-  fun addStepsToGoal(goalUuid: UUID, steps: List<Step>, replaceExistingSteps: Boolean = false): List<StepEntity> {
-    var goal: GoalEntity = goalRepository.findByUuid(goalUuid)
+  fun addStepsToGoal(goalUuid: UUID, goal: Goal, replaceExistingSteps: Boolean = false): List<StepEntity> {
+    var goalEntity: GoalEntity = goalRepository.findByUuid(goalUuid)
       ?: throw Exception("This Goal was not found: $goalUuid")
 
-    require(steps.isNotEmpty()) { "At least one Step must be provided" }
+    if (goal.steps.isEmpty() && goal.note.isNullOrEmpty()) {
+      throw IllegalArgumentException("A Step or Note must be provided")
+    }
 
-    requireStepsAreValid(steps)
+    if (goal.steps.isNotEmpty()) {
+      requireStepsAreValid(goal.steps)
+    }
 
-    val planVersion = goal.planVersion
+    val planVersion = goalEntity.planVersion
     versionService.conditionallyCreateNewPlanVersion(planVersion)
 
     // the planversion has changed, so refetch the goal to make sure we have the right version tree
-    goal = goalRepository.findByUuid(goalUuid)!!
+    goalEntity = goalRepository.findByUuid(goalUuid)!!
 
-    if (replaceExistingSteps) {
-      stepRepository.deleteAll(goal.steps)
+    if (goal.steps.isNotEmpty()) {
+      if (replaceExistingSteps) {
+        stepRepository.deleteAll(goalEntity.steps)
+      }
+      goalEntity.steps = createStepEntitiesFromSteps(goalEntity, goal.steps)
     }
 
-    goal.steps = createStepEntitiesFromSteps(goal, steps)
+    goal.note?.takeIf { it.isNotEmpty() }?.let { note ->
+      goalEntity.notes.add(
+        GoalNoteEntity(
+          note = note,
+          type = GoalNoteType.PROGRESS,
+          goal = goalEntity,
+        ),
+      )
+    }
 
-    val savedGoal: GoalEntity = goalRepository.save(goal)
+    val savedGoal: GoalEntity = goalRepository.save(goalEntity)
     return savedGoal.steps
   }
 

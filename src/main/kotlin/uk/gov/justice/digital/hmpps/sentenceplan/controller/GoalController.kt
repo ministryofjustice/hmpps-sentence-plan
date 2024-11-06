@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.servlet.resource.NoResourceFoundException
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Goal
 import uk.gov.justice.digital.hmpps.sentenceplan.data.GoalOrder
+import uk.gov.justice.digital.hmpps.sentenceplan.data.GoalStatusUpdate
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Step
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepEntity
@@ -37,13 +38,13 @@ class GoalController(private val service: GoalService) {
     )
   }
 
-  @PatchMapping("/{goalUuid}")
+  @PutMapping("/{goalUuid}")
   @ResponseStatus(HttpStatus.OK)
-  fun updateGoal(
+  fun replaceGoal(
     @PathVariable goalUuid: UUID,
     @RequestBody goal: Goal,
   ): GoalEntity {
-    return service.updateGoalByUuid(goalUuid, goal)
+    return service.replaceGoalByUuid(goalUuid, goal)
   }
 
   @DeleteMapping("/{goalUuid}")
@@ -54,6 +55,15 @@ class GoalController(private val service: GoalService) {
     if (service.deleteGoalByUuid(goalUuid) != ONE_ROW_DELETED) {
       throw NoResourceFoundException(HttpMethod.DELETE, "No goal found for $goalUuid")
     }
+  }
+
+  @PatchMapping("/{goalUuid}")
+  @ResponseStatus(HttpStatus.OK)
+  fun updateGoalStatus(
+    @PathVariable goalUuid: UUID,
+    @RequestBody goalStatusUpdate: GoalStatusUpdate,
+  ) {
+    return service.updateGoalStatus(goalUuid, goalStatusUpdate)
   }
 
   @PostMapping("/{goalUuid}/steps")

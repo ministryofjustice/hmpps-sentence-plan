@@ -325,7 +325,7 @@ class GoalControllerTest : IntegrationTestBase() {
       val goalUuid = "31d7e986-4078-4f5c-af1d-115f9ba3722d"
 
       val goalEntity: GoalEntity? =
-        webTestClient.patch().uri("/goals/$goalUuid").header("Content-Type", "application/json")
+        webTestClient.put().uri("/goals/$goalUuid").header("Content-Type", "application/json")
           .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
           .bodyValue(goalRequestBody)
           .exchange()
@@ -347,7 +347,7 @@ class GoalControllerTest : IntegrationTestBase() {
       val goalUuid = "778b8e52-5927-42d4-9c05-7029ef3c6f6d"
 
       val goalEntity: GoalEntity? =
-        webTestClient.patch().uri("/goals/$goalUuid").header("Content-Type", "application/json")
+        webTestClient.put().uri("/goals/$goalUuid").header("Content-Type", "application/json")
           .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
           .bodyValue(goalRequestBody)
           .exchange()
@@ -371,7 +371,7 @@ class GoalControllerTest : IntegrationTestBase() {
       val goalUuid = "778b8e52-5927-42d4-9c05-7029ef3c6f6d"
 
       val goalEntity: GoalEntity? =
-        webTestClient.patch().uri("/goals/$goalUuid").header("Content-Type", "application/json")
+        webTestClient.put().uri("/goals/$goalUuid").header("Content-Type", "application/json")
           .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
           .bodyValue(goalRequestBody)
           .exchange()
@@ -395,7 +395,7 @@ class GoalControllerTest : IntegrationTestBase() {
       val goalUuid = "31d7e986-4078-4f5c-af1d-115f9ba3722d"
 
       val goalEntity: GoalEntity? =
-        webTestClient.patch().uri("/goals/$goalUuid").header("Content-Type", "application/json")
+        webTestClient.put().uri("/goals/$goalUuid").header("Content-Type", "application/json")
           .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
           .bodyValue(goalRequestBody)
           .exchange()
@@ -418,7 +418,7 @@ class GoalControllerTest : IntegrationTestBase() {
       val goalUuid = "31d7e986-4078-4f5c-af1d-115f9ba3722d"
 
       val goalEntity: GoalEntity? =
-        webTestClient.patch().uri("/goals/$goalUuid").header("Content-Type", "application/json")
+        webTestClient.put().uri("/goals/$goalUuid").header("Content-Type", "application/json")
           .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
           .bodyValue(goalRequestBody)
           .exchange()
@@ -438,7 +438,7 @@ class GoalControllerTest : IntegrationTestBase() {
       val goalUuid = "31d7e986-4078-4f5c-af1d-115f9ba3722d"
 
       val goalEntity: GoalEntity? =
-        webTestClient.patch().uri("/goals/$goalUuid").header("Content-Type", "application/json")
+        webTestClient.put().uri("/goals/$goalUuid").header("Content-Type", "application/json")
           .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
           .bodyValue(goalRequestBody)
           .exchange()
@@ -462,7 +462,7 @@ class GoalControllerTest : IntegrationTestBase() {
       val goalUuid = "31d7e986-4078-4f5c-af1d-115f9ba3722d"
 
       val goalEntity: GoalEntity? =
-        webTestClient.patch().uri("/goals/$goalUuid").header("Content-Type", "application/json")
+        webTestClient.put().uri("/goals/$goalUuid").header("Content-Type", "application/json")
           .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
           .bodyValue(goalRequestBody)
           .exchange()
@@ -486,7 +486,7 @@ class GoalControllerTest : IntegrationTestBase() {
       val goalUuid = "31d7e986-4078-4f5c-af1d-115f9ba3722d"
 
       val goalEntity: GoalEntity? =
-        webTestClient.patch().uri("/goals/$goalUuid").header("Content-Type", "application/json")
+        webTestClient.put().uri("/goals/$goalUuid").header("Content-Type", "application/json")
           .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
           .bodyValue(goalRequestBody)
           .exchange()
@@ -512,7 +512,7 @@ class GoalControllerTest : IntegrationTestBase() {
       val goalUuid = "31d7e986-4078-4f5c-af1d-115f9ba3722d"
 
       val goalEntity: GoalEntity? =
-        webTestClient.patch().uri("/goals/$goalUuid").header("Content-Type", "application/json")
+        webTestClient.put().uri("/goals/$goalUuid").header("Content-Type", "application/json")
           .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
           .bodyValue(goalRequestBody)
           .exchange()

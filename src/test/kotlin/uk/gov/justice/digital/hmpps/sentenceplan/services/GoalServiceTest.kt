@@ -71,7 +71,7 @@ class GoalServiceTest {
     planVersion = null,
     uuid = goalUuid,
     goalOrder = 1,
-    relatedAreasOfNeed = mockk<MutableSet<AreaOfNeedEntity>>(),
+    relatedAreasOfNeed = mutableSetOf(areaOfNeedEntity),
   )
 
   private val steps = listOf(
@@ -245,7 +245,7 @@ class GoalServiceTest {
       every { versionService.conditionallyCreateNewPlanVersion(any()) } returns newPlanVersionEntity
 
       val exception = assertThrows<Exception> {
-        goalService.updateGoalByUuid(UUID.randomUUID(), goal)
+        goalService.replaceGoalByUuid(UUID.randomUUID(), goal)
       }
 
       assertThat(exception.message).startsWith("This Goal was not found:")
@@ -260,7 +260,7 @@ class GoalServiceTest {
       val goalSlot = slot<GoalEntity>()
       every { goalRepository.save(capture(goalSlot)) } answers { goalSlot.captured }
 
-      val savedGoal: GoalEntity = goalService.updateGoalByUuid(UUID.randomUUID(), goal)
+      val savedGoal: GoalEntity = goalService.replaceGoalByUuid(UUID.randomUUID(), goal)
 
       assertThat(savedGoal.title).isEqualTo(goal.title)
     }
@@ -272,7 +272,7 @@ class GoalServiceTest {
       every { versionService.conditionallyCreateNewPlanVersion(any()) } returns newPlanVersionEntity
 
       val exception = assertThrows<Exception> {
-        goalService.updateGoalByUuid(UUID.randomUUID(), goal)
+        goalService.replaceGoalByUuid(UUID.randomUUID(), goal)
       }
 
       assertThat(exception.message).startsWith("One or more of the Related Areas of Need was not found:")
@@ -285,7 +285,7 @@ class GoalServiceTest {
       every { versionService.conditionallyCreateNewPlanVersion(any()) } returns newPlanVersionEntity
 
       val exception = assertThrows<Exception> {
-        goalService.updateGoalByUuid(UUID.randomUUID(), goal)
+        goalService.replaceGoalByUuid(UUID.randomUUID(), goal)
       }
 
       assertThat(exception.message).startsWith("One or more of the Related Areas of Need was not found")
@@ -304,7 +304,7 @@ class GoalServiceTest {
       val goalSlot = slot<GoalEntity>()
       every { goalRepository.save(capture(goalSlot)) } answers { goalSlot.captured }
 
-      val savedGoal: GoalEntity = goalService.updateGoalByUuid(UUID.randomUUID(), goal)
+      val savedGoal: GoalEntity = goalService.replaceGoalByUuid(UUID.randomUUID(), goal)
 
       assertThat(savedGoal.notes.first().note).isEqualTo(goal.note)
       assertThat(savedGoal.notes.first().type).isEqualTo(GoalNoteType.PROGRESS)
@@ -312,24 +312,25 @@ class GoalServiceTest {
     }
 
     @Test
-    fun `update goal with new note and status ACHIEVED should add note with Type ACHIEVED`() {
+    fun `update goal with new note and status ACHIEVED should add note with Type ACHIEVED and note remove Related Areas of Need`() {
       val goal = Goal(
         note = "Simple note update",
         status = GoalStatus.ACHIEVED,
       )
 
-      every { goalRepository.findByUuid(any()) } returns goalEntityNoSteps
+      every { goalRepository.findByUuid(any()) } returns goalEntityWithRelatedAreasOfNeed
       every { areaOfNeedRepository.findAllByNames(any()) } returns listOf(areaOfNeedEntity)
       every { versionService.conditionallyCreateNewPlanVersion(any()) } returns newPlanVersionEntity
 
       val goalSlot = slot<GoalEntity>()
       every { goalRepository.save(capture(goalSlot)) } answers { goalSlot.captured }
 
-      val savedGoal: GoalEntity = goalService.updateGoalByUuid(UUID.randomUUID(), goal)
+      val savedGoal: GoalEntity = goalService.replaceGoalByUuid(UUID.randomUUID(), goal)
 
       assertThat(savedGoal.notes.first().note).isEqualTo(goal.note)
       assertThat(savedGoal.notes.first().type).isEqualTo(GoalNoteType.ACHIEVED)
       assertThat(savedGoal.status).isEqualTo(GoalStatus.ACHIEVED)
+      assertThat(savedGoal.relatedAreasOfNeed?.size).isEqualTo(1)
     }
 
     @Test
@@ -346,7 +347,7 @@ class GoalServiceTest {
       val goalSlot = slot<GoalEntity>()
       every { goalRepository.save(capture(goalSlot)) } answers { goalSlot.captured }
 
-      val savedGoal: GoalEntity = goalService.updateGoalByUuid(UUID.randomUUID(), goal)
+      val savedGoal: GoalEntity = goalService.replaceGoalByUuid(UUID.randomUUID(), goal)
 
       assertThat(savedGoal.notes.first().note).isEqualTo(goal.note)
       assertThat(savedGoal.notes.first().type).isEqualTo(GoalNoteType.REMOVED)

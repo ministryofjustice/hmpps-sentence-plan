@@ -412,7 +412,7 @@ class GoalControllerTest : IntegrationTestBase() {
     fun `should update goal without changing area of need`() {
       val goalRequestBody = Goal(
         title = "Update goal without changing area of need test",
-        areaOfNeed = "Finance",
+        areaOfNeed = "Finances",
       )
 
       val goalUuid = "31d7e986-4078-4f5c-af1d-115f9ba3722d"
@@ -506,7 +506,7 @@ class GoalControllerTest : IntegrationTestBase() {
     fun `should update goal and delete related areas of need`() {
       val goalRequestBody = Goal(
         title = "update goal and delete related areas of need",
-        areaOfNeed = "Finance",
+        areaOfNeed = "Finances",
       )
 
       val goalUuid = "31d7e986-4078-4f5c-af1d-115f9ba3722d"

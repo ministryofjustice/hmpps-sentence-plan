@@ -39,32 +39,40 @@ import java.util.UUID
 @NamedNativeQuery(
   name = "PlanEntity.getPlanAndGoalNotes",
   query = """
-    select 'Plan' as type,
-           plan_notes.agreement_status_note as note,
-           CAST(plan_notes.agreement_status AS VARCHAR) AS note_type,
-           plan_notes.created_date,
-           plan_notes.created_by_id        
-    from "sentence-plan".plan_agreement_notes plan_notes
-        inner join "sentence-plan".plan_version on plan_notes.plan_version_id = plan_version.id
-        inner join "sentence-plan".plan on plan.current_plan_version_id = plan_version.id
-        and plan.uuid = ?1
+select 'Plan' as note_object,
+       plan_notes.agreement_status_note as note,
+       plan_notes.optional_note as additional_note,
+       CAST(plan_notes.agreement_status AS VARCHAR) AS note_type,
+       '' as goal_title,
+       '' as goal_uuid,
+       plan_notes.created_date,
+       practitioner.username as created_by
+from "sentence-plan".plan_agreement_notes plan_notes
+    inner join "sentence-plan".practitioner on plan_notes.created_by_id = practitioner.id
+    inner join "sentence-plan".plan_version on plan_notes.plan_version_id = plan_version.id
+    inner join "sentence-plan".plan on plan.current_plan_version_id = plan_version.id
+    and plan.uuid = ?1
 
-    UNION ALL
+UNION ALL
 
-    select 'Goal' as type,
-           goal_notes.note,
-           CAST(goal_notes.note_type AS VARCHAR) AS note_type,
-           goal_notes.created_date,
-           goal_notes.created_by_id           
-    from "sentence-plan".goal_notes
-        inner join "sentence-plan".goal on goal_notes.goal_id = goal.id
-        inner join "sentence-plan".plan_version on goal.plan_version_id = plan_version.id
-        inner join "sentence-plan".plan on plan.current_plan_version_id = plan_version.id
-        and plan.uuid = ?1
+select 'Goal' as note_object,
+       goal_notes.note,
+       '' as additional_note,
+       CAST(goal_notes.note_type AS VARCHAR) AS note_type,
+       goal.title as goal_title,
+       CAST(goal.uuid AS VARCHAR) as goal_uuid, 
+       goal_notes.created_date,
+       practitioner.username as created_by
+from "sentence-plan".goal_notes
+    inner join "sentence-plan".practitioner on goal_notes.created_by_id = practitioner.id
+    inner join "sentence-plan".goal on goal_notes.goal_id = goal.id
+    inner join "sentence-plan".plan_version on goal.plan_version_id = plan_version.id
+    inner join "sentence-plan".plan on plan.current_plan_version_id = plan_version.id
+    and plan.uuid = ?1
         
     ORDER BY created_date DESC;
     """,
-  resultSetMapping = "NoteMapping"
+  resultSetMapping = "NoteMapping",
 )
 @SqlResultSetMapping(
   name = "NoteMapping",
@@ -72,14 +80,17 @@ import java.util.UUID
     ConstructorResult(
       targetClass = Note::class,
       columns = [
-        ColumnResult(name = "type"),
+        ColumnResult(name = "note_object"),
         ColumnResult(name = "note"),
+        ColumnResult(name = "additional_note"),
         ColumnResult(name = "note_type"),
+        ColumnResult(name = "goal_title"),
+        ColumnResult(name = "goal_uuid"),
         ColumnResult(name = "created_date", type = LocalDateTime::class),
-        ColumnResult(name = "created_by_id")
-      ]
-    )
-  ]
+        ColumnResult(name = "created_by"),
+      ],
+    ),
+  ],
 )
 class PlanEntity(
   @Id

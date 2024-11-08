@@ -3,12 +3,12 @@ package uk.gov.justice.digital.hmpps.sentenceplan.data
 import java.time.LocalDateTime
 
 data class Note(
-  val type: String,
+  val noteObject: String,
   val note: String,
-  val noteType: String,
+  val additionalNote: String,
+  val noteStatus: String,
+  val goalTitle: String,
+  val goalUuid: String,
   val createdDate: LocalDateTime,
-  val createdBy: Long,
+  val createdBy: String,
 )
-
-// goal title
-// goal uuid

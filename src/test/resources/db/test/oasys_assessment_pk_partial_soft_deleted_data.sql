@@ -65,9 +65,3 @@ SET current_plan_version_id = (
     WHERE uuid = '9f2aaa46-e544-4bcd-8db6-fbe7842ddb69'
 )
 WHERE uuid = '556db5c8-a1eb-4064-986b-0740d6a83c33';
-
--- Insert into oasys_pk_to_plan
-INSERT INTO oasys_pk_to_plan (oasys_assessment_pk, plan_id)
-SELECT '1', plan.id
-from plan
-where plan.uuid = '556db5c8-a1eb-4064-986b-0740d6a83c33';

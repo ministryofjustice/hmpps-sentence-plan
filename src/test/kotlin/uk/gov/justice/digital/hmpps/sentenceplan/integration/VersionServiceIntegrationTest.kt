@@ -66,7 +66,7 @@ class VersionServiceIntegrationTest : IntegrationTestBase() {
   @WithMockUser(username = "UserId|Username")
   @Sql(
     scripts = [
-      "/db/test/oasys_assessment_pk_data.sql",
+      "/db/test/plan_data.sql",
       "/db/test/goals_data.sql",
       "/db/test/related_area_of_need_data.sql",
       "/db/test/step_data.sql",
@@ -80,7 +80,7 @@ class VersionServiceIntegrationTest : IntegrationTestBase() {
       "/db/test/step_cleanup.sql",
       "/db/test/related_area_of_need_cleanup.sql",
       "/db/test/goals_cleanup.sql",
-      "/db/test/oasys_assessment_pk_cleanup.sql",
+      "/db/test/plan_cleanup.sql",
     ],
     executionPhase = AFTER_TEST_METHOD,
   )
@@ -139,8 +139,8 @@ class VersionServiceIntegrationTest : IntegrationTestBase() {
   @Test
   @DisplayName("Adding Goals creates new PlanVersions")
   @WithMockUser(username = "UserId|Username")
-  @Sql(scripts = [ "/db/test/oasys_assessment_pk_data.sql" ], executionPhase = BEFORE_TEST_METHOD)
-  @Sql(scripts = [ "/db/test/goals_cleanup.sql", "/db/test/oasys_assessment_pk_cleanup.sql" ], executionPhase = AFTER_TEST_METHOD)
+  @Sql(scripts = [ "/db/test/plan_data.sql" ], executionPhase = BEFORE_TEST_METHOD)
+  @Sql(scripts = [ "/db/test/goals_cleanup.sql", "/db/test/plan_cleanup.sql" ], executionPhase = AFTER_TEST_METHOD)
   fun `test adding goals creates new plan versions correctly`() {
     // a plan and a version are added via SQL scripts in annotation
 
@@ -162,8 +162,8 @@ class VersionServiceIntegrationTest : IntegrationTestBase() {
   @Test
   @DisplayName("Adding Steps creates new PlanVersions")
   @WithMockUser(username = "UserId|Username")
-  @Sql(scripts = [ "/db/test/oasys_assessment_pk_data.sql", "/db/test/goals_data.sql" ], executionPhase = BEFORE_TEST_METHOD)
-  @Sql(scripts = [ "/db/test/step_cleanup.sql", "/db/test/goals_cleanup.sql", "/db/test/oasys_assessment_pk_cleanup.sql" ], executionPhase = AFTER_TEST_METHOD)
+  @Sql(scripts = [ "/db/test/plan_data.sql", "/db/test/goals_data.sql" ], executionPhase = BEFORE_TEST_METHOD)
+  @Sql(scripts = [ "/db/test/step_cleanup.sql", "/db/test/goals_cleanup.sql", "/db/test/plan_cleanup.sql" ], executionPhase = AFTER_TEST_METHOD)
   fun `test adding steps creates new goals and plan versions correctly`() {
     // a plan and a version are added via SQL scripts in annotation
 
@@ -194,8 +194,8 @@ class VersionServiceIntegrationTest : IntegrationTestBase() {
   @Test
   @DisplayName("Adding Steps to Goal with Steps creates new PlanVersions")
   @WithMockUser(username = "UserId|Username")
-  @Sql(scripts = [ "/db/test/oasys_assessment_pk_data.sql", "/db/test/goals_data.sql", "/db/test/step_data.sql" ], executionPhase = BEFORE_TEST_METHOD)
-  @Sql(scripts = [ "/db/test/step_cleanup.sql", "/db/test/goals_cleanup.sql", "/db/test/oasys_assessment_pk_cleanup.sql" ], executionPhase = AFTER_TEST_METHOD)
+  @Sql(scripts = [ "/db/test/plan_data.sql", "/db/test/goals_data.sql", "/db/test/step_data.sql" ], executionPhase = BEFORE_TEST_METHOD)
+  @Sql(scripts = [ "/db/test/step_cleanup.sql", "/db/test/goals_cleanup.sql", "/db/test/plan_cleanup.sql" ], executionPhase = AFTER_TEST_METHOD)
   fun `test adding steps to a goal with steps creates new goals and plan versions correctly`() {
     // a plan and a version are added via SQL scripts in annotation
 
@@ -222,8 +222,8 @@ class VersionServiceIntegrationTest : IntegrationTestBase() {
   @Test
   @DisplayName("Agreeing a Plan creates new PlanVersions")
   @WithMockUser(username = "UserId|Username")
-  @Sql(scripts = [ "/db/test/oasys_assessment_pk_data.sql", "/db/test/goals_data.sql", "/db/test/step_data.sql" ], executionPhase = BEFORE_TEST_METHOD)
-  @Sql(scripts = [ "/db/test/step_cleanup.sql", "/db/test/goals_cleanup.sql", "/db/test/oasys_assessment_pk_cleanup.sql" ], executionPhase = AFTER_TEST_METHOD)
+  @Sql(scripts = [ "/db/test/plan_data.sql", "/db/test/goals_data.sql", "/db/test/step_data.sql" ], executionPhase = BEFORE_TEST_METHOD)
+  @Sql(scripts = [ "/db/test/step_cleanup.sql", "/db/test/goals_cleanup.sql", "/db/test/plan_cleanup.sql" ], executionPhase = AFTER_TEST_METHOD)
   fun `agreeing a plan creates new goals and plan versions correctly`() {
     // a plan and a version are added via SQL scripts in annotation
 
@@ -251,8 +251,8 @@ class VersionServiceIntegrationTest : IntegrationTestBase() {
   @Test
   @DisplayName("Signing a Plan updates the original version and creates a new version.")
   @WithMockUser(username = "UserId|Username")
-  @Sql(scripts = [ "/db/test/oasys_assessment_pk_data.sql", "/db/test/oasys_assessment_pk_data_agreed.sql" ], executionPhase = BEFORE_TEST_METHOD)
-  @Sql(scripts = [ "/db/test/oasys_assessment_pk_cleanup.sql" ], executionPhase = AFTER_TEST_METHOD)
+  @Sql(scripts = [ "/db/test/plan_data.sql", "/db/test/oasys_assessment_pk_data_agreed.sql" ], executionPhase = BEFORE_TEST_METHOD)
+  @Sql(scripts = [ "/db/test/plan_cleanup.sql" ], executionPhase = AFTER_TEST_METHOD)
   fun `signing a plan creates new goals and plan versions correctly`() {
     val userDetails = UserDetails(
       id = "UserId",

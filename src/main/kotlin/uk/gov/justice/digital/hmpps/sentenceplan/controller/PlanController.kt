@@ -14,6 +14,7 @@ import org.springframework.web.server.ResponseStatusException
 import org.springframework.web.servlet.resource.NoResourceFoundException
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Agreement
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Goal
+import uk.gov.justice.digital.hmpps.sentenceplan.data.Note
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.exceptions.ConflictException
@@ -35,6 +36,18 @@ class PlanController(
   ): PlanVersionEntity {
     try {
       return planService.getPlanVersionByPlanUuid(planUuid)
+    } catch (e: EmptyResultDataAccessException) {
+      throw NoResourceFoundException(HttpMethod.GET, "Could not find a plan with ID: $planUuid")
+    }
+  }
+
+  @GetMapping("/{planUuid}/notes")
+  @ResponseStatus(HttpStatus.OK)
+  fun getPlanAndGoalNotes(
+    @PathVariable planUuid: UUID,
+  ): List<Note> {
+    try {
+      return planService.getPlanAndGoalNotes(planUuid)
     } catch (e: EmptyResultDataAccessException) {
       throw NoResourceFoundException(HttpMethod.GET, "Could not find a plan with ID: $planUuid")
     }

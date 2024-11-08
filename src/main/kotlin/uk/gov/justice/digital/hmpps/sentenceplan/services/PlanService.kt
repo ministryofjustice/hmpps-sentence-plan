@@ -5,6 +5,7 @@ import org.springframework.dao.EmptyResultDataAccessException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Agreement
+import uk.gov.justice.digital.hmpps.sentenceplan.data.Note
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.CountersigningStatus
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanAgreementNoteEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanAgreementNoteRepository
@@ -291,5 +292,9 @@ class PlanService(
     }
 
     return planVersionRepository.save(version)
+  }
+
+  fun getPlanAndGoalNotes(planUuid: UUID): List<Note> {
+    return planRepository.getPlanAndGoalNotes(planUuid)
   }
 }

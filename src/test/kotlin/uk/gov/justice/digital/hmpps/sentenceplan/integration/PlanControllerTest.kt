@@ -20,6 +20,7 @@ import org.springframework.test.web.reactive.server.expectBodyList
 import uk.gov.justice.digital.hmpps.sentenceplan.config.ErrorResponse
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Agreement
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Goal
+import uk.gov.justice.digital.hmpps.sentenceplan.data.Note
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.AreaOfNeedEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalStatus
@@ -306,6 +307,30 @@ class PlanControllerTest : IntegrationTestBase() {
         .bodyValue(agreePlanBody)
         .exchange()
         .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
+    }
+  }
+
+
+  @Nested
+  @DisplayName("get plan and goal notes")
+  @Sql(scripts = [ "/db/test/oasys_assessment_pk_data.sql", "/db/test/plan_notes_data.sql", "/db/test/goals_data.sql", "/db/test/goal_notes_data.sql" ], executionPhase = BEFORE_TEST_CLASS)
+  @Sql(scripts = [ "/db/test/goals_cleanup.sql", "/db/test/goal_notes_cleanup.sql","/db/test/plan_notes_cleanup.sql", "/db/test/oasys_assessment_pk_cleanup.sql" ], executionPhase = AFTER_TEST_CLASS)
+  inner class GetPlanAndGoalNotes {
+    @Test
+    fun `should bob a new version of the plan with a new version`() {
+      val notes: List<Note>? = webTestClient.get().uri("/plans/$testPlanUuid/notes")
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .exchange()
+        .expectStatus().isOk
+        .expectBody<List<Note>>()
+        .returnResult().responseBody
+
+      assertThat(notes!!).isNotNull
+
+      assertThat(notes.size).isEqualTo(3)
+
+      assertThat(notes[0].createdDate).isAfterOrEqualTo(notes[1].createdDate)
+      assertThat(notes[2].note).isEqualTo("Agreement status note")
     }
   }
 }

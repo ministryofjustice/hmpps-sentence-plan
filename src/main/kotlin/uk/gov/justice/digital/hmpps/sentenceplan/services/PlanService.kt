@@ -294,6 +294,7 @@ class PlanService(
     return planVersionRepository.save(version)
   }
 
+  @Transactional
   fun getPlanAndGoalNotes(planUuid: UUID): List<Note> {
     return planRepository.getPlanAndGoalNotes(planUuid)
   }

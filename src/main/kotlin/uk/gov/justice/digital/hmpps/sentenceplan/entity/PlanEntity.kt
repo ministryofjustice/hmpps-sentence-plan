@@ -43,8 +43,8 @@ select 'Plan' as note_object,
        plan_notes.agreement_status_note as note,
        plan_notes.optional_note as additional_note,
        CAST(plan_notes.agreement_status AS VARCHAR) AS note_type,
-       '' as goal_title,
-       '' as goal_uuid,
+       null as goal_title,
+       null as goal_uuid,
        plan_notes.created_date,
        practitioner.username as created_by
 from "sentence-plan".plan_agreement_notes plan_notes
@@ -57,7 +57,7 @@ UNION ALL
 
 select 'Goal' as note_object,
        goal_notes.note,
-       '' as additional_note,
+       null as additional_note,
        CAST(goal_notes.note_type AS VARCHAR) AS note_type,
        goal.title as goal_title,
        CAST(goal.uuid AS VARCHAR) as goal_uuid, 

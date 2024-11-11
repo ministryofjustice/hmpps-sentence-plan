@@ -327,9 +327,25 @@ class PlanControllerTest : IntegrationTestBase() {
       assertThat(notes!!).isNotNull
 
       assertThat(notes.size).isEqualTo(3)
-
       assertThat(notes[0].createdDate).isAfterOrEqualTo(notes[1].createdDate)
+
+      // make sure all the values are populated correctly for a Goal(checks the ResultMapper)
+      assertThat(notes[0].noteObject).isEqualTo("Goal")
+      assertThat(notes[0].note).isEqualTo("Second goal note")
+      assertThat(notes[0].additionalNote).isNull()
+      assertThat(notes[0].noteType).isEqualTo("ACHIEVED")
+      assertThat(notes[0].goalTitle).isEqualTo("Goal For Now Title")
+      assertThat(notes[0].goalUuid).isEqualTo("31d7e986-4078-4f5c-af1d-115f9ba3722d")
+      assertThat(notes[0].createdBy).isEqualTo("test user")
+
+      // make sure all the values are populated correctly for a Plan(checks the ResultMapper)
+      assertThat(notes[2].noteObject).isEqualTo("Plan")
       assertThat(notes[2].note).isEqualTo("Agreement status note")
+      assertThat(notes[2].additionalNote).isEqualTo("Optional note")
+      assertThat(notes[2].noteType).isEqualTo("AGREED")
+      assertThat(notes[2].goalTitle).isNull()
+      assertThat(notes[2].goalUuid).isNull()
+      assertThat(notes[2].createdBy).isEqualTo("test user")
     }
   }
 }

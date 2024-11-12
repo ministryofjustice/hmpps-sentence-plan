@@ -39,6 +39,10 @@ class PlanService(
     return planEntity.currentVersion!!
   }
 
+  fun getPlanVersionByPlanUuidAndPlanVersion(planUuid: UUID, planVersion: Int): PlanVersionEntity {
+    return planVersionRepository.getVersionByUuidAndVersion(planUuid, planVersion)
+  }
+
   fun rollbackVersion(planUuid: UUID, versionNumber: Int): PlanVersionEntity {
     val version = planVersionRepository.getVersionByUuidAndVersion(planUuid, versionNumber)
     version.status = CountersigningStatus.ROLLED_BACK
@@ -208,7 +212,7 @@ class PlanService(
 
     versionService.alwaysCreateNewPlanVersion(planVersion)
 
-    val signedPlan = planVersionRepository.findByPlanUuidAndVersion(planUuid, planVersion.version)
+    val signedPlan = planVersionRepository.findByPlanUuidAndVersionNumber(planUuid, planVersion.version)
 
     when (signRequest.signType) {
       SignType.SELF -> {

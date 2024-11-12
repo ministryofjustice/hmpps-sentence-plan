@@ -168,7 +168,7 @@ interface PlanVersionRepository : JpaRepository<PlanVersionEntity, Long> {
       "where p.uuid = :planUuid and plan_version.version = :versionNumber",
     nativeQuery = true,
   )
-  fun findByPlanUuidAndVersion(planUuid: UUID, versionNumber: Int): PlanVersionEntity
+  fun findByPlanUuidAndVersionNumber(planUuid: UUID, versionNumber: Int): PlanVersionEntity
 
   @Query(
     """

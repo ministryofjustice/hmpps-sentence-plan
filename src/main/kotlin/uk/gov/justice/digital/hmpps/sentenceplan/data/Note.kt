@@ -9,6 +9,7 @@ data class Note(
   val noteType: String,
   val goalTitle: String?,
   val goalUuid: String?,
+  val goalStatus: String?,
   val createdDate: LocalDateTime,
   val createdBy: String,
 )

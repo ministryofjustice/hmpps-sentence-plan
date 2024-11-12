@@ -45,6 +45,7 @@ select 'Plan' as note_object,
        CAST(plan_notes.agreement_status AS VARCHAR) AS note_type,
        null as goal_title,
        null as goal_uuid,
+       null as goal_status,
        plan_notes.created_date,
        practitioner.username as created_by
 from "sentence-plan".plan_agreement_notes plan_notes
@@ -61,6 +62,7 @@ select 'Goal' as note_object,
        CAST(goal_notes.note_type AS VARCHAR) AS note_type,
        goal.title as goal_title,
        CAST(goal.uuid AS VARCHAR) as goal_uuid, 
+       goal.goal_status as goal_status,
        goal_notes.created_date,
        practitioner.username as created_by
 from "sentence-plan".goal_notes

@@ -62,7 +62,7 @@ select 'Goal' as note_object,
        CAST(goal_notes.note_type AS VARCHAR) AS note_type,
        goal.title as goal_title,
        CAST(goal.uuid AS VARCHAR) as goal_uuid, 
-       goal.goal_status as goal_status,
+       CAST(goal.goal_status AS VARCHAR) as goal_status,
        goal_notes.created_date,
        practitioner.username as created_by
 from "sentence-plan".goal_notes
@@ -88,6 +88,7 @@ from "sentence-plan".goal_notes
         ColumnResult(name = "note_type"),
         ColumnResult(name = "goal_title"),
         ColumnResult(name = "goal_uuid"),
+        ColumnResult(name = "goal_status"),
         ColumnResult(name = "created_date", type = LocalDateTime::class),
         ColumnResult(name = "created_by"),
       ],

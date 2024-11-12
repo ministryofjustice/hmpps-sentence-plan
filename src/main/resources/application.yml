@@ -12,7 +12,7 @@ spring:
     username: ${db.username}
     password: ${db.password}
   jpa:
-    show-sql: true
+    show-sql: false
   flyway:
     schemas: sentence-plan
     locations: classpath:/db/migration

@@ -40,6 +40,19 @@ class PlanController(
     }
   }
 
+  @GetMapping("/{planUuid}/{planVersionNumber}")
+  @ResponseStatus(HttpStatus.OK)
+  fun getPlan(
+    @PathVariable planUuid: UUID,
+    @PathVariable planVersionNumber: Int,
+  ): PlanVersionEntity {
+    try {
+      return planService.getPlanVersionByPlanUuidAndPlanVersion(planUuid, planVersionNumber)
+    } catch (e: EmptyResultDataAccessException) {
+      throw NoResourceFoundException(HttpMethod.GET, "Could not find a plan with ID: $planUuid and version number: $planVersionNumber")
+    }
+  }
+
   @GetMapping("/{planUuid}/goals")
   @ResponseStatus(HttpStatus.OK)
   fun getPlanGoals(

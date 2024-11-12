@@ -225,7 +225,7 @@ class PlanControllerTest : IntegrationTestBase() {
         title = "abc",
         areaOfNeed = "Accommodation",
         targetDate = LocalDate.now().toString(),
-        relatedAreasOfNeed = listOf("Accommodation", "Finance"),
+        relatedAreasOfNeed = listOf("Accommodation", "Finances"),
       )
       val goalEntity: GoalEntity? =
         webTestClient.post().uri("/plans/$testPlanUuid/goals").header("Content-Type", "application/json")

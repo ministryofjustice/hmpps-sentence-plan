@@ -1,5 +1,7 @@
 package uk.gov.justice.digital.hmpps.sentenceplan.data
 
+import java.time.LocalDate
+
 data class CaseDetail(
   var name: Name? = Name(),
   var crn: String? = null,
@@ -9,6 +11,7 @@ data class CaseDetail(
   var region: String? = null,
   var keyWorker: KeyWorker? = KeyWorker(),
   var inCustody: Boolean? = null,
+  val sentences: List<Sentence> = emptyList(),
 )
 
 data class KeyWorker(
@@ -31,4 +34,16 @@ data class PopInfoResponse(
   var crn: String? = null,
   var prc: String? = null,
   var courtOrderRequirements: Map<String, Any>? = null,
+  val sentences: List<Sentence> = emptyList(),
+)
+
+data class Sentence(
+  val description: String?,
+  val startDate: LocalDate? = null,
+  val endDate: LocalDate? = null,
+  val programmeRequirement: Boolean = false,
+  val unpaidWorkHoursOrdered: Int = 0,
+  val unpaidWorkMinutesCompleted: Int = 0,
+  val rarDaysOrdered: Int = 0,
+  val rarDaysCompleted: Int = 0,
 )

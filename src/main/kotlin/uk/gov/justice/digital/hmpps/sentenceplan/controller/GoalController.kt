@@ -62,7 +62,7 @@ class GoalController(private val service: GoalService) {
   fun updateGoalStatus(
     @PathVariable goalUuid: UUID,
     @RequestBody goalStatusUpdate: GoalStatusUpdate,
-  ) {
+  ): GoalEntity {
     return service.updateGoalStatus(goalUuid, goalStatusUpdate)
   }
 

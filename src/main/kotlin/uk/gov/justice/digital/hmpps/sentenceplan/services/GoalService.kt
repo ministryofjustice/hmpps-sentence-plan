@@ -191,7 +191,7 @@ class GoalService(
   }
 
   @Transactional
-  fun updateGoalStatus(goalUuid: UUID, goalStatusUpdate: GoalStatusUpdate) {
+  fun updateGoalStatus(goalUuid: UUID, goalStatusUpdate: GoalStatusUpdate): GoalEntity {
     // 1. if we have a note value, create a new note of the correct type
     // 2. update the current goal status
 
@@ -209,5 +209,7 @@ class GoalService(
 
     goalEntity.status = goalStatusUpdate.status
     goalEntity.statusDate = LocalDateTime.now()
+
+    return goalRepository.save(goalEntity)
   }
 }

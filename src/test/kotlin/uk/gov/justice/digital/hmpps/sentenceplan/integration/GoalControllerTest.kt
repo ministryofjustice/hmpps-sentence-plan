@@ -549,7 +549,7 @@ class GoalControllerTest : IntegrationTestBase() {
     open fun `update goal status without a note`() {
       val goalStatusUpdate = GoalStatusUpdate(
         status = GoalStatus.FUTURE,
-        note = ""
+        note = "",
       )
       val goalUuid = "31d7e986-4078-4f5c-af1d-115f9ba3722d"
 
@@ -573,7 +573,7 @@ class GoalControllerTest : IntegrationTestBase() {
     open fun `update goal status with a note`() {
       val goalStatusUpdate = GoalStatusUpdate(
         status = GoalStatus.FUTURE,
-        note = "A note"
+        note = "A note",
       )
       val goalUuid = "31d7e986-4078-4f5c-af1d-115f9ba3722d"
 

@@ -53,9 +53,9 @@ class PlanController(
     }
   }
 
-  @GetMapping("/{planUuid}/{planVersionNumber}")
+  @GetMapping("/{planUuid}/version/{planVersionNumber}")
   @ResponseStatus(HttpStatus.OK)
-  fun getPlan(
+  fun getPlanVersion(
     @PathVariable planUuid: UUID,
     @PathVariable planVersionNumber: Int,
   ): PlanVersionEntity {

@@ -42,6 +42,7 @@ class ARNSApiService(
       caseDetail.crn,
       "ABC123XYZ",
       mapOf<String, Any>(),
+      caseDetail.sentences,
     )
   }
 

@@ -482,30 +482,32 @@ class PlanServiceTest {
       }
     }
     private fun softDeleteExceptionTestData() = listOf(
-      Arguments.of(listOf(3, 4, 5, 7), 2, 1, true, "Invalid range specified, from (2) cannot be greater than to (1)"),
+      Arguments.of(listOf(3, 4, 5, 7), 2, 1, true, "Invalid range specified, from (2) must be lower than to (1)"),
+      Arguments.of(listOf(3, 4, 5, 7), 2, 2, true, "Invalid range specified, from (2) must be lower than to (2)"),
       Arguments.of(listOf(3, 4, 5, 7), 2, 5, true, "The specified range contains version(s) (2) that do not exist or have already had soft_deleted set to true"),
-      Arguments.of(listOf(3, 4, 5, 7), 3, 6, true, "The specified range contains version(s) (6) that do not exist or have already had soft_deleted set to true"),
-      Arguments.of(listOf(3, 4, 5, 7), 0, 8, true, "The specified range contains version(s) (0, 1, 2, 6, 8) that do not exist or have already had soft_deleted set to true"),
+      Arguments.of(listOf(3, 4, 5, 7), 3, 7, true, "The specified range contains version(s) (6) that do not exist or have already had soft_deleted set to true"),
+      Arguments.of(listOf(3, 4, 5, 7), 0, 8, true, "The specified range contains version(s) (0, 1, 2, 6) that do not exist or have already had soft_deleted set to true"),
       Arguments.of(listOf(3, 4, 5, 7), 3, null, true, "The specified range contains version(s) (6, 8, 9) that do not exist or have already had soft_deleted set to true"),
       Arguments.of(listOf(3, 4, 5, 6, 8, 9), 4, 8, true, "The specified range contains version(s) (7) that do not exist or have already had soft_deleted set to true"),
       Arguments.of(emptyList<Int>(), 4, 8, true, "No plans available or all plan versions have already had soft_deleted set to true"),
 //      // undelete
-      Arguments.of(listOf(3, 4, 5, 7), 2, 1, false, "Invalid range specified, from (2) cannot be greater than to (1)"),
+      Arguments.of(listOf(3, 4, 5, 7), 2, 1, false, "Invalid range specified, from (2) must be lower than to (1)"),
+      Arguments.of(listOf(3, 4, 5, 7), 2, 2, false, "Invalid range specified, from (2) must be lower than to (2)"),
       Arguments.of(listOf(3, 4, 5, 7), 2, 5, false, "The specified range contains version(s) (2) that do not exist or have already had soft_deleted set to false"),
-      Arguments.of(listOf(3, 4, 5, 7), 3, 6, false, "The specified range contains version(s) (6) that do not exist or have already had soft_deleted set to false"),
-      Arguments.of(listOf(3, 4, 5, 7), 0, 8, false, "The specified range contains version(s) (0, 1, 2, 6, 8) that do not exist or have already had soft_deleted set to false"),
+      Arguments.of(listOf(3, 4, 5, 7), 3, 7, false, "The specified range contains version(s) (6) that do not exist or have already had soft_deleted set to false"),
+      Arguments.of(listOf(3, 4, 5, 7), 0, 8, false, "The specified range contains version(s) (0, 1, 2, 6) that do not exist or have already had soft_deleted set to false"),
       Arguments.of(listOf(3, 4, 5, 7), 3, null, false, "The specified range contains version(s) (6, 8, 9) that do not exist or have already had soft_deleted set to false"),
       Arguments.of(listOf(3, 4, 5, 6, 8, 9), 4, 8, false, "The specified range contains version(s) (7) that do not exist or have already had soft_deleted set to false"),
       Arguments.of(emptyList<Int>(), 4, 8, false, "No plans available or all plan versions have already had soft_deleted set to false"),
     )
     private fun softDeleteSuccessTestData() = listOf(
       Arguments.of(listOf(3, 4, 5, 6, 7, 8, 9), 3, null, true, listOf(3, 4, 5, 6, 7, 8, 9)),
-      Arguments.of(listOf(3, 4, 5, 6, 7, 8, 9), 4, 8, true, listOf(4, 5, 6, 7, 8)),
-      Arguments.of(listOf(3, 4, 5, 6, 7, 8, 9), 4, 4, true, listOf(4)),
+      Arguments.of(listOf(3, 4, 5, 6, 7, 8, 9), 4, 8, true, listOf(4, 5, 6, 7)),
+      Arguments.of(listOf(3, 4, 5, 6, 7, 8, 9), 4, 5, true, listOf(4)),
       // undelete
       Arguments.of(listOf(3, 4, 5, 6, 7, 8, 9), 3, null, false, listOf(3, 4, 5, 6, 7, 8, 9)),
-      Arguments.of(listOf(3, 4, 5, 6, 7, 8, 9), 4, 8, false, listOf(4, 5, 6, 7, 8)),
-      Arguments.of(listOf(3, 4, 5, 6, 7, 8, 9), 4, 4, false, listOf(4)),
+      Arguments.of(listOf(3, 4, 5, 6, 7, 8, 9), 4, 8, false, listOf(4, 5, 6, 7)),
+      Arguments.of(listOf(3, 4, 5, 6, 7, 8, 9), 4, 5, false, listOf(4)),
     )
   }
 

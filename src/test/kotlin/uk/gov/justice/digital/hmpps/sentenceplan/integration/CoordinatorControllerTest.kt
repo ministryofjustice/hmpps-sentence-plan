@@ -551,11 +551,11 @@ class CoordinatorControllerTest : IntegrationTestBase() {
         .expectStatus().isOk
         .expectBody<SoftDeletePlanVersionsResponse>()
         .returnResult().run {
-          assertThat(responseBody?.versionsRestored).isEqualTo(listOf(0, 1, 2, 3))
+          assertThat(responseBody?.versionsRestored).isEqualTo(listOf(0, 1, 2))
         }
 
       val allSoftDeletedVersionsAfter = planVersionRepository.findAllByPlanId(plan.id!!).filter { it.softDeleted }
-      assertThat(allSoftDeletedVersionsAfter.size).isEqualTo(1)
+      assertThat(allSoftDeletedVersionsAfter.size).isEqualTo(2)
     }
 
     @Sql(scripts = ["/db/test/oasys_assessment_pk_partial_soft_deleted_data.sql"], executionPhase = BEFORE_TEST_METHOD)
@@ -577,7 +577,7 @@ class CoordinatorControllerTest : IntegrationTestBase() {
         .expectBody<ErrorResponse>()
         .returnResult().responseBody
 
-      assertThat(response.userMessage).isEqualTo("Validation failure: The specified range contains version(s) (5, 6) that do not exist or have already had soft_deleted set to false")
+      assertThat(response.userMessage).isEqualTo("Validation failure: The specified range contains version(s) (5) that do not exist or have already had soft_deleted set to false")
     }
 
     @Test

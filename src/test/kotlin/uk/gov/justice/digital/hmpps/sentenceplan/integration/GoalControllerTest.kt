@@ -540,8 +540,8 @@ class GoalControllerTest : IntegrationTestBase() {
 
   @Nested
   @DisplayName("updateGoal")
-  @Sql(scripts = [ "/db/test/oasys_assessment_pk_data.sql", "/db/test/goals_data.sql", "/db/test/related_area_of_need_data.sql" ], executionPhase = BEFORE_TEST_CLASS)
-  @Sql(scripts = [ "/db/test/related_area_of_need_cleanup.sql", "/db/test/goals_cleanup.sql", "/db/test/oasys_assessment_pk_cleanup.sql" ], executionPhase = AFTER_TEST_CLASS)
+  @Sql(scripts = [ "/db/test/plan_data.sql", "/db/test/goals_data.sql", "/db/test/related_area_of_need_data.sql" ], executionPhase = BEFORE_TEST_CLASS)
+  @Sql(scripts = [ "/db/test/related_area_of_need_cleanup.sql", "/db/test/goals_cleanup.sql", "/db/test/plan_cleanup.sql" ], executionPhase = AFTER_TEST_CLASS)
   open inner class UpdateGoalTests {
 
     @Test

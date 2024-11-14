@@ -41,8 +41,8 @@ class PlanControllerTest : IntegrationTestBase() {
 
   @Nested
   @DisplayName("getPlan")
-  @Sql(scripts = [ "/db/test/oasys_assessment_pk_data.sql", "/db/test/goals_data.sql" ], executionPhase = BEFORE_TEST_CLASS)
-  @Sql(scripts = [ "/db/test/goals_cleanup.sql", "/db/test/oasys_assessment_pk_cleanup.sql" ], executionPhase = AFTER_TEST_CLASS)
+  @Sql(scripts = [ "/db/test/plan_data.sql", "/db/test/goals_data.sql" ], executionPhase = BEFORE_TEST_CLASS)
+  @Sql(scripts = [ "/db/test/goals_cleanup.sql", "/db/test/plan_cleanup.sql" ], executionPhase = AFTER_TEST_CLASS)
   inner class GetPlan {
     @Test
     fun `should return OK when getting plan by existing UUID `() {
@@ -68,8 +68,8 @@ class PlanControllerTest : IntegrationTestBase() {
 
   @Nested
   @DisplayName("getPlanGoals")
-  @Sql(scripts = [ "/db/test/oasys_assessment_pk_data.sql", "/db/test/goals_data.sql" ], executionPhase = BEFORE_TEST_CLASS)
-  @Sql(scripts = [ "/db/test/goals_cleanup.sql", "/db/test/oasys_assessment_pk_cleanup.sql" ], executionPhase = AFTER_TEST_CLASS)
+  @Sql(scripts = [ "/db/test/plan_data.sql", "/db/test/goals_data.sql" ], executionPhase = BEFORE_TEST_CLASS)
+  @Sql(scripts = [ "/db/test/goals_cleanup.sql", "/db/test/plan_cleanup.sql" ], executionPhase = AFTER_TEST_CLASS)
   inner class GetPlanGoals {
     @Test
     fun `should return OK when getting goals by plan UUID`() {
@@ -102,8 +102,8 @@ class PlanControllerTest : IntegrationTestBase() {
 
   @Nested
   @DisplayName("createNewGoal")
-  @Sql(scripts = [ "/db/test/oasys_assessment_pk_data.sql", "/db/test/goals_data.sql" ], executionPhase = BEFORE_TEST_CLASS)
-  @Sql(scripts = [ "/db/test/goals_cleanup.sql", "/db/test/oasys_assessment_pk_cleanup.sql" ], executionPhase = AFTER_TEST_CLASS)
+  @Sql(scripts = [ "/db/test/plan_data.sql", "/db/test/goals_data.sql" ], executionPhase = BEFORE_TEST_CLASS)
+  @Sql(scripts = [ "/db/test/goals_cleanup.sql", "/db/test/plan_cleanup.sql" ], executionPhase = AFTER_TEST_CLASS)
   inner class CreateNewGoal {
     private lateinit var goalRequestBody: Goal
 
@@ -257,8 +257,8 @@ class PlanControllerTest : IntegrationTestBase() {
   @Nested
   @DisplayName("agreePlan")
   @TestMethodOrder(MethodOrderer.OrderAnnotation::class)
-  @Sql(scripts = [ "/db/test/oasys_assessment_pk_data.sql" ], executionPhase = BEFORE_TEST_CLASS)
-  @Sql(scripts = [ "/db/test/oasys_assessment_pk_cleanup.sql" ], executionPhase = AFTER_TEST_CLASS)
+  @Sql(scripts = [ "/db/test/plan_data.sql" ], executionPhase = BEFORE_TEST_CLASS)
+  @Sql(scripts = [ "/db/test/plan_cleanup.sql" ], executionPhase = AFTER_TEST_CLASS)
   inner class AgreePlan {
     private val agreePlanBody = Agreement(
       PlanAgreementStatus.AGREED,
@@ -312,8 +312,8 @@ class PlanControllerTest : IntegrationTestBase() {
 
   @Nested
   @DisplayName("get plan and goal notes")
-  @Sql(scripts = [ "/db/test/oasys_assessment_pk_data.sql", "/db/test/plan_notes_data.sql", "/db/test/goals_data.sql", "/db/test/goal_notes_data.sql" ], executionPhase = BEFORE_TEST_CLASS)
-  @Sql(scripts = [ "/db/test/goals_cleanup.sql", "/db/test/goal_notes_cleanup.sql", "/db/test/plan_notes_cleanup.sql", "/db/test/oasys_assessment_pk_cleanup.sql" ], executionPhase = AFTER_TEST_CLASS)
+  @Sql(scripts = [ "/db/test/plan_data.sql", "/db/test/plan_notes_data.sql", "/db/test/goals_data.sql", "/db/test/goal_notes_data.sql" ], executionPhase = BEFORE_TEST_CLASS)
+  @Sql(scripts = [ "/db/test/goals_cleanup.sql", "/db/test/goal_notes_cleanup.sql", "/db/test/plan_notes_cleanup.sql", "/db/test/plan_cleanup.sql" ], executionPhase = AFTER_TEST_CLASS)
   inner class GetPlanAndGoalNotes {
     @Test
     fun `should fetch all plan and goal notes for a given plan uuid`() {

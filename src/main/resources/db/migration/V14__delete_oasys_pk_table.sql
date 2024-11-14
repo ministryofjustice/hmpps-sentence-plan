@@ -1,0 +1,1 @@
+drop table oasys_pk_to_plan;

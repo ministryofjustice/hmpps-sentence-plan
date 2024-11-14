@@ -570,7 +570,7 @@ class GoalControllerTest : IntegrationTestBase() {
 
     @Test
     @Transactional
-    open fun `update goal status with a note`() {
+    open fun `update goal status with a note and related areas of need are preserved`() {
       val goalStatusUpdate = GoalStatusUpdate(
         status = GoalStatus.FUTURE,
         note = "A note",

@@ -1,0 +1,1 @@
+DELETE FROM goal_notes;

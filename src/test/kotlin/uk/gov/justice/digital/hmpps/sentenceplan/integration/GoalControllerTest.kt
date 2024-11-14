@@ -6,6 +6,7 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient
 import org.springframework.test.context.jdbc.Sql
 import org.springframework.test.context.jdbc.Sql.ExecutionPhase.AFTER_TEST_CLASS
@@ -15,12 +16,15 @@ import org.springframework.test.context.jdbc.Sql.ExecutionPhase.BEFORE_TEST_METH
 import org.springframework.test.context.jdbc.SqlMergeMode
 import org.springframework.test.web.reactive.server.expectBody
 import org.springframework.test.web.reactive.server.expectBodyList
+import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.sentenceplan.config.ErrorResponse
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Goal
 import uk.gov.justice.digital.hmpps.sentenceplan.data.GoalOrder
+import uk.gov.justice.digital.hmpps.sentenceplan.data.GoalStatusUpdate
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Step
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalNoteType
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalStatus
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepStatus
@@ -33,6 +37,9 @@ private const val TEST_DATA_GOAL_UUID = "31d7e986-4078-4f5c-af1d-115f9ba3722d"
 @DisplayName("Goal Controller Tests")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class GoalControllerTest : IntegrationTestBase() {
+
+  @Autowired
+  lateinit var goalRepository: GoalRepository
 
   lateinit var goalRequestBody: Goal
 
@@ -310,10 +317,10 @@ class GoalControllerTest : IntegrationTestBase() {
   }
 
   @Nested
-  @DisplayName("updateGoal")
+  @DisplayName("replaceGoal")
   @Sql(scripts = [ "/db/test/oasys_assessment_pk_data.sql", "/db/test/goals_data.sql" ], executionPhase = BEFORE_TEST_METHOD)
   @Sql(scripts = [ "/db/test/goals_cleanup.sql", "/db/test/oasys_assessment_pk_cleanup.sql" ], executionPhase = AFTER_TEST_METHOD)
-  inner class UpdateGoalTests {
+  inner class ReplaceGoalTests {
 
     @Test
     fun `should update goal title`() {
@@ -325,7 +332,7 @@ class GoalControllerTest : IntegrationTestBase() {
       val goalUuid = "31d7e986-4078-4f5c-af1d-115f9ba3722d"
 
       val goalEntity: GoalEntity? =
-        webTestClient.patch().uri("/goals/$goalUuid").header("Content-Type", "application/json")
+        webTestClient.put().uri("/goals/$goalUuid").header("Content-Type", "application/json")
           .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
           .bodyValue(goalRequestBody)
           .exchange()
@@ -347,7 +354,7 @@ class GoalControllerTest : IntegrationTestBase() {
       val goalUuid = "778b8e52-5927-42d4-9c05-7029ef3c6f6d"
 
       val goalEntity: GoalEntity? =
-        webTestClient.patch().uri("/goals/$goalUuid").header("Content-Type", "application/json")
+        webTestClient.put().uri("/goals/$goalUuid").header("Content-Type", "application/json")
           .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
           .bodyValue(goalRequestBody)
           .exchange()
@@ -371,7 +378,7 @@ class GoalControllerTest : IntegrationTestBase() {
       val goalUuid = "778b8e52-5927-42d4-9c05-7029ef3c6f6d"
 
       val goalEntity: GoalEntity? =
-        webTestClient.patch().uri("/goals/$goalUuid").header("Content-Type", "application/json")
+        webTestClient.put().uri("/goals/$goalUuid").header("Content-Type", "application/json")
           .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
           .bodyValue(goalRequestBody)
           .exchange()
@@ -389,13 +396,14 @@ class GoalControllerTest : IntegrationTestBase() {
       val goalRequestBody = Goal(
         targetDate = null,
         title = "Change active goal into future goal test",
+        areaOfNeed = "Accommodation",
         status = GoalStatus.FUTURE,
       )
 
       val goalUuid = "31d7e986-4078-4f5c-af1d-115f9ba3722d"
 
       val goalEntity: GoalEntity? =
-        webTestClient.patch().uri("/goals/$goalUuid").header("Content-Type", "application/json")
+        webTestClient.put().uri("/goals/$goalUuid").header("Content-Type", "application/json")
           .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
           .bodyValue(goalRequestBody)
           .exchange()
@@ -418,7 +426,7 @@ class GoalControllerTest : IntegrationTestBase() {
       val goalUuid = "31d7e986-4078-4f5c-af1d-115f9ba3722d"
 
       val goalEntity: GoalEntity? =
-        webTestClient.patch().uri("/goals/$goalUuid").header("Content-Type", "application/json")
+        webTestClient.put().uri("/goals/$goalUuid").header("Content-Type", "application/json")
           .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
           .bodyValue(goalRequestBody)
           .exchange()
@@ -432,13 +440,15 @@ class GoalControllerTest : IntegrationTestBase() {
     @Test
     fun `should add a note to a goal without updating status`() {
       val goalRequestBody = Goal(
+        title = "Goal For Now Title",
+        areaOfNeed = "Accommodation",
         note = "An exciting note",
       )
 
       val goalUuid = "31d7e986-4078-4f5c-af1d-115f9ba3722d"
 
       val goalEntity: GoalEntity? =
-        webTestClient.patch().uri("/goals/$goalUuid").header("Content-Type", "application/json")
+        webTestClient.put().uri("/goals/$goalUuid").header("Content-Type", "application/json")
           .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
           .bodyValue(goalRequestBody)
           .exchange()
@@ -455,14 +465,16 @@ class GoalControllerTest : IntegrationTestBase() {
     @Test
     fun `should add a note to a goal and update status to ACHIEVED`() {
       val goalRequestBody = Goal(
+        title = "A title",
         note = "An exciting note",
+        areaOfNeed = "Accommodation",
         status = GoalStatus.ACHIEVED,
       )
 
       val goalUuid = "31d7e986-4078-4f5c-af1d-115f9ba3722d"
 
       val goalEntity: GoalEntity? =
-        webTestClient.patch().uri("/goals/$goalUuid").header("Content-Type", "application/json")
+        webTestClient.put().uri("/goals/$goalUuid").header("Content-Type", "application/json")
           .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
           .bodyValue(goalRequestBody)
           .exchange()
@@ -479,14 +491,16 @@ class GoalControllerTest : IntegrationTestBase() {
     @Test
     fun `should add a note to a goal and update status to REMOVED`() {
       val goalRequestBody = Goal(
+        title = "A title",
         note = "An exciting note",
+        areaOfNeed = "Finances",
         status = GoalStatus.REMOVED,
       )
 
       val goalUuid = "31d7e986-4078-4f5c-af1d-115f9ba3722d"
 
       val goalEntity: GoalEntity? =
-        webTestClient.patch().uri("/goals/$goalUuid").header("Content-Type", "application/json")
+        webTestClient.put().uri("/goals/$goalUuid").header("Content-Type", "application/json")
           .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
           .bodyValue(goalRequestBody)
           .exchange()
@@ -512,7 +526,7 @@ class GoalControllerTest : IntegrationTestBase() {
       val goalUuid = "31d7e986-4078-4f5c-af1d-115f9ba3722d"
 
       val goalEntity: GoalEntity? =
-        webTestClient.patch().uri("/goals/$goalUuid").header("Content-Type", "application/json")
+        webTestClient.put().uri("/goals/$goalUuid").header("Content-Type", "application/json")
           .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
           .bodyValue(goalRequestBody)
           .exchange()
@@ -521,6 +535,61 @@ class GoalControllerTest : IntegrationTestBase() {
           .returnResult().responseBody
 
       assertThat(goalEntity?.relatedAreasOfNeed).isEmpty()
+    }
+  }
+
+  @Nested
+  @DisplayName("updateGoal")
+  @Sql(scripts = [ "/db/test/oasys_assessment_pk_data.sql", "/db/test/goals_data.sql", "/db/test/related_area_of_need_data.sql" ], executionPhase = BEFORE_TEST_CLASS)
+  @Sql(scripts = [ "/db/test/related_area_of_need_cleanup.sql", "/db/test/goals_cleanup.sql", "/db/test/oasys_assessment_pk_cleanup.sql" ], executionPhase = AFTER_TEST_CLASS)
+  open inner class UpdateGoalTests {
+
+    @Test
+    @Transactional
+    open fun `update goal status without a note`() {
+      val goalStatusUpdate = GoalStatusUpdate(
+        status = GoalStatus.FUTURE,
+        note = "",
+      )
+      val goalUuid = "31d7e986-4078-4f5c-af1d-115f9ba3722d"
+
+      // If you goalRepository.findByUuid() here, the test will fail.
+
+      webTestClient.patch().uri("/goals/$goalUuid").header("Content-Type", "application/json")
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .bodyValue(goalStatusUpdate)
+        .exchange()
+        .expectStatus().isOk
+
+      val goal = goalRepository.getGoalByUuid(UUID.fromString(goalUuid))
+      assertThat(goal.status).isEqualTo(GoalStatus.FUTURE)
+      assertThat(goal.relatedAreasOfNeed).isNotEmpty()
+      assertThat(goal.notes.first().note).isEqualTo("")
+      assertThat(goal.notes.first().type).isEqualTo(GoalNoteType.PROGRESS)
+    }
+
+    @Test
+    @Transactional
+    open fun `update goal status with a note and related areas of need are preserved`() {
+      val goalStatusUpdate = GoalStatusUpdate(
+        status = GoalStatus.FUTURE,
+        note = "A note",
+      )
+      val goalUuid = "31d7e986-4078-4f5c-af1d-115f9ba3722d"
+
+      // If you goalRepository.findByUuid() here, the test will fail.
+
+      webTestClient.patch().uri("/goals/$goalUuid").header("Content-Type", "application/json")
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .bodyValue(goalStatusUpdate)
+        .exchange()
+        .expectStatus().isOk
+
+      val goal = goalRepository.getGoalByUuid(UUID.fromString(goalUuid))
+      assertThat(goal.status).isEqualTo(GoalStatus.FUTURE)
+      assertThat(goal.relatedAreasOfNeed).isNotEmpty()
+      assertThat(goal.notes.first().note).isEqualTo("A note")
+      assertThat(goal.notes.first().type).isEqualTo(GoalNoteType.PROGRESS)
     }
   }
 

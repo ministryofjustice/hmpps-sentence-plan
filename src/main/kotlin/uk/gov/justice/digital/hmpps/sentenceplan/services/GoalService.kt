@@ -1,10 +1,12 @@
 package uk.gov.justice.digital.hmpps.sentenceplan.services
 
+import jakarta.validation.ValidationException
 import org.springframework.dao.EmptyResultDataAccessException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Goal
 import uk.gov.justice.digital.hmpps.sentenceplan.data.GoalOrder
+import uk.gov.justice.digital.hmpps.sentenceplan.data.GoalStatusUpdate
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Step
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.AreaOfNeedEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.AreaOfNeedRepository
@@ -87,10 +89,18 @@ class GoalService(
     return relatedAreasOfNeedList
   }
 
+  /**
+   * This function expects a full Goal object - it cannot be used for updating individual fields in
+   * a Goal object identified by the UUID unless the rest of the goal object is passed in.
+   * In particular the GoalEntity.merge function will intentionally remove all Related Areas of Need from a GoalEntity
+   * if there are no Related Areas of Need in the Goal parameter received here.
+   */
   @Transactional
-  fun updateGoalByUuid(goalUuid: UUID, goal: Goal): GoalEntity {
+  fun replaceGoalByUuid(goalUuid: UUID, goal: Goal): GoalEntity {
     val goalEntity = goalRepository.findByUuid(goalUuid)
       ?: throw Exception("This Goal was not found: $goalUuid")
+
+    validateGoalFields(goal)
 
     val relatedAreasOfNeedList: List<AreaOfNeedEntity> = getAreasOfNeedByNames(goal)
     goalEntity.merge(goal, relatedAreasOfNeedList)
@@ -98,6 +108,13 @@ class GoalService(
     versionService.conditionallyCreateNewPlanVersion(goalEntity.planVersion)
 
     return goalRepository.save(goalEntity)
+  }
+
+  private fun validateGoalFields(goal: Goal) {
+    val requiredFields = listOf(goal.title, goal.areaOfNeed)
+    if (requiredFields.any { it == null }) {
+      throw ValidationException("One or more required fields are null")
+    }
   }
 
   @Transactional
@@ -171,5 +188,28 @@ class GoalService(
   fun deleteGoalByUuid(goalUuid: UUID): Int {
     goalRepository.findByUuid(goalUuid)?.let { versionService.conditionallyCreateNewPlanVersion(it.planVersion) }
     return goalRepository.deleteByUuid(goalUuid)
+  }
+
+  @Transactional
+  fun updateGoalStatus(goalUuid: UUID, goalStatusUpdate: GoalStatusUpdate): GoalEntity {
+    // 1. if we have a note value, create a new note of the correct type
+    // 2. update the current goal status
+
+    val goalEntity = goalRepository.getGoalByUuid(goalUuid)
+
+    val goalNoteEntity = GoalNoteEntity(note = goalStatusUpdate.note, goal = goalEntity).apply {
+      type = when (goalStatusUpdate.status) {
+        GoalStatus.REMOVED -> GoalNoteType.REMOVED
+        GoalStatus.ACHIEVED -> GoalNoteType.ACHIEVED
+        else -> GoalNoteType.PROGRESS
+      }
+    }
+
+    goalEntity.notes.add(goalNoteEntity)
+
+    goalEntity.status = goalStatusUpdate.status
+    goalEntity.statusDate = LocalDateTime.now()
+
+    return goalRepository.save(goalEntity)
   }
 }

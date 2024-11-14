@@ -28,6 +28,7 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Goal
+import uk.gov.justice.digital.hmpps.sentenceplan.exceptions.NotFoundException
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
@@ -110,20 +111,19 @@ class GoalEntity(
 ) {
 
   fun merge(goal: Goal, relatedAreasOfNeedList: List<AreaOfNeedEntity>): GoalEntity {
-    if (goal.title != null) {
-      this.title = goal.title
-    }
+    this.title = goal.title!!
 
-    if (goal.targetDate != null) {
-      this.targetDate = LocalDate.parse(goal.targetDate)
+    // targetDate can be null if the goal is for the future
+    goal.targetDate?.let {
+      this.targetDate = LocalDate.parse(it)
       if (this.status == GoalStatus.FUTURE) {
         this.status = GoalStatus.ACTIVE
         this.statusDate = LocalDateTime.now()
       }
-    }
-
-    if (goal.targetDate == null && goal.status == GoalStatus.FUTURE) {
-      this.targetDate = null
+    } ?: run {
+      if (goal.status == GoalStatus.FUTURE) {
+        this.targetDate = null
+      }
     }
 
     // If we receive a goal note, check if there is an ACHIEVED or REMOVED status and create a note with that.
@@ -162,6 +162,8 @@ enum class GoalStatus {
 
 interface GoalRepository : JpaRepository<GoalEntity, Long> {
   fun findByUuid(uuid: UUID): GoalEntity?
+
+  fun getGoalByUuid(uuid: UUID) = findByUuid(uuid) ?: throw NotFoundException("Goal not found for UUID: $uuid")
 
   // returns how many records were deleted
   @Modifying

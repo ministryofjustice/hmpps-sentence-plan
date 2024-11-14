@@ -15,6 +15,7 @@ import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.dao.EmptyResultDataAccessException
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Goal
+import uk.gov.justice.digital.hmpps.sentenceplan.data.GoalStatusUpdate
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Step
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.AreaOfNeedEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.AreaOfNeedRepository
@@ -71,7 +72,7 @@ class GoalServiceTest {
     planVersion = null,
     uuid = goalUuid,
     goalOrder = 1,
-    relatedAreasOfNeed = mockk<MutableSet<AreaOfNeedEntity>>(),
+    relatedAreasOfNeed = mutableSetOf(areaOfNeedEntity),
   )
 
   private val steps = listOf(
@@ -108,6 +109,7 @@ class GoalServiceTest {
       uuid = goalUuid,
       goalOrder = 1,
       status = GoalStatus.ACTIVE,
+      relatedAreasOfNeed = mutableSetOf(areaOfNeedEntity),
     )
 
     goalSet = setOf(goalEntityNoSteps)
@@ -236,8 +238,8 @@ class GoalServiceTest {
   }
 
   @Nested
-  @DisplayName("UpdateGoal")
-  inner class UpdateGoal {
+  @DisplayName("ReplaceGoal")
+  inner class ReplaceGoal {
 
     @Test
     fun `update goal with random Plan UUID should throw Exception`() {
@@ -245,7 +247,7 @@ class GoalServiceTest {
       every { versionService.conditionallyCreateNewPlanVersion(any()) } returns newPlanVersionEntity
 
       val exception = assertThrows<Exception> {
-        goalService.updateGoalByUuid(UUID.randomUUID(), goal)
+        goalService.replaceGoalByUuid(UUID.randomUUID(), goal)
       }
 
       assertThat(exception.message).startsWith("This Goal was not found:")
@@ -260,7 +262,7 @@ class GoalServiceTest {
       val goalSlot = slot<GoalEntity>()
       every { goalRepository.save(capture(goalSlot)) } answers { goalSlot.captured }
 
-      val savedGoal: GoalEntity = goalService.updateGoalByUuid(UUID.randomUUID(), goal)
+      val savedGoal: GoalEntity = goalService.replaceGoalByUuid(UUID.randomUUID(), goal)
 
       assertThat(savedGoal.title).isEqualTo(goal.title)
     }
@@ -272,7 +274,7 @@ class GoalServiceTest {
       every { versionService.conditionallyCreateNewPlanVersion(any()) } returns newPlanVersionEntity
 
       val exception = assertThrows<Exception> {
-        goalService.updateGoalByUuid(UUID.randomUUID(), goal)
+        goalService.replaceGoalByUuid(UUID.randomUUID(), goal)
       }
 
       assertThat(exception.message).startsWith("One or more of the Related Areas of Need was not found:")
@@ -285,7 +287,7 @@ class GoalServiceTest {
       every { versionService.conditionallyCreateNewPlanVersion(any()) } returns newPlanVersionEntity
 
       val exception = assertThrows<Exception> {
-        goalService.updateGoalByUuid(UUID.randomUUID(), goal)
+        goalService.replaceGoalByUuid(UUID.randomUUID(), goal)
       }
 
       assertThat(exception.message).startsWith("One or more of the Related Areas of Need was not found")
@@ -294,6 +296,8 @@ class GoalServiceTest {
     @Test
     fun `update goal with new note and no note type should add note with Type PROGRESS`() {
       val goal = Goal(
+        title = "Goal title",
+        areaOfNeed = "Finances",
         note = "Simple note update",
       )
 
@@ -304,7 +308,7 @@ class GoalServiceTest {
       val goalSlot = slot<GoalEntity>()
       every { goalRepository.save(capture(goalSlot)) } answers { goalSlot.captured }
 
-      val savedGoal: GoalEntity = goalService.updateGoalByUuid(UUID.randomUUID(), goal)
+      val savedGoal: GoalEntity = goalService.replaceGoalByUuid(UUID.randomUUID(), goal)
 
       assertThat(savedGoal.notes.first().note).isEqualTo(goal.note)
       assertThat(savedGoal.notes.first().type).isEqualTo(GoalNoteType.PROGRESS)
@@ -312,30 +316,11 @@ class GoalServiceTest {
     }
 
     @Test
-    fun `update goal with new note and status ACHIEVED should add note with Type ACHIEVED`() {
-      val goal = Goal(
-        note = "Simple note update",
-        status = GoalStatus.ACHIEVED,
-      )
-
-      every { goalRepository.findByUuid(any()) } returns goalEntityNoSteps
-      every { areaOfNeedRepository.findAllByNames(any()) } returns listOf(areaOfNeedEntity)
-      every { versionService.conditionallyCreateNewPlanVersion(any()) } returns newPlanVersionEntity
-
-      val goalSlot = slot<GoalEntity>()
-      every { goalRepository.save(capture(goalSlot)) } answers { goalSlot.captured }
-
-      val savedGoal: GoalEntity = goalService.updateGoalByUuid(UUID.randomUUID(), goal)
-
-      assertThat(savedGoal.notes.first().note).isEqualTo(goal.note)
-      assertThat(savedGoal.notes.first().type).isEqualTo(GoalNoteType.ACHIEVED)
-      assertThat(savedGoal.status).isEqualTo(GoalStatus.ACHIEVED)
-    }
-
-    @Test
     fun `update goal with new note and status REMOVED should add note with Type REMOVED`() {
       val goal = Goal(
+        title = "A title",
         note = "Simple note update",
+        areaOfNeed = "Finances",
         status = GoalStatus.REMOVED,
       )
 
@@ -346,11 +331,37 @@ class GoalServiceTest {
       val goalSlot = slot<GoalEntity>()
       every { goalRepository.save(capture(goalSlot)) } answers { goalSlot.captured }
 
-      val savedGoal: GoalEntity = goalService.updateGoalByUuid(UUID.randomUUID(), goal)
+      val savedGoal: GoalEntity = goalService.replaceGoalByUuid(UUID.randomUUID(), goal)
 
       assertThat(savedGoal.notes.first().note).isEqualTo(goal.note)
       assertThat(savedGoal.notes.first().type).isEqualTo(GoalNoteType.REMOVED)
       assertThat(savedGoal.status).isEqualTo(GoalStatus.REMOVED)
+    }
+  }
+
+  @Nested
+  @DisplayName("UpdateGoal")
+  inner class UpdateGoal {
+    @Test
+    fun `update goal with new note and status ACHIEVED should add note with Type ACHIEVED and not remove Related Areas of Need`() {
+      val goalStatusUpdate = GoalStatusUpdate(
+        note = "Simple note update",
+        status = GoalStatus.ACHIEVED,
+      )
+
+      every { goalRepository.getGoalByUuid(any()) } returns goalEntityWithRelatedAreasOfNeed
+      every { areaOfNeedRepository.findAllByNames(any()) } returns listOf(areaOfNeedEntity)
+      every { versionService.conditionallyCreateNewPlanVersion(any()) } returns newPlanVersionEntity
+
+      val goalSlot = slot<GoalEntity>()
+      every { goalRepository.save(capture(goalSlot)) } answers { goalSlot.captured }
+
+      val savedGoal = goalService.updateGoalStatus(UUID.randomUUID(), goalStatusUpdate)
+
+      assertThat(savedGoal.notes.first().note).isEqualTo("Simple note update")
+      assertThat(savedGoal.notes.first().type).isEqualTo(GoalNoteType.ACHIEVED)
+      assertThat(savedGoal.status).isEqualTo(GoalStatus.ACHIEVED)
+      assertThat(savedGoal.relatedAreasOfNeed?.size).isEqualTo(1)
     }
   }
 

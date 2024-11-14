@@ -92,7 +92,7 @@ class GoalService(
   /**
    * This function expects a full Goal object - it cannot be used for updating individual fields in
    * a Goal object identified by the UUID unless the rest of the goal object is passed in.
-   * In particular the GoalEntity.merge function will remove all Related Areas of Need from a GoalEntity
+   * In particular the GoalEntity.merge function will intentionally remove all Related Areas of Need from a GoalEntity
    * if there are no Related Areas of Need in the Goal parameter received here.
    */
   @Transactional

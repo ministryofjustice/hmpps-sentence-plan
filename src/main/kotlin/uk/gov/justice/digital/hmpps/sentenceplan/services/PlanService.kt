@@ -59,10 +59,10 @@ class PlanService(
   private fun validateRange(from: Int, to: Int, available: List<Int>, softDelete: Boolean): IntRange {
     val specifiedRange = when {
       available.isEmpty() -> throw ValidationException("No plans available or all plan versions have already had soft_deleted set to $softDelete")
-      from > to -> throw ValidationException("Invalid range specified, from ($from) cannot be greater than to ($to)")
-      else -> (from..to)
+      from >= to -> throw ValidationException("Invalid range specified, from ($from) must be lower than to ($to)")
+      else -> (from until to)
     }
-    val availableInRange = available.filter { it in from..to }
+    val availableInRange = available.filter { it in specifiedRange }
     val unableToUpdate = specifiedRange.partition { !availableInRange.contains(it) }.first.sorted()
     if (unableToUpdate.isNotEmpty()) {
       throw ValidationException("The specified range contains version(s) (${unableToUpdate.joinToString()}) that do not exist or have already had soft_deleted set to $softDelete")
@@ -75,12 +75,12 @@ class PlanService(
     val plan = planRepository.getPlanByUuid(planUuid)
     val versions = planVersionRepository.findAllByPlanId(plan.id!!)
     val availableForUpdate = versions.filter { it.softDeleted != softDelete }.map { it.version }.sorted()
-    val to = versionTo ?: versions.maxByOrNull { it.version }?.version ?: 0
+    val to = versionTo ?: versions.maxByOrNull { it.version }?.version?.plus(1) ?: 0
     val range = validateRange(from, to, availableForUpdate, softDelete)
     val versionsToUpdate = versions.filter { it.version in range }.map { it.apply { it.softDeleted = softDelete } }
     planVersionRepository.saveAll(versionsToUpdate)
 
-    if (plan.currentVersion?.version in from..to && softDelete) {
+    if (plan.currentVersion?.version in range && softDelete) {
       // The current version has been deleted.
       // Find the latest version that has not been deleted, to be used for base of the new version
       val maxAvailableVersion = versions.filter { !it.softDeleted && it.version < from }.maxByOrNull { it.version }

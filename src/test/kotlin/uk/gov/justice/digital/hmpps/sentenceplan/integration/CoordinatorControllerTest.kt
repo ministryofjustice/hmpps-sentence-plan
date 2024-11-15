@@ -441,19 +441,19 @@ class CoordinatorControllerTest : IntegrationTestBase() {
         .expectBody<SoftDeletePlanVersionsResponse>()
         .returnResult().run {
           assertThat(responseBody?.versionsSoftDeleted).isEqualTo(listOf(6, 7, 8, 9))
-          assertThat(responseBody?.planVersion).isEqualTo(5)
+          assertThat(responseBody?.createdFromVersion).isEqualTo(5) // . Current version has been soft_deleted. New version 10 created from version 5")
         }
 
       val planAfter = planRepository.getPlanByUuid(planUuid)
       val allVersionsAfter = planVersionRepository.findAllByPlanId(plan.id!!).filter { !it.softDeleted }
-      assertThat(allVersionsAfter.size).isEqualTo(1)
-      assertThat(planAfter.currentVersion?.version).isEqualTo(5)
+      assertThat(allVersionsAfter.size).isEqualTo(2)
+      assertThat(planAfter.currentVersion?.version).isEqualTo(10)
     }
 
     @Sql(scripts = ["/db/test/oasys_assessment_pk_no_soft_deleted_data.sql"], executionPhase = BEFORE_TEST_METHOD)
     @Sql(scripts = ["/db/test/plan_cleanup.sql"], executionPhase = AFTER_TEST_METHOD)
     @Test
-    fun `should return empty body if all records have been soft deleted`() {
+    fun `should create a brand new version based on nothing if all records have been soft deleted`() {
       val plan = planRepository.getPlanByUuid(planUuid)
       val allVersionsBefore = planVersionRepository.findAllByPlanId(plan.id!!).filter { !it.softDeleted }
       assertThat(allVersionsBefore.size).isEqualTo(10)
@@ -468,12 +468,16 @@ class CoordinatorControllerTest : IntegrationTestBase() {
         .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
         .exchange()
         .expectStatus().isOk
-        .expectBody()
+        .expectBody<SoftDeletePlanVersionsResponse>()
+        .returnResult().run {
+          assertThat(responseBody?.versionsSoftDeleted).isEqualTo(listOf(0, 1, 2, 3, 4, 5, 6, 7, 8, 9))
+          assertThat(responseBody?.createdFromVersion).isEqualTo(null)
+        }
 
       val planAfter = planRepository.getPlanByUuid(planUuid)
       val allVersionsAfter = planVersionRepository.findAllByPlanId(plan.id!!).filter { !it.softDeleted }
-      assertThat(allVersionsAfter.size).isEqualTo(0)
-      assertThat(planAfter.currentVersion?.version).isEqualTo(9)
+      assertThat(allVersionsAfter.size).isEqualTo(1)
+      assertThat(planAfter.currentVersion?.version).isEqualTo(10)
     }
 
     @Sql(scripts = ["/db/test/oasys_assessment_pk_partial_soft_deleted_data.sql"], executionPhase = BEFORE_TEST_METHOD)
@@ -548,46 +552,10 @@ class CoordinatorControllerTest : IntegrationTestBase() {
         .expectBody<SoftDeletePlanVersionsResponse>()
         .returnResult().run {
           assertThat(responseBody?.versionsRestored).isEqualTo(listOf(0, 1, 2))
-          assertThat(responseBody?.planVersion).isEqualTo(9)
         }
 
       val allSoftDeletedVersionsAfter = planVersionRepository.findAllByPlanId(plan.id!!).filter { it.softDeleted }
       assertThat(allSoftDeletedVersionsAfter.size).isEqualTo(2)
-    }
-
-    @Sql(scripts = ["/db/test/oasys_assessment_pk_latest_soft_deleted_data.sql"], executionPhase = BEFORE_TEST_METHOD)
-    @Sql(scripts = ["/db/test/plan_cleanup.sql"], executionPhase = AFTER_TEST_METHOD)
-    @Test
-    fun `should successfully restore the latest soft_deleted record`() {
-      val plan = planRepository.getPlanByUuid(planUuid)
-      val allSoftDeletedVersionsBefore = planVersionRepository.findAllByPlanId(plan.id!!).filter { it.softDeleted }
-      assertThat(allSoftDeletedVersionsBefore.size).isEqualTo(1)
-
-      val restoreRequest = RestorePlanVersionsRequest(
-        userDetails = userDetails,
-        from = 1,
-        to = null,
-      )
-      webTestClient.post()
-        .uri("/coordinator/plan/$planUuid/restore")
-        .bodyValue(restoreRequest)
-        .header("Content-Type", "application/json")
-        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
-        .exchange()
-        .expectStatus().isOk
-        .expectBody<SoftDeletePlanVersionsResponse>()
-        .returnResult().run {
-          assertThat(responseBody?.versionsRestored).isEqualTo(listOf(1))
-          assertThat(responseBody?.planVersion).isEqualTo(1)
-        }
-
-      val allSoftDeletedVersionsAfter = planVersionRepository.findAllByPlanId(plan.id!!).filter { it.softDeleted }
-      assertThat(allSoftDeletedVersionsAfter.size).isEqualTo(0)
-
-      val allNonDeletedVersionsAfter = planVersionRepository.findAllByPlanId(plan.id!!).filter { !it.softDeleted }
-      assertThat(allNonDeletedVersionsAfter.size).isEqualTo(2)
-
-      assertThat(planRepository.getPlanByUuid(planUuid).currentVersion?.version).isEqualTo(1)
     }
 
     @Sql(scripts = ["/db/test/oasys_assessment_pk_partial_soft_deleted_data.sql"], executionPhase = BEFORE_TEST_METHOD)

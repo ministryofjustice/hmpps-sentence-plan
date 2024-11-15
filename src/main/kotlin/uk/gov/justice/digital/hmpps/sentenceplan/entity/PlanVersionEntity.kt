@@ -180,6 +180,8 @@ interface PlanVersionRepository : JpaRepository<PlanVersionEntity, Long> {
   )
   fun findLatestPlanVersion(planId: Long): Int?
 
+  fun findFirstByPlanIdAndSoftDeletedOrderByVersionDesc(planId: Long, softDeleted: Boolean): PlanVersionEntity?
+
   fun findAllByPlanId(planId: Long): List<PlanVersionEntity>
 
   @Query(

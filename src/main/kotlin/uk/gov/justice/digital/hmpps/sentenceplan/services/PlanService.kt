@@ -72,7 +72,7 @@ class PlanService(
   }
 
   @Transactional
-  fun softDelete(planUuid: UUID, from: Int, versionTo: Int?, softDelete: Boolean): SoftDeletePlanVersionsResponse? {
+  fun softDelete(planUuid: UUID, from: Int, versionTo: Int?, softDelete: Boolean): SoftDeletePlanVersionsResponse {
     val plan = planRepository.getPlanByUuid(planUuid)
     val versions = planVersionRepository.findAllByPlanId(plan.id!!)
     val availableForUpdate = versions.filter { it.softDeleted != softDelete }.map { it.version }.sorted()
@@ -80,15 +80,40 @@ class PlanService(
     val range = validateRange(from, to, availableForUpdate, softDelete)
     val versionsToUpdate = versions.filter { it.version in range }.map { it.apply { it.softDeleted = softDelete } }
     planVersionRepository.saveAll(versionsToUpdate)
-    return planVersionRepository
-      .findFirstByPlanIdAndSoftDeletedOrderByVersionDesc(plan.id!!, false)
-      ?.let {
-        plan.currentVersion = it
-        plan
+
+    if (plan.currentVersion?.version in range && softDelete) {
+      // The current version has been deleted.
+      // Find the latest version that has not been deleted, to be used for base of the new version
+      val maxAvailableVersion = versions.filter { !it.softDeleted && it.version < from }.maxByOrNull { it.version }
+
+      val updatedPlan = maxAvailableVersion.let { availableVersion ->
+        plan.currentVersion =
+          if (availableVersion != null) {
+            // Use the available version to base new version on
+            versionService.alwaysCreateNewPlanVersion(availableVersion)
+          } else {
+            // No version available to base new version on. Create a new version
+            planVersionRepository.save(
+              PlanVersionEntity(
+                plan = plan,
+                planId = plan.id!!,
+                planType = PlanType.INITIAL,
+                version = versions.maxByOrNull { it.version }?.version?.inc() ?: 0,
+              ),
+            )
+          }
+        planRepository.save(plan)
       }
-      ?.run(planRepository::save)
-      ?.currentVersion
-      ?.let { SoftDeletePlanVersionsResponse.from(it, planUuid, softDelete, range.toList()) }
+
+      return SoftDeletePlanVersionsResponse.from(
+        updatedPlan.currentVersion!!,
+        planUuid,
+        true,
+        range.toList(),
+        maxAvailableVersion?.version?.toLong(),
+      )
+    }
+    return SoftDeletePlanVersionsResponse.from(plan.currentVersion!!, planUuid, softDelete, range.toList())
   }
 
   fun lockPlan(planUuid: UUID): PlanVersionEntity {

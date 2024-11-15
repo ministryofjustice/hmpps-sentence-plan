@@ -395,13 +395,14 @@ class PlanServiceTest {
       planEntity.apply { currentVersion = planVersionEntities.filter { !it.softDeleted }.maxByOrNull { it.version } }
       every { planRepository.findPlanByUuid(any()) } returns planEntity
       every { planRepository.save(any()) } returns planEntity
+      val nextVersion = planVersionEntities.maxOfOrNull { it.version }?.inc() ?: 0
+      every { versionService.alwaysCreateNewPlanVersion(any()) } returns PlanVersionEntity(plan = planEntity, planId = 1L, version = nextVersion)
       every { planVersionRepository.findAllByPlanId(any()) } returns planVersionEntities
-      every { planVersionRepository.findFirstByPlanIdAndSoftDeletedOrderByVersionDesc(any(), false) } returns planVersionEntities.reversed().firstOrNull { !it.softDeleted }
       val result = planService.softDelete(UUID.randomUUID(), from, to, softDelete)
       if (softDelete) {
-        assertThat(result?.versionsSoftDeleted).isEqualTo(expected)
+        assertThat(result.versionsSoftDeleted).isEqualTo(expected)
       } else {
-        assertThat(result?.versionsRestored).isEqualTo(expected)
+        assertThat(result.versionsRestored).isEqualTo(expected)
       }
     }
     private fun softDeleteExceptionTestData() = listOf(

@@ -28,6 +28,9 @@ dependencies {
     implementation("org.bouncycastle:bcprov-jdk18on:1.79") {
       because("1.77 has CVEs")
     }
+    implementation("commons-io:commons-io:2.14.0") {
+      because("2.11 has CVEs")
+    }
   }
   implementation("org.springframework.cloud:spring-cloud-dependencies:2023.0.3")
   implementation("com.vladmihalcea:hibernate-types-60:2.21.1")

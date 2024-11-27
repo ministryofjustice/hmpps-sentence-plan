@@ -29,7 +29,7 @@ dependencies {
       because("1.77 has CVEs")
     }
     implementation("commons-io:commons-io:2.14.0") {
-      because("2.11 has CVEs")
+      because("2.11 has CVEs and is included via commons-upload 1.5 via spring-cloud-openfeign 4.1.3")
     }
   }
   implementation("org.springframework.cloud:spring-cloud-dependencies:2023.0.3")

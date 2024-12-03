@@ -32,7 +32,7 @@ dependencies {
       because("2.11 has CVEs and is included via commons-upload 1.5 via spring-cloud-openfeign 4.1.3")
     }
   }
-  implementation("org.springframework.cloud:spring-cloud-dependencies:2023.0.4")
+  implementation("org.springframework.cloud:spring-cloud-dependencies:2024.0.0")
   implementation("com.vladmihalcea:hibernate-types-60:2.21.1")
   implementation("org.flywaydb:flyway-core:10.21.0")
   runtimeOnly("org.flywaydb:flyway-database-postgresql:10.21.0")

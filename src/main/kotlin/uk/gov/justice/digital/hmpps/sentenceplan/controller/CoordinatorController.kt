@@ -9,6 +9,7 @@ import jakarta.validation.Valid
 import org.springframework.dao.EmptyResultDataAccessException
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
@@ -38,6 +39,7 @@ class CoordinatorController(
 ) {
 
   @PostMapping()
+  @PreAuthorize("hasAnyRole('ROLE_SENTENCE_PLAN_WRITE')")
   @Operation(
     description = "Create a new sentence plan",
     tags = ["Integrations"],
@@ -101,6 +103,7 @@ class CoordinatorController(
   }
 
   @PostMapping("/{planUuid}/sign")
+  @PreAuthorize("hasAnyRole('ROLE_SENTENCE_PLAN_WRITE')")
   @Operation(
     description = "Signs the specified sentence plan, updating its status to 'AWAITING_COUNTERSIGN' and returning the latest version of the plan.",
     tags = ["Integrations"],
@@ -138,6 +141,7 @@ class CoordinatorController(
   }
 
   @PostMapping("/{planUuid}/lock")
+  @PreAuthorize("hasAnyRole('ROLE_SENTENCE_PLAN_WRITE')")
   @Operation(
     description = "Locks the specified sentence plan, updating its status to 'LOCKED_INCOMPLETE' and returning the latest version of the plan.",
     tags = ["Integrations"],
@@ -168,6 +172,7 @@ class CoordinatorController(
   ): PlanVersionResponse = PlanVersionResponse.from(planService.lockPlan(planUuid))
 
   @PostMapping("/{planUuid}/countersign")
+  @PreAuthorize("hasAnyRole('ROLE_SENTENCE_PLAN_WRITE')")
   @Operation(
     description = "Updates the specified version of a sentence plan with the provided countersign status.",
     tags = ["Integrations"],
@@ -201,6 +206,7 @@ class CoordinatorController(
   }
 
   @PostMapping("/{planUuid}/rollback")
+  @PreAuthorize("hasAnyRole('ROLE_SENTENCE_PLAN_WRITE')")
   @Operation(
     description = "Sets the countersigning status of the specified plan version to 'ROLLED_BACK'",
     tags = ["Integrations"],
@@ -267,6 +273,7 @@ class CoordinatorController(
   )
 
   @PostMapping("/{planUuid}/restore")
+  @PreAuthorize("hasAnyRole('ROLE_SENTENCE_PLAN_WRITE')")
   @Operation(
     description = "Unsets the soft deleted flag for the specified range of plan versions to if all versions in specified range are already set to soft deleted. If no upper range specified, the latest version is assumumed." +
       "",
@@ -303,6 +310,7 @@ class CoordinatorController(
   )
 
   @PostMapping("/{planUuid}/clone")
+  @PreAuthorize("hasAnyRole('ROLE_SENTENCE_PLAN_WRITE')")
   @Operation(
     description = "Clone the latest plan version data into a new version",
     tags = ["Integrations"],

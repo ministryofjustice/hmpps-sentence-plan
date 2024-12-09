@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.sentenceplan.controller
 
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
@@ -39,6 +40,7 @@ class GoalController(private val service: GoalService) {
   }
 
   @PutMapping("/{goalUuid}")
+  @PreAuthorize("hasAnyRole('ROLE_SENTENCE_PLAN_WRITE')")
   @ResponseStatus(HttpStatus.OK)
   fun replaceGoal(
     @PathVariable goalUuid: UUID,
@@ -48,6 +50,7 @@ class GoalController(private val service: GoalService) {
   }
 
   @DeleteMapping("/{goalUuid}")
+  @PreAuthorize("hasAnyRole('ROLE_SENTENCE_PLAN_WRITE')")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   fun deleteGoal(
     @PathVariable goalUuid: UUID,
@@ -58,6 +61,7 @@ class GoalController(private val service: GoalService) {
   }
 
   @PatchMapping("/{goalUuid}")
+  @PreAuthorize("hasAnyRole('ROLE_SENTENCE_PLAN_WRITE')")
   @ResponseStatus(HttpStatus.OK)
   fun updateGoalStatus(
     @PathVariable goalUuid: UUID,
@@ -67,6 +71,7 @@ class GoalController(private val service: GoalService) {
   }
 
   @PostMapping("/{goalUuid}/steps")
+  @PreAuthorize("hasAnyRole('ROLE_SENTENCE_PLAN_WRITE')")
   @ResponseStatus(HttpStatus.CREATED)
   fun createNewSteps(
     @PathVariable goalUuid: UUID,
@@ -85,6 +90,7 @@ class GoalController(private val service: GoalService) {
   }
 
   @PutMapping("/{goalUuid}/steps")
+  @PreAuthorize("hasAnyRole('ROLE_SENTENCE_PLAN_WRITE')")
   @ResponseStatus(HttpStatus.OK)
   fun updateStep(
     @PathVariable goalUuid: UUID,
@@ -94,6 +100,7 @@ class GoalController(private val service: GoalService) {
   }
 
   @PostMapping("/order")
+  @PreAuthorize("hasAnyRole('ROLE_SENTENCE_PLAN_WRITE')")
   @ResponseStatus(HttpStatus.CREATED)
   fun updateGoalsOrder(
     @RequestBody goalsOrder: List<GoalOrder>,

@@ -182,7 +182,7 @@ class GoalControllerTest : IntegrationTestBase() {
     fun `get goal by UUID should return OK when goal exists`() {
       val goal: GoalEntity? = webTestClient.get().uri("/goals/$TEST_DATA_GOAL_UUID")
         .header("Content-Type", "application/json")
-        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_READ")))
         .exchange()
         .expectStatus().isOk
         .expectBody<GoalEntity>()
@@ -197,7 +197,7 @@ class GoalControllerTest : IntegrationTestBase() {
       val randomUuid = UUID.randomUUID()
       webTestClient.get().uri("/goals/$randomUuid")
         .header("Content-Type", "application/json")
-        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_READ")))
         .exchange()
         .expectStatus().isNotFound
         .expectBody<ErrorResponse>()
@@ -207,7 +207,7 @@ class GoalControllerTest : IntegrationTestBase() {
     fun `get goal steps should return OK and contain 1 step`() {
       webTestClient.get().uri("/goals/$TEST_DATA_GOAL_UUID/steps")
         .header("Content-Type", "application/json")
-        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_READ")))
         .exchange()
         .expectStatus().isOk
         .expectBodyList<StepEntity>()
@@ -218,7 +218,7 @@ class GoalControllerTest : IntegrationTestBase() {
       val randomUuid = UUID.randomUUID()
       webTestClient.get().uri("/goals/$randomUuid/steps")
         .header("Content-Type", "application/json")
-        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_READ")))
         .exchange()
         .expectStatus().isNotFound
         .expectBody<ErrorResponse>()
@@ -234,7 +234,7 @@ class GoalControllerTest : IntegrationTestBase() {
     fun `create goal steps should return OK`() {
       webTestClient.post().uri("/goals/${TEST_DATA_GOAL_UUID}/steps")
         .header("Content-Type", "application/json")
-        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_WRITE")))
         .bodyValue(stepList)
         .exchange()
         .expectStatus().isCreated
@@ -246,7 +246,7 @@ class GoalControllerTest : IntegrationTestBase() {
       val randomUuid = UUID.randomUUID()
       webTestClient.post().uri("/goals/$randomUuid/steps")
         .header("Content-Type", "application/json")
-        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_WRITE")))
         .bodyValue(stepList)
         .exchange()
         .expectStatus().is5xxServerError
@@ -257,7 +257,7 @@ class GoalControllerTest : IntegrationTestBase() {
     fun `create goal steps with no steps should return 500`() {
       webTestClient.post().uri("/goals/${TEST_DATA_GOAL_UUID}/steps")
         .header("Content-Type", "application/json")
-        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_WRITE")))
         .bodyValue(emptyList<StepEntity>())
         .exchange()
         .expectStatus().is5xxServerError
@@ -274,7 +274,7 @@ class GoalControllerTest : IntegrationTestBase() {
     fun `update goals order should return created`() {
       webTestClient.post().uri("/goals/order")
         .header("Content-Type", "application/json")
-        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_WRITE")))
         .bodyValue(goalOrderList)
         .exchange()
         .expectStatus().isCreated
@@ -291,17 +291,17 @@ class GoalControllerTest : IntegrationTestBase() {
     @Sql(scripts = ["/db/test/goal_deletion_data.sql"], executionPhase = BEFORE_TEST_METHOD)
     fun `delete goal should return no content and confirm goal and steps deleted`() {
       webTestClient.delete().uri("/goals/ede47f7f-8431-4ff9-80ec-2dd3a8db3841")
-        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_WRITE")))
         .exchange()
         .expectStatus().isNoContent
 
       webTestClient.get().uri("/goals/ede47f7f-8431-4ff9-80ec-2dd3a8db3841")
-        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_WRITE")))
         .exchange()
         .expectStatus().isNotFound
 
       webTestClient.get().uri("/steps/79803555-fad5-4cb7-8f8e-10f6d436834c")
-        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_WRITE")))
         .exchange()
         .expectStatus().isNotFound
     }
@@ -310,7 +310,7 @@ class GoalControllerTest : IntegrationTestBase() {
     fun `deleting a goal that does not exist should return 404`() {
       webTestClient.delete().uri("/goals/93ab5028-867f-4554-aa5a-2383e6b50f1f")
         .header("Content-Type", "application/json")
-        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_WRITE")))
         .exchange()
         .expectStatus().isNotFound
     }
@@ -333,7 +333,7 @@ class GoalControllerTest : IntegrationTestBase() {
 
       val goalEntity: GoalEntity? =
         webTestClient.put().uri("/goals/$goalUuid").header("Content-Type", "application/json")
-          .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+          .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_READ")))
           .bodyValue(goalRequestBody)
           .exchange()
           .expectStatus().isOk
@@ -355,7 +355,7 @@ class GoalControllerTest : IntegrationTestBase() {
 
       val goalEntity: GoalEntity? =
         webTestClient.put().uri("/goals/$goalUuid").header("Content-Type", "application/json")
-          .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+          .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_WRITE")))
           .bodyValue(goalRequestBody)
           .exchange()
           .expectStatus().isOk
@@ -379,7 +379,7 @@ class GoalControllerTest : IntegrationTestBase() {
 
       val goalEntity: GoalEntity? =
         webTestClient.put().uri("/goals/$goalUuid").header("Content-Type", "application/json")
-          .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+          .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_WRITE")))
           .bodyValue(goalRequestBody)
           .exchange()
           .expectStatus().isOk
@@ -404,7 +404,7 @@ class GoalControllerTest : IntegrationTestBase() {
 
       val goalEntity: GoalEntity? =
         webTestClient.put().uri("/goals/$goalUuid").header("Content-Type", "application/json")
-          .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+          .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_WRITE")))
           .bodyValue(goalRequestBody)
           .exchange()
           .expectStatus().isOk
@@ -427,7 +427,7 @@ class GoalControllerTest : IntegrationTestBase() {
 
       val goalEntity: GoalEntity? =
         webTestClient.put().uri("/goals/$goalUuid").header("Content-Type", "application/json")
-          .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+          .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_WRITE")))
           .bodyValue(goalRequestBody)
           .exchange()
           .expectStatus().isOk
@@ -449,7 +449,7 @@ class GoalControllerTest : IntegrationTestBase() {
 
       val goalEntity: GoalEntity? =
         webTestClient.put().uri("/goals/$goalUuid").header("Content-Type", "application/json")
-          .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+          .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_WRITE")))
           .bodyValue(goalRequestBody)
           .exchange()
           .expectStatus().isOk
@@ -475,7 +475,7 @@ class GoalControllerTest : IntegrationTestBase() {
 
       val goalEntity: GoalEntity? =
         webTestClient.put().uri("/goals/$goalUuid").header("Content-Type", "application/json")
-          .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+          .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_WRITE")))
           .bodyValue(goalRequestBody)
           .exchange()
           .expectStatus().isOk
@@ -501,7 +501,7 @@ class GoalControllerTest : IntegrationTestBase() {
 
       val goalEntity: GoalEntity? =
         webTestClient.put().uri("/goals/$goalUuid").header("Content-Type", "application/json")
-          .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+          .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_WRITE")))
           .bodyValue(goalRequestBody)
           .exchange()
           .expectStatus().isOk
@@ -527,7 +527,7 @@ class GoalControllerTest : IntegrationTestBase() {
 
       val goalEntity: GoalEntity? =
         webTestClient.put().uri("/goals/$goalUuid").header("Content-Type", "application/json")
-          .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+          .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_WRITE")))
           .bodyValue(goalRequestBody)
           .exchange()
           .expectStatus().isOk
@@ -556,7 +556,7 @@ class GoalControllerTest : IntegrationTestBase() {
       // If you goalRepository.findByUuid() here, the test will fail.
 
       webTestClient.patch().uri("/goals/$goalUuid").header("Content-Type", "application/json")
-        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_WRITE")))
         .bodyValue(goalStatusUpdate)
         .exchange()
         .expectStatus().isOk
@@ -580,7 +580,7 @@ class GoalControllerTest : IntegrationTestBase() {
       // If you goalRepository.findByUuid() here, the test will fail.
 
       webTestClient.patch().uri("/goals/$goalUuid").header("Content-Type", "application/json")
-        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_WRITE")))
         .bodyValue(goalStatusUpdate)
         .exchange()
         .expectStatus().isOk
@@ -605,7 +605,7 @@ class GoalControllerTest : IntegrationTestBase() {
 
       val steps: List<StepEntity>? = webTestClient.put().uri("/goals/$goalWithNoStepsUuid/steps")
         .header("Content-Type", "application/json")
-        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_WRITE")))
         .bodyValue(Goal(steps = stepList))
         .exchange()
         .expectStatus().isOk
@@ -625,7 +625,7 @@ class GoalControllerTest : IntegrationTestBase() {
 
       val steps: List<StepEntity>? = webTestClient.put().uri("/goals/$goalWithOneStepUuid/steps")
         .header("Content-Type", "application/json")
-        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_WRITE")))
         .bodyValue(Goal(steps = stepList))
         .exchange()
         .expectStatus().isOk
@@ -639,7 +639,7 @@ class GoalControllerTest : IntegrationTestBase() {
       // refetch goal to make sure there are no surprise steps still attached
       val goal: GoalEntity? = webTestClient.get().uri("/goals/$goalWithOneStepUuid")
         .header("Content-Type", "application/json")
-        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_WRITE")))
         .exchange()
         .expectStatus().isOk
         .expectBody<GoalEntity>()
@@ -654,7 +654,7 @@ class GoalControllerTest : IntegrationTestBase() {
 
       webTestClient.get().uri("/steps/$originalGoalStepUuid")
         .header("Content-Type", "application/json")
-        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_WRITE")))
         .exchange()
         .expectStatus().isNotFound
         .expectBody<ErrorResponse>()
@@ -666,7 +666,7 @@ class GoalControllerTest : IntegrationTestBase() {
 
       webTestClient.put().uri("/goals/$goalUuid/steps")
         .header("Content-Type", "application/json")
-        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_WRITE")))
         .bodyValue(stepList)
         .exchange()
         .expectStatus().is5xxServerError
@@ -687,7 +687,7 @@ class GoalControllerTest : IntegrationTestBase() {
 
       webTestClient.put().uri("/goals/$goalWithNoStepsUuid/steps")
         .header("Content-Type", "application/json")
-        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_WRITE")))
         .bodyValue(listWithIncompleteStep)
         .exchange()
         .expectStatus().is5xxServerError
@@ -700,7 +700,7 @@ class GoalControllerTest : IntegrationTestBase() {
 
       webTestClient.put().uri("/goals/$goalWithNoStepsUuid/steps")
         .header("Content-Type", "application/json")
-        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_WRITE")))
         .bodyValue(emptyList<Step>())
         .exchange()
         .expectStatus().is5xxServerError

@@ -62,7 +62,7 @@ class ARNSApiService(
       } else {
         log.info("Calling ARNSRestClient")
         arnsRestClient.get()
-          .uri("/case-details/$crn")
+          .uri("/risks/crn/$crn")
           .retrieve()
           .bodyToMono(RiskAssessment::class.java)
           .onErrorResume(WebClientResponseException.NotFound::class.java) { Mono.empty() }

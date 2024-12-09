@@ -27,6 +27,7 @@ spring:
       resourceserver:
         jwt:
           issuer-uri: ${hmpps-auth.issuer-base-url:${hmpps-auth.base-url}}/auth/issuer
+          jwk-set-uri: ${hmpps-auth.base-url}/.well-known/jwks.json
       client:
         provider:
           hmpps-auth-service:

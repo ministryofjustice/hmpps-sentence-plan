@@ -124,7 +124,7 @@ class PlanControllerTest : IntegrationTestBase() {
         targetDate = LocalDate.now().toString(),
       )
       webTestClient.post().uri("/plans/$testPlanUuid/goals").header("Content-Type", "application/json")
-        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_WRITE")))
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_READ", "ROLE_SENTENCE_PLAN_WRITE")))
         .bodyValue(goalRequestBodyBadAreaOfNeed)
         .exchange()
         .expectStatus().is5xxServerError
@@ -140,7 +140,7 @@ class PlanControllerTest : IntegrationTestBase() {
       )
       val randomUuid = UUID.randomUUID()
       val errorResponse: ErrorResponse? = webTestClient.post().uri("/plans/$randomUuid/goals").header("Content-Type", "application/json")
-        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_WRITE")))
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_READ", "ROLE_SENTENCE_PLAN_WRITE")))
         .bodyValue(goalRequestBodyBadAreaOfNeed)
         .exchange()
         .expectStatus().is5xxServerError
@@ -158,7 +158,7 @@ class PlanControllerTest : IntegrationTestBase() {
       )
       val goalEntity: GoalEntity? =
         webTestClient.post().uri("/plans/$testPlanUuid/goals").header("Content-Type", "application/json")
-          .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_WRITE")))
+          .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_READ", "ROLE_SENTENCE_PLAN_WRITE")))
           .bodyValue(goalRequestBodyWithNoTargetDate)
           .exchange()
           .expectStatus().isCreated
@@ -173,7 +173,7 @@ class PlanControllerTest : IntegrationTestBase() {
     fun `should create goal with a target date`() {
       val goalEntity: GoalEntity? =
         webTestClient.post().uri("/plans/$testPlanUuid/goals").header("Content-Type", "application/json")
-          .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_WRITE")))
+          .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_READ", "ROLE_SENTENCE_PLAN_WRITE")))
           .bodyValue(goalRequestBody)
           .exchange()
           .expectStatus().isCreated
@@ -193,7 +193,7 @@ class PlanControllerTest : IntegrationTestBase() {
       )
       val goalEntity: GoalEntity? =
         webTestClient.post().uri("/plans/$testPlanUuid/goals").header("Content-Type", "application/json")
-          .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_WRITE")))
+          .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_READ", "ROLE_SENTENCE_PLAN_WRITE")))
           .bodyValue(goalRequestBodyUppercaseAreaOfNeed)
           .exchange()
           .expectStatus().isCreated
@@ -207,7 +207,7 @@ class PlanControllerTest : IntegrationTestBase() {
     fun `should return created when creating goal with no related areas of need`() {
       val goalEntity: GoalEntity? =
         webTestClient.post().uri("/plans/$testPlanUuid/goals").header("Content-Type", "application/json")
-          .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_WRITE")))
+          .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_READ", "ROLE_SENTENCE_PLAN_WRITE")))
           .bodyValue(goalRequestBody)
           .exchange()
           .expectStatus().isCreated
@@ -230,7 +230,7 @@ class PlanControllerTest : IntegrationTestBase() {
       )
       val goalEntity: GoalEntity? =
         webTestClient.post().uri("/plans/$testPlanUuid/goals").header("Content-Type", "application/json")
-          .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_WRITE")))
+          .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_READ", "ROLE_SENTENCE_PLAN_WRITE")))
           .bodyValue(goalRequestBody)
           .exchange()
           .expectStatus().isCreated
@@ -246,7 +246,7 @@ class PlanControllerTest : IntegrationTestBase() {
     fun `should return server error when creating goal with invalid Plan UUID`() {
       val randomPlanUuid = UUID.randomUUID()
       webTestClient.post().uri("/plans/$randomPlanUuid/goals").header("Content-Type", "application/json")
-        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_WRITE")))
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_READ", "ROLE_SENTENCE_PLAN_WRITE")))
         .bodyValue(goalRequestBody)
         .exchange()
         .expectStatus().is5xxServerError
@@ -275,7 +275,7 @@ class PlanControllerTest : IntegrationTestBase() {
 
       val planVersionEntity: PlanVersionEntity? = webTestClient.post().uri("/plans/$testPlanUuid/agree")
         .header("Content-Type", "application/json")
-        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_WRITE")))
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_READ", "ROLE_SENTENCE_PLAN_WRITE")))
         .bodyValue(agreePlanBody)
         .exchange()
         .expectStatus().isAccepted
@@ -293,7 +293,7 @@ class PlanControllerTest : IntegrationTestBase() {
     fun `plan has already been agreed`() {
       webTestClient.post().uri("/plans/$testPlanUuid/agree")
         .header("Content-Type", "application/json")
-        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_WRITE")))
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_READ", "ROLE_SENTENCE_PLAN_WRITE")))
         .bodyValue(agreePlanBody)
         .exchange()
         .expectStatus().isEqualTo(HttpStatus.CONFLICT)
@@ -303,7 +303,7 @@ class PlanControllerTest : IntegrationTestBase() {
     fun `plan not found`() {
       webTestClient.post().uri("/plans/e0b7707e-a9da-4574-b97f-ea84e402baf6/agree")
         .header("Content-Type", "application/json")
-        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_WRITE")))
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_READ", "ROLE_SENTENCE_PLAN_WRITE")))
         .bodyValue(agreePlanBody)
         .exchange()
         .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
@@ -318,7 +318,7 @@ class PlanControllerTest : IntegrationTestBase() {
     @Test
     fun `should fetch all plan and goal notes for a given plan uuid`() {
       val notes: List<Note>? = webTestClient.get().uri("/plans/$testPlanUuid/notes")
-        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_WRITE")))
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_READ", "ROLE_SENTENCE_PLAN_WRITE")))
         .exchange()
         .expectStatus().isOk
         .expectBody<List<Note>>()

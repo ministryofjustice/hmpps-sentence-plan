@@ -3,12 +3,12 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.springframework.boot.gradle.tasks.run.BootRun
 
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "6.0.9"
-  kotlin("plugin.spring") version "2.0.21"
-  kotlin("plugin.jpa") version "2.0.21"
-  kotlin("jvm") version "2.0.21"
-  id("org.jlleitschuh.gradle.ktlint") version "12.1.1"
-  id("org.openapi.generator") version "7.9.0"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "6.1.0"
+  kotlin("plugin.spring") version "2.1.0"
+  kotlin("plugin.jpa") version "2.1.0"
+  kotlin("jvm") version "2.1.0"
+  id("org.jlleitschuh.gradle.ktlint") version "12.1.2"
+  id("org.openapi.generator") version "7.10.0"
   jacoco
 }
 
@@ -17,25 +17,25 @@ configurations {
 }
 
 dependencies {
-  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0")
+  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.7.0")
   implementation("org.springframework.boot:spring-boot-starter-webflux")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
   implementation("org.springframework.boot:spring-boot-starter-security")
   implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
   implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
-  implementation("org.springframework.cloud:spring-cloud-starter-openfeign:4.1.3")
+  implementation("org.springframework.cloud:spring-cloud-starter-openfeign:4.2.0")
   constraints {
     implementation("org.bouncycastle:bcprov-jdk18on:1.79") {
       because("1.77 has CVEs")
     }
-    implementation("commons-io:commons-io:2.14.0") {
+    implementation("commons-io:commons-io:2.18.0") {
       because("2.11 has CVEs and is included via commons-upload 1.5 via spring-cloud-openfeign 4.1.3")
     }
   }
   implementation("org.springframework.cloud:spring-cloud-dependencies:2023.0.4")
   implementation("com.vladmihalcea:hibernate-types-60:2.21.1")
-  implementation("org.flywaydb:flyway-core:10.21.0")
-  runtimeOnly("org.flywaydb:flyway-database-postgresql:10.21.0")
+  implementation("org.flywaydb:flyway-core:10.22.0")
+  runtimeOnly("org.flywaydb:flyway-database-postgresql:10.22.0")
   runtimeOnly("org.postgresql:postgresql")
 
   // Test dependencies

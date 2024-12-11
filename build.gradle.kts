@@ -26,7 +26,6 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
   implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
 
-  implementation("org.springframework.cloud:spring-cloud-dependencies:2023.0.4")
   implementation("com.vladmihalcea:hibernate-types-60:2.21.1")
   implementation("org.flywaydb:flyway-core:10.21.0")
   runtimeOnly("org.flywaydb:flyway-database-postgresql:10.21.0")

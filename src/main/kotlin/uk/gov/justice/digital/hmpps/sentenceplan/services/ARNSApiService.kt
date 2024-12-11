@@ -36,9 +36,8 @@ class ARNSApiService(
           .uri("/case-details/$crn")
           .retrieve()
           .bodyToMono(CaseDetail::class.java)
-          .onErrorResume(WebClientResponseException.NotFound::class.java) { Mono.empty() }
+          .onErrorResume(WebClientResponseException.NotFound::class.java) { throw ResponseStatusException(HttpStatus.NOT_FOUND) }
           .block()
-          ?: throw ResponseStatusException(HttpStatus.NOT_FOUND)
       }
     // TODO sort source of below hard coded values
     return PopInfoResponse(
@@ -65,9 +64,8 @@ class ARNSApiService(
           .uri("/risks/crn/$crn")
           .retrieve()
           .bodyToMono(RiskAssessment::class.java)
-          .onErrorResume(WebClientResponseException.NotFound::class.java) { Mono.empty() }
+          .onErrorResume(WebClientResponseException.NotFound::class.java) { throw ResponseStatusException(HttpStatus.NOT_FOUND) }
           .block()
-          ?: throw ResponseStatusException(HttpStatus.NOT_FOUND)
       }
     val riskInCommunityMap = LinkedHashMap<String, ScoreEnum>()
     val riskInCustodyMap = LinkedHashMap<String, ScoreEnum>()

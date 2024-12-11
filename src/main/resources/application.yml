@@ -83,13 +83,3 @@ management:
     info:
       cache:
         time-to-live: 2000ms
-
-  cloud.openfeign.client.config:
-    default:
-      logger-level: basic
-      connect-timeout: 5000
-      read-timeout: 5000
-      default-request-headers:
-        Accept: application/json
-        Content-Type: application/json
-

@@ -27,6 +27,7 @@ spring:
       resourceserver:
         jwt:
           issuer-uri: ${hmpps-auth.issuer-base-url:${hmpps-auth.base-url}}/auth/issuer
+          jwk-set-uri: ${hmpps-auth.base-url}/auth/.well-known/jwks.json # If this 404's it returns unauthorised?!?
       client:
         provider:
           hmpps-auth-service:
@@ -82,13 +83,3 @@ management:
     info:
       cache:
         time-to-live: 2000ms
-
-  cloud.openfeign.client.config:
-    default:
-      logger-level: basic
-      connect-timeout: 5000
-      read-timeout: 5000
-      default-request-headers:
-        Accept: application/json
-        Content-Type: application/json
-

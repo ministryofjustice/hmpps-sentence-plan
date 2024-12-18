@@ -21,7 +21,7 @@ class StepControllerTest : IntegrationTestBase() {
   @Test
   fun `get step by existing UUID should return OK`() {
     webTestClient.get().uri("/steps/${TEST_DATA_STEP_UUID}")
-      .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+      .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_SENTENCE_PLAN_READ")))
       .exchange()
       .expectStatus().isOk
   }
@@ -30,7 +30,7 @@ class StepControllerTest : IntegrationTestBase() {
   fun `get step by non-existent UUID should return not found`() {
     val randomStepUuid = UUID.randomUUID()
     webTestClient.get().uri("/steps/$randomStepUuid")
-      .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+      .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_SENTENCE_PLAN_READ")))
       .exchange()
       .expectStatus().isNotFound
   }

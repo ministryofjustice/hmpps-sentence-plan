@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.sentenceplan.controller
 import org.springframework.dao.EmptyResultDataAccessException
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
@@ -81,6 +82,7 @@ class PlanController(
   }
 
   @PostMapping("/{planUuid}/goals")
+  @PreAuthorize("hasAnyRole('ROLE_SENTENCE_PLAN_WRITE')")
   @ResponseStatus(HttpStatus.CREATED)
   fun createNewGoal(
     @PathVariable planUuid: UUID,
@@ -90,6 +92,7 @@ class PlanController(
   }
 
   @PostMapping("/{planUuid}/agree")
+  @PreAuthorize("hasAnyRole('ROLE_SENTENCE_PLAN_WRITE')")
   @ResponseStatus(HttpStatus.ACCEPTED)
   fun agreePlanVersion(
     @PathVariable planUuid: UUID,

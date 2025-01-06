@@ -237,6 +237,7 @@ class CoordinatorController(
   ): PlanVersionResponse = PlanVersionResponse.from(planService.rollbackVersion(planUuid, body.sentencePlanVersion.toInt()))
 
   @PostMapping("/{planUuid}/soft-delete")
+  @PreAuthorize("hasAnyRole('ROLE_SENTENCE_PLAN_WRITE')")
   @Operation(
     description = "Sets the specified range of plan versions to soft deleted if all versions in specified range are not already set to soft deleted. If no upper range specified, the latest version is assumumed." +
       "",

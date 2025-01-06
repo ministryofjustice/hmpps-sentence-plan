@@ -66,7 +66,7 @@ class CoordinatorControllerTest : IntegrationTestBase() {
         .uri("/coordinator/plan")
         .bodyValue(createPlanRequest)
         .header("Content-Type", "application/json")
-        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_READ")))
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_READ", "ROLE_SENTENCE_PLAN_WRITE")))
         .exchange()
         .expectStatus().isCreated
         .expectBody<PlanVersionResponse>()

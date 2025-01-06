@@ -333,7 +333,7 @@ class GoalControllerTest : IntegrationTestBase() {
 
       val goalEntity: GoalEntity? =
         webTestClient.put().uri("/goals/$goalUuid").header("Content-Type", "application/json")
-          .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_READ")))
+          .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_READ", "ROLE_SENTENCE_PLAN_WRITE")))
           .bodyValue(goalRequestBody)
           .exchange()
           .expectStatus().isOk

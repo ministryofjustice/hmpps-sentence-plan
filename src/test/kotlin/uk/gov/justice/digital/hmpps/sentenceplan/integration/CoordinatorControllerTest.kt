@@ -66,7 +66,7 @@ class CoordinatorControllerTest : IntegrationTestBase() {
         .uri("/coordinator/plan")
         .bodyValue(createPlanRequest)
         .header("Content-Type", "application/json")
-        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_READ", "ROLE_SENTENCE_PLAN_WRITE")))
         .exchange()
         .expectStatus().isCreated
         .expectBody<PlanVersionResponse>()
@@ -89,7 +89,7 @@ class CoordinatorControllerTest : IntegrationTestBase() {
       webTestClient.get()
         .uri("/coordinator/plan/$staticPlanUuid")
         .header("Content-Type", "application/json")
-        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_READ")))
         .exchange()
         .expectStatus().isOk
         .expectBody<GetPlanResponse>()
@@ -106,7 +106,7 @@ class CoordinatorControllerTest : IntegrationTestBase() {
       webTestClient.get()
         .uri("/coordinator/plan/15285be5-fe67-448f-b8b0-45c9e4c7ad8e")
         .header("Content-Type", "application/json")
-        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_READ")))
         .exchange()
         .expectStatus().isNotFound
         .expectBody<ErrorResponse>()
@@ -117,7 +117,7 @@ class CoordinatorControllerTest : IntegrationTestBase() {
       webTestClient.get()
         .uri("/coordinator/plan/x")
         .header("Content-Type", "application/json")
-        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_READ")))
         .exchange()
         .expectStatus().is5xxServerError
         .expectBody<ErrorResponse>()
@@ -149,7 +149,7 @@ class CoordinatorControllerTest : IntegrationTestBase() {
         .uri("/coordinator/plan/$planUuid/sign")
         .bodyValue(signRequest)
         .header("Content-Type", "application/json")
-        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_READ", "ROLE_SENTENCE_PLAN_WRITE")))
         .exchange()
         .expectStatus().isOk
         .expectBody<PlanVersionResponse>()
@@ -170,7 +170,7 @@ class CoordinatorControllerTest : IntegrationTestBase() {
         .uri("/coordinator/plan/$notFoundUuid/sign")
         .bodyValue(signRequest)
         .header("Content-Type", "application/json")
-        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_READ", "ROLE_SENTENCE_PLAN_WRITE")))
         .exchange()
         .expectStatus().isNotFound
         .expectBody<ErrorResponse>()
@@ -194,7 +194,7 @@ class CoordinatorControllerTest : IntegrationTestBase() {
         .uri("/coordinator/plan/$planUuid/sign")
         .bodyValue(signRequest)
         .header("Content-Type", "application/json")
-        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_READ", "ROLE_SENTENCE_PLAN_WRITE")))
         .exchange()
         .expectStatus().is4xxClientError
         .expectBody<ErrorResponse>()
@@ -229,7 +229,7 @@ class CoordinatorControllerTest : IntegrationTestBase() {
         .uri("/coordinator/plan/$planUuid/lock")
         .bodyValue(lockRequest)
         .header("Content-Type", "application/json")
-        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_READ", "ROLE_SENTENCE_PLAN_WRITE")))
         .exchange()
         .expectStatus().isOk
         .expectBody<PlanVersionResponse>()
@@ -257,7 +257,7 @@ class CoordinatorControllerTest : IntegrationTestBase() {
         .uri("/coordinator/plan/$notFoundUuid/lock")
         .bodyValue(lockRequest)
         .header("Content-Type", "application/json")
-        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_READ", "ROLE_SENTENCE_PLAN_WRITE")))
         .exchange()
         .expectStatus().isNotFound
         .expectBody<ErrorResponse>()
@@ -291,7 +291,7 @@ class CoordinatorControllerTest : IntegrationTestBase() {
         .uri("/coordinator/plan/$planUuid/rollback")
         .bodyValue(rollbackRequest)
         .header("Content-Type", "application/json")
-        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_READ", "ROLE_SENTENCE_PLAN_WRITE")))
         .exchange()
         .expectStatus().isOk
         .expectBody<PlanVersionResponse>()
@@ -317,7 +317,7 @@ class CoordinatorControllerTest : IntegrationTestBase() {
         .uri("/coordinator/plan/$planUuid/rollback")
         .bodyValue(rollbackRequest)
         .header("Content-Type", "application/json")
-        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_READ", "ROLE_SENTENCE_PLAN_WRITE")))
         .exchange()
         .expectStatus().isNotFound
         .expectBody<ErrorResponse>()
@@ -354,7 +354,7 @@ class CoordinatorControllerTest : IntegrationTestBase() {
         .uri("/coordinator/plan/$planUuid/countersign")
         .bodyValue(signRequest)
         .header("Content-Type", "application/json")
-        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_READ", "ROLE_SENTENCE_PLAN_WRITE")))
         .exchange()
         .expectStatus().isOk
         .expectBody<PlanVersionResponse>()
@@ -380,7 +380,7 @@ class CoordinatorControllerTest : IntegrationTestBase() {
         .uri("/coordinator/plan/$notFoundUuid/countersign")
         .bodyValue(signRequest)
         .header("Content-Type", "application/json")
-        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_READ", "ROLE_SENTENCE_PLAN_WRITE")))
         .exchange()
         .expectStatus().isNotFound
         .expectBody<ErrorResponse>()
@@ -403,7 +403,7 @@ class CoordinatorControllerTest : IntegrationTestBase() {
         .uri("/coordinator/plan/$planUuid/countersign")
         .bodyValue(signRequest)
         .header("Content-Type", "application/json")
-        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_READ", "ROLE_SENTENCE_PLAN_WRITE")))
         .exchange()
         .expectStatus().is4xxClientError
         .expectBody<ErrorResponse>()
@@ -435,7 +435,7 @@ class CoordinatorControllerTest : IntegrationTestBase() {
         .uri("/coordinator/plan/$planUuid/soft-delete")
         .bodyValue(softDeletePlanVersionsRequest)
         .header("Content-Type", "application/json")
-        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_READ", "ROLE_SENTENCE_PLAN_WRITE")))
         .exchange()
         .expectStatus().isOk
         .expectBody<SoftDeletePlanVersionsResponse>()
@@ -465,7 +465,7 @@ class CoordinatorControllerTest : IntegrationTestBase() {
         .uri("/coordinator/plan/$planUuid/soft-delete")
         .bodyValue(softDeletePlanVersionsRequest)
         .header("Content-Type", "application/json")
-        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_READ", "ROLE_SENTENCE_PLAN_WRITE")))
         .exchange()
         .expectStatus().isOk
         .expectBody()
@@ -488,7 +488,7 @@ class CoordinatorControllerTest : IntegrationTestBase() {
         .uri("/coordinator/plan/$planUuid/soft-delete")
         .bodyValue(softDeletePlanVersionsRequest)
         .header("Content-Type", "application/json")
-        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_READ", "ROLE_SENTENCE_PLAN_WRITE")))
         .exchange()
         .expectStatus().isBadRequest
         .expectBody<ErrorResponse>()
@@ -508,7 +508,7 @@ class CoordinatorControllerTest : IntegrationTestBase() {
         .uri("/coordinator/plan/$notFoundUuid/soft-delete")
         .bodyValue(softDeletePlanVersionsRequest)
         .header("Content-Type", "application/json")
-        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_READ", "ROLE_SENTENCE_PLAN_WRITE")))
         .exchange()
         .expectStatus().isNotFound
         .expectBody<ErrorResponse>()
@@ -542,7 +542,7 @@ class CoordinatorControllerTest : IntegrationTestBase() {
         .uri("/coordinator/plan/$planUuid/restore")
         .bodyValue(restoreRequest)
         .header("Content-Type", "application/json")
-        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_READ", "ROLE_SENTENCE_PLAN_WRITE")))
         .exchange()
         .expectStatus().isOk
         .expectBody<SoftDeletePlanVersionsResponse>()
@@ -572,7 +572,7 @@ class CoordinatorControllerTest : IntegrationTestBase() {
         .uri("/coordinator/plan/$planUuid/restore")
         .bodyValue(restoreRequest)
         .header("Content-Type", "application/json")
-        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_READ", "ROLE_SENTENCE_PLAN_WRITE")))
         .exchange()
         .expectStatus().isOk
         .expectBody<SoftDeletePlanVersionsResponse>()
@@ -603,7 +603,7 @@ class CoordinatorControllerTest : IntegrationTestBase() {
         .uri("/coordinator/plan/$planUuid/restore")
         .bodyValue(softDeletePlanVersionsRequest)
         .header("Content-Type", "application/json")
-        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_READ", "ROLE_SENTENCE_PLAN_WRITE")))
         .exchange()
         .expectStatus().isBadRequest
         .expectBody<ErrorResponse>()
@@ -624,7 +624,7 @@ class CoordinatorControllerTest : IntegrationTestBase() {
         .uri("/coordinator/plan/$notFoundUuid/restore")
         .bodyValue(restoreRequest)
         .header("Content-Type", "application/json")
-        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_READ", "ROLE_SENTENCE_PLAN_WRITE")))
         .exchange()
         .expectStatus().isNotFound
         .expectBody<ErrorResponse>()
@@ -657,7 +657,7 @@ class CoordinatorControllerTest : IntegrationTestBase() {
         .uri("/coordinator/plan/$planUuid/clone")
         .bodyValue(clonePlanVersionRequest)
         .header("Content-Type", "application/json")
-        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_READ", "ROLE_SENTENCE_PLAN_WRITE")))
         .exchange()
         .expectStatus().isOk
         .expectBody<PlanVersionResponse>()
@@ -682,7 +682,7 @@ class CoordinatorControllerTest : IntegrationTestBase() {
         .uri("/coordinator/plan/$notFoundUuid/clone")
         .bodyValue(clonePlanVersionRequest)
         .header("Content-Type", "application/json")
-        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_READ", "ROLE_SENTENCE_PLAN_WRITE")))
         .exchange()
         .expectStatus().isNotFound
         .expectBody<ErrorResponse>()

@@ -15,7 +15,7 @@ class PopInfoControllerTest : IntegrationTestBase() {
   fun `get pop info should return success`() {
     webTestClient.post().uri("/info/pop")
       .header("Content-Type", "application/json")
-      .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+      .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_SENTENCE_PLAN_READ", "ROLE_RISK_INTEGRATIONS_RO")))
       .bodyValue(requestBody)
       .exchange()
       .expectStatus().isOk
@@ -44,7 +44,7 @@ class PopInfoControllerTest : IntegrationTestBase() {
   fun `get pop info scores risk should return success`() {
     webTestClient.post().uri("/info/pop/scores/risk")
       .header("Content-Type", "application/json")
-      .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_RISK_INTEGRATIONS_RO")))
+      .headers(setAuthorisation(user = "Tom C", roles = listOf("ROLE_SENTENCE_PLAN_READ", "ROLE_RISK_INTEGRATIONS_RO")))
       .bodyValue(requestBody)
       .exchange()
       .expectStatus().isOk

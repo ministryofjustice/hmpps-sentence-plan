@@ -26,7 +26,7 @@ class SecurityConfiguration {
             "/v3/api-docs/**",
             "/question-reference-data",
           ).permitAll()
-          .anyRequest().hasAuthority("ROLE_RISK_INTEGRATIONS_RO")
+          .anyRequest().hasAuthority("ROLE_SENTENCE_PLAN_READ")
       }
       .oauth2ResourceServer { oauth2 -> oauth2.jwt { it.jwtAuthenticationConverter(AuthAwareTokenConverter()) } }
 

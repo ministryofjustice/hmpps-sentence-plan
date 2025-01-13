@@ -127,12 +127,16 @@ class GoalEntity(
     }
 
     // If we receive a goal note, check if there is an ACHIEVED or REMOVED status and create a note with that.
+    // If the goal is currently REMOVED and we are setting it to ACTIVE or FUTURE, create a note for that.
     // Otherwise make it a progress note
+    // TODO write some tests to cover READDED case
     goal.note?.let { note ->
       val goalNoteEntity = GoalNoteEntity(note = note, goal = this).apply {
-        type = when (goal.status) {
-          GoalStatus.REMOVED -> GoalNoteType.REMOVED
-          GoalStatus.ACHIEVED -> GoalNoteType.ACHIEVED
+        type = when {
+          this.goal!!.status == GoalStatus.REMOVED && goal.status == GoalStatus.FUTURE -> GoalNoteType.READDED
+          this.goal!!.status == GoalStatus.REMOVED && goal.status == GoalStatus.ACTIVE -> GoalNoteType.READDED
+          goal.status == GoalStatus.REMOVED -> GoalNoteType.REMOVED
+          goal.status == GoalStatus.ACHIEVED -> GoalNoteType.ACHIEVED
           else -> GoalNoteType.PROGRESS
         }
       }

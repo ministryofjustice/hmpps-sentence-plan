@@ -65,4 +65,5 @@ enum class GoalNoteType {
   PROGRESS,
   REMOVED,
   ACHIEVED,
+  READDED,
 }

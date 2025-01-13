@@ -31,21 +31,17 @@ class GoalController(private val service: GoalService) {
   @GetMapping("/{goalUuid}")
   fun getGoal(
     @PathVariable goalUuid: UUID,
-  ): GoalEntity {
-    return service.getGoalByUuid(goalUuid) ?: throw NoResourceFoundException(
-      HttpMethod.GET,
-      "No goal found for $goalUuid",
-    )
-  }
+  ): GoalEntity = service.getGoalByUuid(goalUuid) ?: throw NoResourceFoundException(
+    HttpMethod.GET,
+    "No goal found for $goalUuid",
+  )
 
   @PutMapping("/{goalUuid}")
   @ResponseStatus(HttpStatus.OK)
   fun replaceGoal(
     @PathVariable goalUuid: UUID,
     @RequestBody goal: Goal,
-  ): GoalEntity {
-    return service.replaceGoalByUuid(goalUuid, goal)
-  }
+  ): GoalEntity = service.replaceGoalByUuid(goalUuid, goal)
 
   @DeleteMapping("/{goalUuid}")
   @ResponseStatus(HttpStatus.NO_CONTENT)
@@ -62,18 +58,14 @@ class GoalController(private val service: GoalService) {
   fun updateGoalStatus(
     @PathVariable goalUuid: UUID,
     @RequestBody goalStatusUpdate: GoalStatusUpdate,
-  ): GoalEntity {
-    return service.updateGoalStatus(goalUuid, goalStatusUpdate)
-  }
+  ): GoalEntity = service.updateGoalStatus(goalUuid, goalStatusUpdate)
 
   @PostMapping("/{goalUuid}/steps")
   @ResponseStatus(HttpStatus.CREATED)
   fun createNewSteps(
     @PathVariable goalUuid: UUID,
     @RequestBody steps: List<Step>,
-  ): List<StepEntity> {
-    return service.addStepsToGoal(goalUuid, Goal(steps = steps))
-  }
+  ): List<StepEntity> = service.addStepsToGoal(goalUuid, Goal(steps = steps))
 
   @GetMapping("/{goalUuid}/steps")
   @ResponseStatus(HttpStatus.OK)
@@ -89,15 +81,11 @@ class GoalController(private val service: GoalService) {
   fun updateStep(
     @PathVariable goalUuid: UUID,
     @RequestBody goal: Goal,
-  ): List<StepEntity>? {
-    return service.addStepsToGoal(goalUuid, goal, true)
-  }
+  ): List<StepEntity>? = service.addStepsToGoal(goalUuid, goal, true)
 
   @PostMapping("/order")
   @ResponseStatus(HttpStatus.CREATED)
   fun updateGoalsOrder(
     @RequestBody goalsOrder: List<GoalOrder>,
-  ) {
-    return service.updateGoalsOrder(goalsOrder)
-  }
+  ) = service.updateGoalsOrder(goalsOrder)
 }

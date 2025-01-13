@@ -39,9 +39,7 @@ class PlanService(
     return planEntity.currentVersion!!
   }
 
-  fun getPlanVersionByPlanUuidAndPlanVersion(planUuid: UUID, planVersion: Int): PlanVersionEntity {
-    return planVersionRepository.getVersionByUuidAndVersion(planUuid, planVersion)
-  }
+  fun getPlanVersionByPlanUuidAndPlanVersion(planUuid: UUID, planVersion: Int): PlanVersionEntity = planVersionRepository.getVersionByUuidAndVersion(planUuid, planVersion)
 
   fun rollbackVersion(planUuid: UUID, versionNumber: Int): PlanVersionEntity {
     val version = planVersionRepository.getVersionByUuidAndVersion(planUuid, versionNumber)
@@ -261,7 +259,5 @@ class PlanService(
   }
 
   @Transactional
-  fun getPlanAndGoalNotes(planUuid: UUID): List<Note> {
-    return planRepository.getPlanAndGoalNotes(planUuid)
-  }
+  fun getPlanAndGoalNotes(planUuid: UUID): List<Note> = planRepository.getPlanAndGoalNotes(planUuid)
 }

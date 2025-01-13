@@ -87,9 +87,7 @@ class PlanController(
   fun createNewGoal(
     @PathVariable planUuid: UUID,
     @RequestBody goal: Goal,
-  ): GoalEntity {
-    return goalService.createNewGoal(planUuid, goal)
-  }
+  ): GoalEntity = goalService.createNewGoal(planUuid, goal)
 
   @PostMapping("/{planUuid}/agree")
   @PreAuthorize("hasAnyRole('ROLE_SENTENCE_PLAN_WRITE')")

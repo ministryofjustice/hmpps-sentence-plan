@@ -199,18 +199,20 @@ class GoalService(
 
     val goalEntity = goalRepository.getGoalByUuid(goalUuid)
 
+    // If the existing goal status is REMOVED and the new status adds it back to plan, mark the note as READDED
     val goalNoteEntity = GoalNoteEntity(note = goalStatusUpdate.note, goal = goalEntity).apply {
       type = when {
-        this.goal!!.status == GoalStatus.REMOVED && goalStatusUpdate.status == GoalStatus.FUTURE -> GoalNoteType.READDED
-        this.goal!!.status == GoalStatus.REMOVED && goalStatusUpdate.status == GoalStatus.ACTIVE -> GoalNoteType.READDED
-        this.goal!!.status == GoalStatus.REMOVED -> GoalNoteType.REMOVED
-        this.goal!!.status == GoalStatus.ACHIEVED -> GoalNoteType.ACHIEVED
+        goalStatusUpdate.status == GoalStatus.FUTURE && this.goal!!.status == GoalStatus.REMOVED -> GoalNoteType.READDED
+        goalStatusUpdate.status == GoalStatus.ACTIVE && this.goal!!.status == GoalStatus.REMOVED -> GoalNoteType.READDED
+        goalStatusUpdate.status == GoalStatus.REMOVED -> GoalNoteType.REMOVED
+        goalStatusUpdate.status == GoalStatus.ACHIEVED -> GoalNoteType.ACHIEVED
         else -> GoalNoteType.PROGRESS
       }
     }
     goalEntity.notes.add(goalNoteEntity)
 
-    // if the goal was re-added then we need to set the order of the goal to the highest value so that it appears last in the plan overview
+    // If the goal was re-added then we need to set the order of the goal to the highest value
+    // so that it appears last in the plan overview.
     if (goalNoteEntity.type == GoalNoteType.READDED) {
       val planVersionEntity: PlanVersionEntity
       try {

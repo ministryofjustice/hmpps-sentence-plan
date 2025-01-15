@@ -17,6 +17,7 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalStatus
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionEntity
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepRepository
 import java.time.LocalDate
@@ -30,6 +31,7 @@ class GoalService(
   private val stepRepository: StepRepository,
   private val planRepository: PlanRepository,
   private val versionService: VersionService,
+  private val planVersionRepository: PlanVersionRepository,
 ) {
   fun getGoalByUuid(goalUuid: UUID): GoalEntity? = goalRepository.findByUuid(goalUuid)
 
@@ -197,15 +199,31 @@ class GoalService(
 
     val goalEntity = goalRepository.getGoalByUuid(goalUuid)
 
+    // If the existing goal status is REMOVED and the new status adds it back to plan, mark the note as READDED
     val goalNoteEntity = GoalNoteEntity(note = goalStatusUpdate.note, goal = goalEntity).apply {
-      type = when (goalStatusUpdate.status) {
-        GoalStatus.REMOVED -> GoalNoteType.REMOVED
-        GoalStatus.ACHIEVED -> GoalNoteType.ACHIEVED
+      type = when {
+        goalStatusUpdate.status == GoalStatus.FUTURE && this.goal!!.status == GoalStatus.REMOVED -> GoalNoteType.READDED
+        goalStatusUpdate.status == GoalStatus.ACTIVE && this.goal!!.status == GoalStatus.REMOVED -> GoalNoteType.READDED
+        goalStatusUpdate.status == GoalStatus.REMOVED -> GoalNoteType.REMOVED
+        goalStatusUpdate.status == GoalStatus.ACHIEVED -> GoalNoteType.ACHIEVED
         else -> GoalNoteType.PROGRESS
       }
     }
-
     goalEntity.notes.add(goalNoteEntity)
+
+    // If the goal was re-added then we need to set the order of the goal to the highest value
+    // so that it appears last in the plan overview.
+    if (goalNoteEntity.type == GoalNoteType.READDED) {
+      val planVersionEntity: PlanVersionEntity
+      try {
+        planVersionEntity = planVersionRepository.findByUuid(goalEntity.planVersion!!.uuid)
+      } catch (e: EmptyResultDataAccessException) {
+        throw Exception("A Plan with this UUID was not found: $goalEntity.planVersion!!.uuid")
+      }
+
+      val highestGoalOrder = planVersionEntity.goals.maxByOrNull { g -> g.goalOrder }?.goalOrder ?: 0
+      goalEntity.goalOrder = highestGoalOrder + 1
+    }
 
     goalEntity.status = goalStatusUpdate.status
     goalEntity.statusDate = LocalDateTime.now()

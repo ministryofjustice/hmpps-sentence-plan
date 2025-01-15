@@ -90,7 +90,7 @@ class GoalEntity(
   var planVersion: PlanVersionEntity?,
 
   @Column(name = "goal_order")
-  val goalOrder: Int = 0,
+  var goalOrder: Int = 0,
 
   @OneToMany(mappedBy = "goal", cascade = [CascadeType.ALL])
   @OrderBy("createdDate ASC")

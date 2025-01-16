@@ -11,6 +11,10 @@ spring:
     url: jdbc:postgresql://${db.endpoint}/${db.name}?currentSchema=${database.schema.name:sentence-plan}&user=${db.username:root}&password=${db.password:dev}&stringtype=unspecified
     username: ${db.username}
     password: ${db.password}
+    hikari:
+      maximum-pool-size: 20
+      connection-timeout: 15000
+      leakDetectionThreshold: 20000
   jpa:
     show-sql: false
   flyway:

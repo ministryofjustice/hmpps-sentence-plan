@@ -41,8 +41,8 @@ class PlanControllerTest : IntegrationTestBase() {
 
   @Nested
   @DisplayName("getPlan")
-  @Sql(scripts = [ "/db/test/plan_data.sql", "/db/test/goals_data.sql" ], executionPhase = BEFORE_TEST_CLASS)
-  @Sql(scripts = [ "/db/test/goals_cleanup.sql", "/db/test/plan_cleanup.sql" ], executionPhase = AFTER_TEST_CLASS)
+//  @Sql(scripts = [ "/db/test/plan_data.sql", "/db/test/goals_data.sql" ], executionPhase = BEFORE_TEST_CLASS)
+//  @Sql(scripts = [ "/db/test/goals_cleanup.sql", "/db/test/plan_cleanup.sql" ], executionPhase = AFTER_TEST_CLASS)
   inner class GetPlan {
     @Test
     fun `should return OK when getting plan by existing UUID `() {
@@ -54,6 +54,10 @@ class PlanControllerTest : IntegrationTestBase() {
         .returnResult().responseBody
 
       assertThat(planVersionEntity?.goals?.size).isEqualTo(2)
+      assertThat(planVersionEntity?.mostRecentUpdateDate).isNotNull()
+      assertThat(planVersionEntity?.mostRecentUpdateDate).isAfter(planVersionEntity?.updatedDate)
+      assertThat(planVersionEntity?.mostRecentUpdateByName).isNotNull()
+      assertThat(planVersionEntity?.mostRecentUpdateByName).isEqualTo("test user")
     }
 
     @Test
@@ -87,6 +91,9 @@ class PlanControllerTest : IntegrationTestBase() {
       assertThat(goalsMap?.get("now")?.first()?.title).isEqualTo("Goal For Now Title")
       assertThat(goalsMap?.get("future")?.first()?.title).isEqualTo("Goal For Future Title")
     }
+
+    // TODO  make sure there is a test where goal.updatedDate is later than plan.lastUpdatedDate (ideally harmonise these names!)
+    // and then check the value of mostRecentUpdateDate
 
     @Test
     fun `should return not found when getting goals by non-existent plan UUID`() {

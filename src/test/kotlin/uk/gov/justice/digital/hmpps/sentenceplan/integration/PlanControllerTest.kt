@@ -92,9 +92,6 @@ class PlanControllerTest : IntegrationTestBase() {
       assertThat(goalsMap?.get("future")?.first()?.title).isEqualTo("Goal For Future Title")
     }
 
-    // TODO  make sure there is a test where goal.updatedDate is later than plan.lastUpdatedDate (ideally harmonise these names!)
-    // and then check the value of mostRecentUpdateDate
-
     @Test
     fun `should return not found when getting goals by non-existent plan UUID`() {
       val randomPlanUuid = UUID.randomUUID()

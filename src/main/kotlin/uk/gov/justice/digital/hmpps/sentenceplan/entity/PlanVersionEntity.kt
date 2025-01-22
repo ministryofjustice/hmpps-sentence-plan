@@ -135,6 +135,7 @@ class PlanVersionEntity(
   @Formula("GREATEST(last_updated_date, (SELECT MAX(g.last_updated_date) FROM goal g WHERE g.plan_version_id = id))")
   var mostRecentUpdateDate: LocalDateTime? = null,
 
+  // this query retrieves the username directly because Formula can only retrieve scalar values, not objects.
   @Formula(
     """
     (select p.username FROM practitioner p

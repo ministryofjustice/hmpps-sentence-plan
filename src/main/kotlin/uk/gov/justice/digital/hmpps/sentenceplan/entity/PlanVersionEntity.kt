@@ -133,6 +133,7 @@ class PlanVersionEntity(
   var softDeleted: Boolean = false,
 
   @Formula("GREATEST(last_updated_date, (SELECT MAX(g.last_updated_date) FROM goal g WHERE g.plan_version_id = id))")
+  @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'")
   var mostRecentUpdateDate: LocalDateTime? = null,
 
   // this query retrieves the username directly because Formula can only retrieve scalar values, not objects.

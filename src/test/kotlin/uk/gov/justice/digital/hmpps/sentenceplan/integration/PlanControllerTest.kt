@@ -54,6 +54,10 @@ class PlanControllerTest : IntegrationTestBase() {
         .returnResult().responseBody
 
       assertThat(planVersionEntity?.goals?.size).isEqualTo(2)
+      assertThat(planVersionEntity?.mostRecentUpdateDate).isNotNull()
+      assertThat(planVersionEntity?.mostRecentUpdateDate).isAfter(planVersionEntity?.updatedDate)
+      assertThat(planVersionEntity?.mostRecentUpdateByName).isNotNull()
+      assertThat(planVersionEntity?.mostRecentUpdateByName).isEqualTo("test user")
     }
 
     @Test

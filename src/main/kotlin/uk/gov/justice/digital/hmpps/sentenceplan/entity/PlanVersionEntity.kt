@@ -21,6 +21,7 @@ import jakarta.persistence.OneToMany
 import jakarta.persistence.OneToOne
 import jakarta.persistence.OrderBy
 import jakarta.persistence.Table
+import org.hibernate.annotations.Formula
 import org.springframework.data.annotation.CreatedBy
 import org.springframework.data.annotation.CreatedDate
 import org.springframework.data.annotation.LastModifiedBy
@@ -131,6 +132,27 @@ class PlanVersionEntity(
   @Column(name = "soft_deleted")
   var softDeleted: Boolean = false,
 
+  @Formula("GREATEST(last_updated_date, (SELECT MAX(g.last_updated_date) FROM goal g WHERE g.plan_version_id = id))")
+  var mostRecentUpdateDate: LocalDateTime? = null,
+
+  // this query retrieves the username directly because Formula can only retrieve scalar values, not objects.
+  @Formula(
+    """
+    (select p.username FROM practitioner p
+    WHERE p.id = (
+      SELECT COALESCE(
+        (SELECT g.last_updated_by_id
+        FROM goal g
+        WHERE g.plan_version_id = id
+        ORDER BY g.last_updated_date DESC
+        LIMIT 1),
+        last_updated_by_id
+      )
+    ))
+  """,
+  )
+  var mostRecentUpdateByName: String? = null,
+
 )
 
 enum class CountersigningStatus {
@@ -164,15 +186,31 @@ interface PlanVersionRepository : JpaRepository<PlanVersionEntity, Long> {
   fun findByUuid(planVersionUuid: UUID): PlanVersionEntity
 
   @Query(
-    "select plan_version.* from plan_version inner join plan p on p.id = plan_version.plan_id " +
-      "where p.uuid = :planUuid and plan_version.version = :versionNumber",
-    nativeQuery = true,
+    """
+    SELECT pv
+    FROM PlanVersion pv
+    WHERE pv.planId = (
+        SELECT p.id
+        FROM PlanEntity p
+        WHERE p.uuid = :planUuid
+    ) AND pv.version = :versionNumber
+    """,
   )
   fun findByPlanUuidAndVersionNumber(planUuid: UUID, versionNumber: Int): PlanVersionEntity
 
   @Query(
     """
-        select max(pv.version) 
+    SELECT pv
+    FROM PlanVersion pv
+    JOIN pv.plan p
+    WHERE p.uuid = :planUuid AND pv.version = :versionNumber
+    """,
+  )
+  fun findPlanVersionByPlanUuidAndVersion(planUuid: UUID, versionNumber: Int): PlanVersionEntity?
+
+  @Query(
+    """
+        select max(pv.version)
         from plan_version pv
         where pv.plan_id = :planId
     """,
@@ -183,13 +221,6 @@ interface PlanVersionRepository : JpaRepository<PlanVersionEntity, Long> {
   fun findFirstByPlanIdAndSoftDeletedOrderByVersionDesc(planId: Long, softDeleted: Boolean): PlanVersionEntity?
 
   fun findAllByPlanId(planId: Long): List<PlanVersionEntity>
-
-  @Query(
-    "select plan_version.* from plan_version inner join plan p on p.id = plan_version.plan_id " +
-      "where p.uuid = :planUuid and plan_version.version = :versionNumber",
-    nativeQuery = true,
-  )
-  fun findPlanVersionByPlanUuidAndVersion(planUuid: UUID, versionNumber: Int): PlanVersionEntity?
 
   @EntityGraph(value = "graph.planversion.eager", type = EntityGraph.EntityGraphType.FETCH)
   fun getWholePlanVersionByUuid(planVersionUuid: UUID): PlanVersionEntity

@@ -202,8 +202,11 @@ interface PlanVersionRepository : JpaRepository<PlanVersionEntity, Long> {
     """
     SELECT pv
     FROM PlanVersion pv
-    JOIN pv.plan p
-    WHERE p.uuid = :planUuid AND pv.version = :versionNumber
+    WHERE pv.planId = (
+        SELECT p.id
+        FROM PlanEntity p
+        WHERE p.uuid = :planUuid
+    ) AND pv.version = :versionNumber
     """,
   )
   fun findPlanVersionByPlanUuidAndVersion(planUuid: UUID, versionNumber: Int): PlanVersionEntity?

@@ -28,11 +28,13 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanType
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionRepository
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.getVersionByUuidAndVersion
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.CounterSignPlanRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.CountersignType
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.SignRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.SignType
 import uk.gov.justice.digital.hmpps.sentenceplan.exceptions.ConflictException
+import uk.gov.justice.digital.hmpps.sentenceplan.exceptions.NotFoundException
 import java.util.UUID
 import java.util.stream.Stream
 
@@ -88,6 +90,37 @@ class PlanServiceTest {
       }
 
       assertEquals("Incorrect result size: expected 1, actual 0", exception.message)
+    }
+  }
+
+  @Nested
+  @DisplayName("getPlanVersionByPlanUuidAndPlanVersion")
+  inner class GetPlanVersionByPlanUuidAndPlanVersion {
+
+    @Test
+    fun `should return plan version when plan exists with given UUID and version`() {
+      val planUuid = UUID.randomUUID()
+      val planVersion = 1
+
+      every { planVersionRepository.getVersionByUuidAndVersion(planUuid, planVersion) } returns planVersionEntity
+
+      val result = planService.getPlanVersionByPlanUuidAndPlanVersion(planUuid, planVersion)
+
+      assertEquals(planVersionEntity, result)
+    }
+
+    @Test
+    fun `should throw NotFoundException when no plan exists with given UUID and version`() {
+      val planUuid = UUID.randomUUID()
+      val planVersion = 1
+
+      every { planVersionRepository.getVersionByUuidAndVersion(planUuid, planVersion) } throws EmptyResultDataAccessException(1)
+
+      val exception = assertThrows(NotFoundException::class.java) {
+        planService.getPlanVersionByPlanUuidAndPlanVersion(planUuid, planVersion)
+      }
+
+      assertEquals("Could not find a plan with ID: $planUuid and version number: $planVersion", exception.message)
     }
   }
 

@@ -230,21 +230,20 @@ class GoalService(
 
       val highestGoalOrder = planVersionEntity.goals.maxByOrNull { g -> g.goalOrder }?.goalOrder ?: 0
       goalEntity.goalOrder = highestGoalOrder + 1
-    }
 
-    goalEntity.status = updatedGoal.status!!
-    goalEntity.statusDate = LocalDateTime.now()
-
-    updatedGoal.targetDate?.let {
-      goalEntity.targetDate = LocalDate.parse(it)
-      if (goalEntity.status == GoalStatus.FUTURE) {
+      // also need to set the new targetDate
+      if (updatedGoal.targetDate != null) {
+        goalEntity.targetDate = LocalDate.parse(updatedGoal.targetDate)
         goalEntity.status = GoalStatus.ACTIVE
         goalEntity.statusDate = LocalDateTime.now()
-      }
-    } ?: run {
-      if (updatedGoal.status == GoalStatus.FUTURE) {
+      } else {
         goalEntity.targetDate = null
+        goalEntity.status = GoalStatus.FUTURE
+        goalEntity.statusDate = LocalDateTime.now()
       }
+    } else {
+      goalEntity.status = updatedGoal.status!!
+      goalEntity.statusDate = LocalDateTime.now()
     }
 
     return goalRepository.save(goalEntity)

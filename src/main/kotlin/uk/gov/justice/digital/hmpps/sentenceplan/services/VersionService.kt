@@ -10,7 +10,6 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.AreaOfNeedEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepEntity
-import uk.gov.justice.digital.hmpps.sentenceplan.entity.getNextPlanVersion
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import java.util.UUID

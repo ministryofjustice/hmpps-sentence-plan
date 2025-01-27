@@ -28,7 +28,6 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanType
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionRepository
-import uk.gov.justice.digital.hmpps.sentenceplan.entity.getVersionByUuidAndVersion
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.CounterSignPlanRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.CountersignType
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.SignRequest
@@ -56,7 +55,10 @@ class PlanServiceTest {
     planVersionEntity = PlanVersionEntity(id = 0, plan = planEntity, planId = 0L, version = 0)
     newPlanVersionEntity = PlanVersionEntity(id = 1, plan = planEntity, planId = 0L, version = 1)
     agreedNewPlanVersionEntity = PlanVersionEntity(
-      id = 1, plan = planEntity, planId = 0L, version = 1,
+      id = 1,
+      plan = planEntity,
+      planId = 0L,
+      version = 1,
       agreementStatus = PlanAgreementStatus.AGREED,
     )
     planEntity.currentVersion = planVersionEntity
@@ -168,7 +170,7 @@ class PlanServiceTest {
     fun `should mark plan as self-signed`() {
       every { planRepository.findByUuid(any()) } returns planEntity.apply { currentVersion?.agreementStatus = PlanAgreementStatus.AGREED }
       every { planVersionRepository.save(any()) } returnsArgument 0
-      every { planVersionRepository.findByPlanUuidAndVersionNumber(any(), any()) } returns newPlanVersionEntity
+      every { planVersionRepository.getVersionByUuidAndVersion(any(), any()) } returns newPlanVersionEntity
       every { versionService.alwaysCreateNewPlanVersion(any()) } returns newPlanVersionEntity
 
       val signRequest = SignRequest(
@@ -185,7 +187,7 @@ class PlanServiceTest {
     fun `should mark plan as awaiting-countersign`() {
       every { planRepository.findByUuid(any()) } returns planEntity.apply { currentVersion?.agreementStatus = PlanAgreementStatus.AGREED }
       every { planVersionRepository.save(any()) } returnsArgument 0
-      every { planVersionRepository.findByPlanUuidAndVersionNumber(any(), any()) } returns newPlanVersionEntity
+      every { planVersionRepository.getVersionByUuidAndVersion(any(), any()) } returns newPlanVersionEntity
       every { versionService.conditionallyCreateNewPlanVersion(any()) } returns newPlanVersionEntity
 
       val signRequest = SignRequest(
@@ -444,7 +446,9 @@ class PlanServiceTest {
       val planUUID = planEntity.uuid
       val updatedPlanEntity = planEntity.apply {
         currentVersion = PlanVersionEntity(
-          id = 1, plan = planEntity, planId = 0L,
+          id = 1,
+          plan = planEntity,
+          planId = 0L,
           version = planEntity.currentVersion!!.version.inc(),
         )
       }

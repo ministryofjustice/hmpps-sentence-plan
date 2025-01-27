@@ -186,19 +186,15 @@ enum class PlanType {
 interface PlanVersionRepository : JpaRepository<PlanVersionEntity, Long> {
   fun findByUuid(planVersionUuid: UUID): PlanVersionEntity
 
-  @Query(
-    """
-    SELECT pv
-    FROM PlanVersion pv
-    WHERE pv.planId = (
-        SELECT p.id
-        FROM PlanEntity p
-        WHERE p.uuid = :planUuid
-    ) AND pv.version = :versionNumber
-    """,
-  )
-  fun findByPlanUuidAndVersionNumber(planUuid: UUID, versionNumber: Int): PlanVersionEntity
+  fun getVersionByUuidAndVersion(planUuid: UUID, versionNumber: Int) = findPlanVersionByPlanUuidAndVersion(planUuid, versionNumber)
+    ?: throw NotFoundException("Plan version $versionNumber not found for Plan uuid $planUuid")
 
+  fun getNextPlanVersion(planId: Long) = findLatestPlanVersion(planId)?.inc() ?: 0
+
+  /**
+   * Instead of this function call use getVersionByUuidAndVersion.
+   * @see getVersionByUuidAndVersion
+   */
   @Query(
     """
     SELECT pv
@@ -229,7 +225,3 @@ interface PlanVersionRepository : JpaRepository<PlanVersionEntity, Long> {
   @EntityGraph(value = "graph.planversion.eager", type = EntityGraph.EntityGraphType.FETCH)
   fun getWholePlanVersionByUuid(planVersionUuid: UUID): PlanVersionEntity
 }
-
-fun PlanVersionRepository.getVersionByUuidAndVersion(planUuid: UUID, versionNumber: Int) = findPlanVersionByPlanUuidAndVersion(planUuid, versionNumber) ?: throw NotFoundException("Plan version $versionNumber not found for Plan uuid $planUuid")
-
-fun PlanVersionRepository.getNextPlanVersion(planId: Long) = findLatestPlanVersion(planId)?.inc() ?: 0

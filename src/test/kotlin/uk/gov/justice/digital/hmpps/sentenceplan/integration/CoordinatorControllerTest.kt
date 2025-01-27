@@ -266,7 +266,7 @@ class CoordinatorControllerTest : IntegrationTestBase() {
           assertThat(responseBody?.planVersion).isEqualTo(beforeVersion.toLong())
         }
 
-      val afterStatus = planVersionRepository.findByPlanUuidAndVersionNumber(planUuid, beforeVersion).status
+      val afterStatus = planVersionRepository.getVersionByUuidAndVersion(planUuid, beforeVersion).status
       val newPlanVersion = planRepository.getPlanByUuid(planUuid).currentVersion
 
       assertThat(afterStatus).isNotEqualTo(beforeVersionStatus)
@@ -328,7 +328,7 @@ class CoordinatorControllerTest : IntegrationTestBase() {
           assertThat(responseBody?.planVersion).isEqualTo(beforeVersion.toLong())
         }
 
-      val afterStatus = planVersionRepository.findByPlanUuidAndVersionNumber(planUuid, beforeVersion).status
+      val afterStatus = planVersionRepository.getVersionByUuidAndVersion(planUuid, beforeVersion).status
 
       assertThat(afterStatus).isNotEqualTo(beforeVersionStatus)
       assertThat(afterStatus).isEqualTo(CountersigningStatus.ROLLED_BACK)
@@ -391,7 +391,7 @@ class CoordinatorControllerTest : IntegrationTestBase() {
           assertThat(responseBody?.planVersion).isEqualTo(beforeVersion.toLong())
         }
 
-      val afterStatus = planVersionRepository.findByPlanUuidAndVersionNumber(planUuid, beforeVersion).status
+      val afterStatus = planVersionRepository.getVersionByUuidAndVersion(planUuid, beforeVersion).status
 
       assertThat(afterStatus).isNotEqualTo(beforeVersionStatus)
       assertThat(afterStatus).isEqualTo(CountersigningStatus.AWAITING_DOUBLE_COUNTERSIGN)

@@ -23,6 +23,7 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanProgressNotesReposit
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepStatus
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.getVersionByUuidAndVersion
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.SignRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.SignType
 import uk.gov.justice.digital.hmpps.sentenceplan.services.GoalService

@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.sentenceplan.data.Note
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.exceptions.ConflictException
+import uk.gov.justice.digital.hmpps.sentenceplan.exceptions.NotFoundException
 import uk.gov.justice.digital.hmpps.sentenceplan.services.GoalService
 import uk.gov.justice.digital.hmpps.sentenceplan.services.PlanService
 import java.util.UUID
@@ -62,8 +63,8 @@ class PlanController(
   ): PlanVersionEntity {
     try {
       return planService.getPlanVersionByPlanUuidAndPlanVersion(planUuid, planVersionNumber)
-    } catch (e: EmptyResultDataAccessException) {
-      throw NoResourceFoundException(HttpMethod.GET, "Could not find a plan with ID: $planUuid and version number: $planVersionNumber")
+    } catch (e: NotFoundException) {
+      throw NoResourceFoundException(HttpMethod.GET, e.message)
     }
   }
 

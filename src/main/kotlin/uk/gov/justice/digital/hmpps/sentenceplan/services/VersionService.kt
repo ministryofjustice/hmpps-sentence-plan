@@ -78,7 +78,7 @@ class VersionService(
     entityManager.detach(newPlanVersionEntity)
 
     val currentPlanVersion = planVersionRepository.findByUuid(planVersionUuid)
-    currentPlanVersion.version = planVersionRepository.getNextPlanVersion(currentPlanVersion.planId)
+    currentPlanVersion.version = planVersionRepository.findNextPlanVersion(currentPlanVersion.planId)
     val updatedCurrentVersion = planVersionRepository.save(currentPlanVersion)
 
     entityManager.flush()

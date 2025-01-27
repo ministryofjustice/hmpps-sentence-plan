@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.servlet.resource.NoResourceFoundException
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Goal
 import uk.gov.justice.digital.hmpps.sentenceplan.data.GoalOrder
-import uk.gov.justice.digital.hmpps.sentenceplan.data.GoalStatusUpdate
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Step
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepEntity
@@ -61,7 +60,7 @@ class GoalController(private val service: GoalService) {
   @ResponseStatus(HttpStatus.OK)
   fun updateGoalStatus(
     @PathVariable goalUuid: UUID,
-    @RequestBody goalStatusUpdate: GoalStatusUpdate,
+    @RequestBody goalStatusUpdate: Goal,
   ): GoalEntity = service.updateGoalStatus(goalUuid, goalStatusUpdate)
 
   @PostMapping("/{goalUuid}/steps")

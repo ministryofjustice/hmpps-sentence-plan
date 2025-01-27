@@ -15,7 +15,6 @@ import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.dao.EmptyResultDataAccessException
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Goal
-import uk.gov.justice.digital.hmpps.sentenceplan.data.GoalStatusUpdate
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Step
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.AreaOfNeedEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.AreaOfNeedRepository
@@ -367,7 +366,7 @@ class GoalServiceTest {
 
     @Test
     fun `update goal with new note and status ACHIEVED should add note with Type ACHIEVED and not remove Related Areas of Need`() {
-      val goalStatusUpdate = GoalStatusUpdate(
+      val goalStatusUpdate = Goal(
         note = "Simple note update",
         status = GoalStatus.ACHIEVED,
       )
@@ -382,7 +381,7 @@ class GoalServiceTest {
 
     @Test
     fun `Re-adding removed Goal to Plan and adding note should add note with Type READDED`() {
-      val goalStatusUpdate = GoalStatusUpdate(
+      val goalStatusUpdate = Goal(
         note = "The goal has been re-added",
         status = GoalStatus.ACTIVE,
       )

@@ -22,6 +22,7 @@ import jakarta.persistence.OneToOne
 import jakarta.persistence.OrderBy
 import jakarta.persistence.Table
 import org.hibernate.annotations.Formula
+import org.springframework.dao.EmptyResultDataAccessException
 import org.springframework.data.annotation.CreatedBy
 import org.springframework.data.annotation.CreatedDate
 import org.springframework.data.annotation.LastModifiedBy
@@ -188,17 +189,17 @@ interface PlanVersionRepository : JpaRepository<PlanVersionEntity, Long> {
 
   @Query(
     """
-    SELECT pv
+    SELECT COALESCE(MAX(pv.version) + 1, 0)
     FROM PlanVersion pv
-    WHERE pv.planId = (
-        SELECT p.id
-        FROM PlanEntity p
-        WHERE p.uuid = :planUuid
-    ) AND pv.version = :versionNumber
+    WHERE pv.planId = :planId
     """,
   )
-  fun findByPlanUuidAndVersionNumber(planUuid: UUID, versionNumber: Int): PlanVersionEntity
+  fun findNextPlanVersion(planId: Long): Int
 
+  /**
+   * Instead of this function call getVersionByUuidAndVersion.
+   * @see getVersionByUuidAndVersion
+   */
   @Query(
     """
     SELECT pv
@@ -212,16 +213,6 @@ interface PlanVersionRepository : JpaRepository<PlanVersionEntity, Long> {
   )
   fun findPlanVersionByPlanUuidAndVersion(planUuid: UUID, versionNumber: Int): PlanVersionEntity?
 
-  @Query(
-    """
-        select max(pv.version)
-        from plan_version pv
-        where pv.plan_id = :planId
-    """,
-    nativeQuery = true,
-  )
-  fun findLatestPlanVersion(planId: Long): Int?
-
   fun findFirstByPlanIdAndSoftDeletedOrderByVersionDesc(planId: Long, softDeleted: Boolean): PlanVersionEntity?
 
   fun findAllByPlanId(planId: Long): List<PlanVersionEntity>
@@ -230,6 +221,11 @@ interface PlanVersionRepository : JpaRepository<PlanVersionEntity, Long> {
   fun getWholePlanVersionByUuid(planVersionUuid: UUID): PlanVersionEntity
 }
 
-fun PlanVersionRepository.getVersionByUuidAndVersion(planUuid: UUID, versionNumber: Int) = findPlanVersionByPlanUuidAndVersion(planUuid, versionNumber) ?: throw NotFoundException("Plan version $versionNumber not found for Plan uuid $planUuid")
-
-fun PlanVersionRepository.getNextPlanVersion(planId: Long) = findLatestPlanVersion(planId)?.inc() ?: 0
+fun PlanVersionRepository.getVersionByUuidAndVersion(planUuid: UUID, versionNumber: Int): PlanVersionEntity {
+  try {
+    return findPlanVersionByPlanUuidAndVersion(planUuid, versionNumber)
+      ?: throw NotFoundException("Plan version $versionNumber not found for Plan uuid $planUuid")
+  } catch (e: EmptyResultDataAccessException) {
+    throw NotFoundException("Could not find a plan with ID: $planUuid and version number: $versionNumber")
+  }
+}

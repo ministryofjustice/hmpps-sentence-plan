@@ -23,6 +23,7 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.SignRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.SignType
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.response.SoftDeletePlanVersionsResponse
 import uk.gov.justice.digital.hmpps.sentenceplan.exceptions.ConflictException
+import uk.gov.justice.digital.hmpps.sentenceplan.exceptions.NotFoundException
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -39,7 +40,11 @@ class PlanService(
     return planEntity.currentVersion!!
   }
 
-  fun getPlanVersionByPlanUuidAndPlanVersion(planUuid: UUID, planVersion: Int): PlanVersionEntity = planVersionRepository.getVersionByUuidAndVersion(planUuid, planVersion)
+  fun getPlanVersionByPlanUuidAndPlanVersion(planUuid: UUID, planVersion: Int): PlanVersionEntity = try {
+    planVersionRepository.getVersionByUuidAndVersion(planUuid, planVersion)
+  } catch (e: EmptyResultDataAccessException) {
+    throw NotFoundException("Could not find a plan with ID: $planUuid and version number: $planVersion")
+  }
 
   fun rollbackVersion(planUuid: UUID, versionNumber: Int): PlanVersionEntity {
     val version = planVersionRepository.getVersionByUuidAndVersion(planUuid, versionNumber)
@@ -172,7 +177,7 @@ class PlanService(
 
     versionService.alwaysCreateNewPlanVersion(planVersion)
 
-    val signedPlan = planVersionRepository.findByPlanUuidAndVersionNumber(planUuid, planVersion.version)
+    val signedPlan = planVersionRepository.getVersionByUuidAndVersion(planUuid, planVersion.version)
 
     when (signRequest.signType) {
       SignType.SELF -> {

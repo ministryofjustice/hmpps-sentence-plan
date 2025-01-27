@@ -15,7 +15,6 @@ import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.dao.EmptyResultDataAccessException
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Goal
-import uk.gov.justice.digital.hmpps.sentenceplan.data.GoalStatusUpdate
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Step
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.AreaOfNeedEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.AreaOfNeedRepository
@@ -30,6 +29,7 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepStatus
+import java.time.LocalDate
 import java.util.UUID
 
 @ExtendWith(MockKExtension::class)
@@ -348,6 +348,8 @@ class GoalServiceTest {
     val goalToUpdate: GoalEntity = GoalEntity(
       title = "Mock Goal with Related Areas of Need",
       areaOfNeed = mockk<AreaOfNeedEntity>(),
+      targetDate = LocalDate.now().plusWeeks(20),
+      status = GoalStatus.ACTIVE,
       planVersion = null,
       uuid = goalUuid,
       goalOrder = 1,
@@ -367,7 +369,7 @@ class GoalServiceTest {
 
     @Test
     fun `update goal with new note and status ACHIEVED should add note with Type ACHIEVED and not remove Related Areas of Need`() {
-      val goalStatusUpdate = GoalStatusUpdate(
+      val goalStatusUpdate = Goal(
         note = "Simple note update",
         status = GoalStatus.ACHIEVED,
       )
@@ -381,10 +383,11 @@ class GoalServiceTest {
     }
 
     @Test
-    fun `Re-adding removed Goal to Plan and adding note should add note with Type READDED`() {
-      val goalStatusUpdate = GoalStatusUpdate(
+    fun `Re-adding removed Goal to Plan with mismatched date and status should override status`() {
+      val goalUpdate = Goal(
         note = "The goal has been re-added",
         status = GoalStatus.ACTIVE,
+        targetDate = null,
       )
 
       goalToUpdate.apply {
@@ -392,12 +395,57 @@ class GoalServiceTest {
         this.planVersion = newPlanVersionEntity
       }
 
-      val savedGoal = goalService.updateGoalStatus(UUID.randomUUID(), goalStatusUpdate)
+      val savedGoal = goalService.updateGoalStatus(UUID.randomUUID(), goalUpdate)
 
-      assertThat(savedGoal.notes.first().note).isEqualTo(goalStatusUpdate.note)
+      assertThat(savedGoal.notes.first().note).isEqualTo(goalUpdate.note)
       assertThat(savedGoal.notes.first().type).isEqualTo(GoalNoteType.READDED)
-      assertThat(savedGoal.status).isEqualTo(goalStatusUpdate.status)
       assertThat(savedGoal.relatedAreasOfNeed?.size).isEqualTo(1)
+      assertThat(savedGoal.status).isEqualTo(GoalStatus.FUTURE)
+      assertThat(savedGoal.targetDate).isNull()
+    }
+
+    @Test
+    fun `Re-adding removed Goal to Plan for the future and adding note should add note with Type READDED`() {
+      val goalUpdate = Goal(
+        note = "The goal has been re-added",
+        status = GoalStatus.FUTURE,
+        targetDate = null,
+      )
+
+      goalToUpdate.apply {
+        this.status = GoalStatus.REMOVED
+        this.planVersion = newPlanVersionEntity
+      }
+
+      val savedGoal = goalService.updateGoalStatus(UUID.randomUUID(), goalUpdate)
+
+      assertThat(savedGoal.notes.first().note).isEqualTo(goalUpdate.note)
+      assertThat(savedGoal.notes.first().type).isEqualTo(GoalNoteType.READDED)
+      assertThat(savedGoal.relatedAreasOfNeed?.size).isEqualTo(1)
+      assertThat(savedGoal.status).isEqualTo(GoalStatus.FUTURE)
+      assertThat(savedGoal.targetDate).isNull()
+    }
+
+    @Test
+    fun `Re-adding removed Goal to Plan with target date and adding note should add note with Type READDED`() {
+      val goalUpdate = Goal(
+        note = "The goal has been re-added",
+        status = GoalStatus.ACTIVE,
+        targetDate = LocalDate.now().plusWeeks(10).toString(),
+      )
+
+      goalToUpdate.apply {
+        this.status = GoalStatus.REMOVED
+        this.planVersion = newPlanVersionEntity
+      }
+
+      val savedGoal = goalService.updateGoalStatus(UUID.randomUUID(), goalUpdate)
+
+      assertThat(savedGoal.notes.first().note).isEqualTo(goalUpdate.note)
+      assertThat(savedGoal.notes.first().type).isEqualTo(GoalNoteType.READDED)
+      assertThat(savedGoal.relatedAreasOfNeed?.size).isEqualTo(1)
+      assertThat(savedGoal.status).isEqualTo(GoalStatus.ACTIVE)
+      assertThat(savedGoal.targetDate).isEqualTo(LocalDate.parse(goalUpdate.targetDate))
     }
   }
 

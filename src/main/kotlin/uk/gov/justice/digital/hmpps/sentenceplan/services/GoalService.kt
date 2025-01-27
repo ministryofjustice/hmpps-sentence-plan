@@ -6,7 +6,6 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Goal
 import uk.gov.justice.digital.hmpps.sentenceplan.data.GoalOrder
-import uk.gov.justice.digital.hmpps.sentenceplan.data.GoalStatusUpdate
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Step
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.AreaOfNeedEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.AreaOfNeedRepository
@@ -55,7 +54,7 @@ class GoalService(
       throw Exception("An Area of Need with this name was not found: ${goal.areaOfNeed}")
     }
 
-    val relatedAreasOfNeedEntity = getAreasOfNeedByNames(goal)
+    val relatedAreasOfNeedEntity = getAreasOfNeedByNames(goal.relatedAreasOfNeed)
 
     val highestGoalOrder = planVersionEntity.goals.maxByOrNull { g -> g.goalOrder }?.goalOrder ?: 0
 
@@ -76,15 +75,15 @@ class GoalService(
     return savedGoalEntity
   }
 
-  private fun getAreasOfNeedByNames(goal: Goal): List<AreaOfNeedEntity> {
+  private fun getAreasOfNeedByNames(areasOfNeed: List<String>): List<AreaOfNeedEntity> {
     var relatedAreasOfNeedList: List<AreaOfNeedEntity> = emptyList()
-    if (goal.relatedAreasOfNeed.isNotEmpty()) {
-      relatedAreasOfNeedList = areaOfNeedRepository.findAllByNames(goal.relatedAreasOfNeed)
-        ?: throw Exception("One or more of the Related Areas of Need was not found: ${goal.relatedAreasOfNeed}")
+    if (areasOfNeed.isNotEmpty()) {
+      relatedAreasOfNeedList = areaOfNeedRepository.findAllByNames(areasOfNeed)
+        ?: throw Exception("One or more of the Related Areas of Need was not found: $areasOfNeed")
 
       // findAllByNames doesn't throw an exception if a subset of goal.relatedAreasOfNeed is not found, so we
       // do a hard check on the count of returned items here
-      if (goal.relatedAreasOfNeed.size != relatedAreasOfNeedList.size) {
+      if (areasOfNeed.size != relatedAreasOfNeedList.size) {
         throw Exception("One or more of the Related Areas of Need was not found")
       }
     }
@@ -104,7 +103,7 @@ class GoalService(
 
     validateGoalFields(goal)
 
-    val relatedAreasOfNeedList: List<AreaOfNeedEntity> = getAreasOfNeedByNames(goal)
+    val relatedAreasOfNeedList: List<AreaOfNeedEntity> = getAreasOfNeedByNames(goal.relatedAreasOfNeed)
     goalEntity.merge(goal, relatedAreasOfNeedList)
 
     versionService.conditionallyCreateNewPlanVersion(goalEntity.planVersion)
@@ -193,19 +192,27 @@ class GoalService(
   }
 
   @Transactional
-  fun updateGoalStatus(goalUuid: UUID, goalStatusUpdate: GoalStatusUpdate): GoalEntity {
+  fun updateGoalStatus(goalUuid: UUID, updatedGoal: Goal): GoalEntity {
     // 1. if we have a note value, create a new note of the correct type
     // 2. update the current goal status
 
+    val requiredFields = listOf(updatedGoal.status, updatedGoal.note)
+    if (requiredFields.any { it == null }) {
+      throw ValidationException("One or more required fields are null")
+    }
+
     val goalEntity = goalRepository.getGoalByUuid(goalUuid)
 
+    // TODO this needs changing to remove the first two lines of the `when` so that we only expect a status
+    // when the goal is being removed or achieved; otherwise the new goal status should be calculated from the targetDate.
+
     // If the existing goal status is REMOVED and the new status adds it back to plan, mark the note as READDED
-    val goalNoteEntity = GoalNoteEntity(note = goalStatusUpdate.note, goal = goalEntity).apply {
+    val goalNoteEntity = GoalNoteEntity(note = updatedGoal.note!!, goal = goalEntity).apply {
       type = when {
-        goalStatusUpdate.status == GoalStatus.FUTURE && this.goal!!.status == GoalStatus.REMOVED -> GoalNoteType.READDED
-        goalStatusUpdate.status == GoalStatus.ACTIVE && this.goal!!.status == GoalStatus.REMOVED -> GoalNoteType.READDED
-        goalStatusUpdate.status == GoalStatus.REMOVED -> GoalNoteType.REMOVED
-        goalStatusUpdate.status == GoalStatus.ACHIEVED -> GoalNoteType.ACHIEVED
+        updatedGoal.status == GoalStatus.FUTURE && this.goal!!.status == GoalStatus.REMOVED -> GoalNoteType.READDED
+        updatedGoal.status == GoalStatus.ACTIVE && this.goal!!.status == GoalStatus.REMOVED -> GoalNoteType.READDED
+        updatedGoal.status == GoalStatus.REMOVED -> GoalNoteType.REMOVED
+        updatedGoal.status == GoalStatus.ACHIEVED -> GoalNoteType.ACHIEVED
         else -> GoalNoteType.PROGRESS
       }
     }
@@ -223,10 +230,21 @@ class GoalService(
 
       val highestGoalOrder = planVersionEntity.goals.maxByOrNull { g -> g.goalOrder }?.goalOrder ?: 0
       goalEntity.goalOrder = highestGoalOrder + 1
-    }
 
-    goalEntity.status = goalStatusUpdate.status
-    goalEntity.statusDate = LocalDateTime.now()
+      // also need to set the new targetDate
+      if (updatedGoal.targetDate != null) {
+        goalEntity.targetDate = LocalDate.parse(updatedGoal.targetDate)
+        goalEntity.status = GoalStatus.ACTIVE
+        goalEntity.statusDate = LocalDateTime.now()
+      } else {
+        goalEntity.targetDate = null
+        goalEntity.status = GoalStatus.FUTURE
+        goalEntity.statusDate = LocalDateTime.now()
+      }
+    } else {
+      goalEntity.status = updatedGoal.status!!
+      goalEntity.statusDate = LocalDateTime.now()
+    }
 
     return goalRepository.save(goalEntity)
   }

@@ -60,10 +60,8 @@ class CoordinatorController(
     ],
   )
   @ResponseStatus(HttpStatus.CREATED)
-  fun createPlan(@RequestBody createPlanRequest: CreatePlanRequest): PlanVersionResponse {
-    return planService.createPlan(createPlanRequest.planType)
-      .run(PlanVersionResponse::from)
-  }
+  fun createPlan(@RequestBody createPlanRequest: CreatePlanRequest): PlanVersionResponse = planService.createPlan(createPlanRequest.planType)
+    .run(PlanVersionResponse::from)
 
   @GetMapping("/{planUuid}")
   @Operation(
@@ -200,10 +198,8 @@ class CoordinatorController(
   fun countersignPlan(
     @PathVariable planUuid: UUID,
     @RequestBody @Valid countersignPlanRequest: CounterSignPlanRequest,
-  ): PlanVersionResponse {
-    return planService.countersignPlan(planUuid, countersignPlanRequest)
-      .run(PlanVersionResponse::from)
-  }
+  ): PlanVersionResponse = planService.countersignPlan(planUuid, countersignPlanRequest)
+    .run(PlanVersionResponse::from)
 
   @PostMapping("/{planUuid}/rollback")
   @PreAuthorize("hasAnyRole('ROLE_SENTENCE_PLAN_WRITE')")

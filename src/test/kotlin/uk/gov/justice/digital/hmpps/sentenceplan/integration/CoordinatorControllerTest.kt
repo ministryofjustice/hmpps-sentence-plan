@@ -24,6 +24,7 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanType
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.getPlanByUuid
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.getVersionByUuidAndVersion
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.ClonePlanVersionRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.CounterSignPlanRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.CountersignType
@@ -42,7 +43,7 @@ import java.util.UUID
 @DisplayName("Coordinator Controller Tests")
 class CoordinatorControllerTest : IntegrationTestBase() {
 
-  val authenticatedUser = "OASYS|Tom C"
+  val authenticatedUser = "coordinator-client"
   val userDetails = UserDetails("1", "Tom C")
 
   @Autowired
@@ -157,6 +158,20 @@ class CoordinatorControllerTest : IntegrationTestBase() {
           assertThat(responseBody?.planId).isNotNull
           assertThat(responseBody?.planVersion).isEqualTo(0L)
         }
+
+      planVersionRepository.getVersionByUuidAndVersion(planUuid, 0).let {
+        when (signRequest.signType) {
+          SignType.SELF -> {
+            it.status = CountersigningStatus.SELF_SIGNED
+          }
+
+          SignType.COUNTERSIGN -> {
+            it.status = CountersigningStatus.AWAITING_COUNTERSIGN
+          }
+        }
+
+        assertThat(it.updatedBy?.username).isEqualTo(userDetails.name)
+      }
     }
 
     @Test

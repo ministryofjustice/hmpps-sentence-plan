@@ -43,7 +43,7 @@ import java.util.UUID
 @DisplayName("Coordinator Controller Tests")
 class CoordinatorControllerTest : IntegrationTestBase() {
 
-  val authenticatedUser = "coordinator-client"
+  val authenticatedUser = "hmpps-coordinator-api-client"
   val userDetails = UserDetails("1", "Tom C")
 
   @Autowired
@@ -63,7 +63,7 @@ class CoordinatorControllerTest : IntegrationTestBase() {
         userDetails = userDetails,
       )
 
-      webTestClient.post()
+      val responseBody = webTestClient.post()
         .uri("/coordinator/plan")
         .bodyValue(createPlanRequest)
         .header("Content-Type", "application/json")
@@ -71,10 +71,18 @@ class CoordinatorControllerTest : IntegrationTestBase() {
         .exchange()
         .expectStatus().isCreated
         .expectBody<PlanVersionResponse>()
-        .returnResult().run {
-          assertThat(responseBody?.planVersion).isEqualTo(0L)
-          assertThat(responseBody?.planId).isNotNull
-        }
+        .returnResult().responseBody
+
+      assertThat(responseBody).isNotNull
+      assertThat(responseBody?.planVersion).isEqualTo(0L)
+      assertThat(responseBody?.planId).isNotNull
+
+      planRepository.findPlanByUuid(responseBody.planId).let {
+        assertThat(it?.currentVersion?.version).isEqualTo(0)
+        assertThat(it?.currentVersion?.planType).isEqualTo(planType)
+        assertThat(it?.lastUpdatedBy?.username).isEqualTo(userDetails.name)
+        assertThat(it?.createdBy?.username).isEqualTo(userDetails.name)
+      }
     }
   }
 
@@ -170,6 +178,11 @@ class CoordinatorControllerTest : IntegrationTestBase() {
           }
         }
 
+        assertThat(it.updatedBy?.username).isEqualTo(userDetails.name)
+      }
+
+      planVersionRepository.getVersionByUuidAndVersion(planUuid, 1).let {
+        assertThat(it.status).isEqualTo(CountersigningStatus.UNSIGNED)
         assertThat(it.updatedBy?.username).isEqualTo(userDetails.name)
       }
     }

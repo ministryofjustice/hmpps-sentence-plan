@@ -35,9 +35,6 @@ class JpaAuditConfig(private val practitionerRepository: PractitionerRepository)
         externalId = userDetails.id
         username = userDetails.name
       }
-
-      println("External ID: $externalId")
-      println("Username: $username")
     }
 
     if (externalId.isEmpty()) {

@@ -2,7 +2,7 @@ package uk.gov.justice.digital.hmpps.sentenceplan.data
 
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanType
 
-data class CreatePlanRequest(
+class CreatePlanRequest(
   val planType: PlanType,
-  val userDetails: UserDetails,
-)
+  override val userDetails: UserDetails,
+) : CoordinatorRequest(userDetails)

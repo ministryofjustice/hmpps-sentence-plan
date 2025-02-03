@@ -29,6 +29,7 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.SignRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.SoftDeletePlanVersionsRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.response.GetPlanResponse
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.response.PlanVersionResponse
+import uk.gov.justice.digital.hmpps.sentenceplan.exceptions.NotFoundException
 import uk.gov.justice.digital.hmpps.sentenceplan.services.PlanService
 import java.util.UUID
 
@@ -133,7 +134,7 @@ class CoordinatorController(
     try {
       return planService.signPlan(planUuid, signRequest)
         .run(PlanVersionResponse::from)
-    } catch (_: EmptyResultDataAccessException) {
+    } catch (_: NotFoundException) {
       throw NoResourceFoundException(HttpMethod.GET, "Could not find a plan with ID: $planUuid")
     }
   }

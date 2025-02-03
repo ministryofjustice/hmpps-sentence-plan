@@ -18,6 +18,7 @@ import jakarta.persistence.NamedNativeQuery
 import jakarta.persistence.OneToOne
 import jakarta.persistence.SqlResultSetMapping
 import jakarta.persistence.Table
+import org.springframework.dao.EmptyResultDataAccessException
 import org.springframework.data.annotation.CreatedBy
 import org.springframework.data.annotation.CreatedDate
 import org.springframework.data.annotation.LastModifiedBy
@@ -141,16 +142,15 @@ enum class PublishState {
 interface PlanRepository : JpaRepository<PlanEntity, Long> {
   fun findByUuid(planUuid: UUID): PlanEntity
 
-  @Query(
-    """
-    select p from PlanEntity p
-    where p.uuid = :planUuid
-  """,
-  )
-  fun findPlanByUuid(planUuid: UUID): PlanEntity?
-
+  // this uses the NoteMapping annotated on the PlanEntity class above
   @Query(nativeQuery = true)
   fun getPlanAndGoalNotes(planUuid: UUID): List<Note>
 }
 
-fun PlanRepository.getPlanByUuid(planUuid: UUID) = findPlanByUuid(planUuid) ?: throw NotFoundException("Plan not found for id $planUuid")
+fun PlanRepository.getPlanByUuid(planUuid: UUID): PlanEntity {
+  try {
+    return findByUuid(planUuid)
+  } catch (e: EmptyResultDataAccessException) {
+    throw NotFoundException("Plan not found for id $planUuid")
+  }
+}

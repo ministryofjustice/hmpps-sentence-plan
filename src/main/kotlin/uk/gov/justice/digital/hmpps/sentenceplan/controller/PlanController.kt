@@ -38,7 +38,7 @@ class PlanController(
   ): PlanVersionEntity {
     try {
       return planService.getPlanVersionByPlanUuid(planUuid)
-    } catch (e: EmptyResultDataAccessException) {
+    } catch (e: NotFoundException) {
       throw NoResourceFoundException(HttpMethod.GET, "Could not find a plan with ID: $planUuid")
     }
   }

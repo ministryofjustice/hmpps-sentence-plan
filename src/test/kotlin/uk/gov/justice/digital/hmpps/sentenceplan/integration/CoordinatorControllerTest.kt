@@ -672,7 +672,7 @@ class CoordinatorControllerTest : IntegrationTestBase() {
     @Sql(scripts = ["/db/test/plan_cleanup.sql"], executionPhase = AFTER_TEST_METHOD)
     @Test
     fun `should clone the latest version into a new version`() {
-      val beforePlan = planRepository.findPlanByUuid(planUuid)
+      val beforePlan = planRepository.getPlanByUuid(planUuid)
       assertThat(beforePlan?.currentVersion?.version).isEqualTo(0L)
 
       val clonePlanVersionRequest = ClonePlanVersionRequest(
@@ -690,7 +690,7 @@ class CoordinatorControllerTest : IntegrationTestBase() {
         .expectBody<PlanVersionResponse>()
         .returnResult().responseBody
 
-      val afterPlan = planRepository.findPlanByUuid(planUuid)
+      val afterPlan = planRepository.getPlanByUuid(planUuid)
       assertThat(afterPlan?.currentVersion?.version).isEqualTo(1L)
       assertThat(afterPlan?.currentVersion?.planType).isEqualTo(PlanType.OTHER)
 

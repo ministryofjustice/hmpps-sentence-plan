@@ -35,15 +35,15 @@ class PlanService(
 ) {
 
   fun getPlanVersionByPlanUuid(planUuid: UUID): PlanVersionEntity {
-    val planEntity = planRepository.findByUuid(planUuid)
-    return planEntity.currentVersion!!
+    try {
+      val planEntity = planRepository.findByUuid(planUuid)
+      return planEntity.currentVersion!!
+    } catch (e: EmptyResultDataAccessException) {
+      throw NotFoundException("Could not find a plan with ID: $planUuid")
+    }
   }
 
-  fun getPlanVersionByPlanUuidAndPlanVersion(planUuid: UUID, planVersion: Int): PlanVersionEntity = try {
-    planVersionRepository.getVersionByUuidAndVersion(planUuid, planVersion)
-  } catch (e: EmptyResultDataAccessException) {
-    throw NotFoundException("Could not find a plan with ID: $planUuid and version number: $planVersion")
-  }
+  fun getPlanVersionByPlanUuidAndPlanVersion(planUuid: UUID, planVersion: Int): PlanVersionEntity = planVersionRepository.getVersionByUuidAndVersion(planUuid, planVersion)
 
   fun rollbackVersion(planUuid: UUID, versionNumber: Int): PlanVersionEntity {
     val version = planVersionRepository.getVersionByUuidAndVersion(planUuid, versionNumber)

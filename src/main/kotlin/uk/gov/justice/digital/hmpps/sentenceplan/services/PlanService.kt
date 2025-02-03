@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.sentenceplan.services
 
 import jakarta.validation.ValidationException
-import org.springframework.dao.EmptyResultDataAccessException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Agreement
@@ -22,7 +21,6 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.SignRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.SignType
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.response.SoftDeletePlanVersionsResponse
 import uk.gov.justice.digital.hmpps.sentenceplan.exceptions.ConflictException
-import uk.gov.justice.digital.hmpps.sentenceplan.exceptions.NotFoundException
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -35,12 +33,8 @@ class PlanService(
 ) {
 
   fun getPlanVersionByPlanUuid(planUuid: UUID): PlanVersionEntity {
-    try {
-      val planEntity = planRepository.findByUuid(planUuid)
-      return planEntity.currentVersion!!
-    } catch (e: EmptyResultDataAccessException) {
-      throw NotFoundException("Could not find a plan with ID: $planUuid")
-    }
+    val planEntity = planRepository.getPlanByUuid(planUuid)
+    return planEntity.currentVersion!!
   }
 
   fun getPlanVersionByPlanUuidAndPlanVersion(planUuid: UUID, planVersion: Int): PlanVersionEntity = planVersionRepository.getVersionByUuidAndVersion(planUuid, planVersion)
@@ -126,11 +120,8 @@ class PlanService(
   @Transactional
   fun agreeLatestPlanVersion(planUuid: UUID, agreement: Agreement): PlanVersionEntity {
     val planVersion: PlanVersionEntity
-    try {
-      planVersion = planRepository.findByUuid(planUuid).currentVersion!!
-    } catch (_: EmptyResultDataAccessException) {
-      throw EmptyResultDataAccessException("Plan was not found with UUID: $planUuid", 1)
-    }
+
+    planVersion = planRepository.getPlanByUuid(planUuid).currentVersion!!
 
     val currentPlanVersion = versionService.conditionallyCreateNewPlanVersion(planVersion)
     val agreedPlanVersion: PlanVersionEntity

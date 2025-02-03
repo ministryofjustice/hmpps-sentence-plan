@@ -19,6 +19,8 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepRepository
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.getPlanByUuid
+import uk.gov.justice.digital.hmpps.sentenceplan.exceptions.NotFoundException
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
@@ -39,8 +41,8 @@ class GoalService(
     val planVersionEntity: PlanVersionEntity
 
     try {
-      planVersionEntity = planRepository.findByUuid(planUuid).currentVersion!!
-    } catch (e: EmptyResultDataAccessException) {
+      planVersionEntity = planRepository.getPlanByUuid(planUuid).currentVersion!!
+    } catch (e: NotFoundException) {
       throw Exception("A Plan with this UUID was not found: $planUuid")
     }
 

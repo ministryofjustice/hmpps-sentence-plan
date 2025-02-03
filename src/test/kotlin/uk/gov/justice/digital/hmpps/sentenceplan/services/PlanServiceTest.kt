@@ -91,7 +91,7 @@ class PlanServiceTest {
         planService.getPlanVersionByPlanUuid(planUuid)
       }
 
-      assertEquals("Could not find a plan with ID: $planUuid", exception.message)
+      assertEquals("Plan not found for id $planUuid", exception.message)
     }
   }
 
@@ -171,11 +171,11 @@ class PlanServiceTest {
     fun `should throw exception when plan not found`() {
       every { planRepository.findByUuid(any()) } throws EmptyResultDataAccessException(1)
 
-      val exception = assertThrows(EmptyResultDataAccessException::class.java) {
+      val exception = assertThrows(NotFoundException::class.java) {
         planService.agreeLatestPlanVersion(UUID.fromString("1c93ebe7-1d8d-4fcc-aef2-f97c4c983a6b"), agreement)
       }
 
-      assertEquals("Plan was not found with UUID: 1c93ebe7-1d8d-4fcc-aef2-f97c4c983a6b", exception.message)
+      assertEquals("Plan not found for id 1c93ebe7-1d8d-4fcc-aef2-f97c4c983a6b", exception.message)
     }
   }
 

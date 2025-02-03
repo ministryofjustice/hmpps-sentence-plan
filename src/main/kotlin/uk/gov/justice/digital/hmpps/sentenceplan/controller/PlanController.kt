@@ -99,7 +99,7 @@ class PlanController(
   ): PlanVersionEntity {
     try {
       return planService.agreeLatestPlanVersion(planUuid, agreement)
-    } catch (e: EmptyResultDataAccessException) {
+    } catch (e: NotFoundException) {
       throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, e.message)
     } catch (e: ConflictException) {
       throw ResponseStatusException(HttpStatus.CONFLICT, e.message)

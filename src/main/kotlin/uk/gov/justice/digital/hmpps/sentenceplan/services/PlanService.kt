@@ -11,11 +11,10 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanAgreementNoteEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanAgreementNoteRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanAgreementStatus
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntity
-import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntityRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanType
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionRepository
-import uk.gov.justice.digital.hmpps.sentenceplan.entity.getPlanByUuid
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.CounterSignPlanRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.CountersignType
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.SignRequest
@@ -28,14 +27,14 @@ import java.util.UUID
 
 @Service
 class PlanService(
-  private val planRepository: PlanRepository,
+  private val planRepository: PlanEntityRepository,
   private val planVersionRepository: PlanVersionRepository,
   private val planAgreementNoteRepository: PlanAgreementNoteRepository,
   private val versionService: VersionService,
 ) {
 
   fun getPlanVersionByPlanUuid(planUuid: UUID): PlanVersionEntity {
-    val planEntity = planRepository.getPlanByUuid(planUuid)
+    val planEntity = planRepository.getByUuid(planUuid)
     return planEntity.currentVersion!!
   }
 
@@ -48,7 +47,7 @@ class PlanService(
   }
 
   fun clone(planUuid: UUID, planType: PlanType): PlanVersionEntity {
-    val plan = planRepository.getPlanByUuid(planUuid)
+    val plan = planRepository.getByUuid(planUuid)
     return versionService.alwaysCreateNewPlanVersion(plan.currentVersion!!).apply {
       this.planType = planType
       planVersionRepository.save(this)
@@ -71,7 +70,7 @@ class PlanService(
 
   @Transactional
   fun softDelete(planUuid: UUID, from: Int, versionTo: Int?, softDelete: Boolean): SoftDeletePlanVersionsResponse? {
-    val plan = planRepository.getPlanByUuid(planUuid)
+    val plan = planRepository.getByUuid(planUuid)
     val versions = planVersionRepository.findAllByPlanId(plan.id!!)
     val availableForUpdate = versions.filter { it.softDeleted != softDelete }.map { it.version }.sorted()
     val to = versionTo ?: versions.maxByOrNull { it.version }?.version?.plus(1) ?: 0
@@ -90,7 +89,7 @@ class PlanService(
   }
 
   fun lockPlan(planUuid: UUID): PlanVersionEntity {
-    val planEntity = planRepository.getPlanByUuid(planUuid)
+    val planEntity = planRepository.getByUuid(planUuid)
     planEntity.currentVersion?.status = CountersigningStatus.LOCKED_INCOMPLETE
     planRepository.save(planEntity)
 
@@ -123,7 +122,7 @@ class PlanService(
   fun agreeLatestPlanVersion(planUuid: UUID, agreement: Agreement): PlanVersionEntity {
     val planVersion: PlanVersionEntity
 
-    planVersion = planRepository.getPlanByUuid(planUuid).currentVersion!!
+    planVersion = planRepository.getByUuid(planUuid).currentVersion!!
 
     val currentPlanVersion = versionService.conditionallyCreateNewPlanVersion(planVersion)
     val agreedPlanVersion: PlanVersionEntity

@@ -7,6 +7,7 @@ import jakarta.persistence.ColumnResult
 import jakarta.persistence.ConstructorResult
 import jakarta.persistence.Entity
 import jakarta.persistence.EntityListeners
+import jakarta.persistence.EntityManager
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
 import jakarta.persistence.GeneratedValue
@@ -16,6 +17,7 @@ import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.NamedNativeQuery
 import jakarta.persistence.OneToOne
+import jakarta.persistence.PersistenceContext
 import jakarta.persistence.SqlResultSetMapping
 import jakarta.persistence.Table
 import org.springframework.dao.EmptyResultDataAccessException
@@ -26,6 +28,7 @@ import org.springframework.data.annotation.LastModifiedDate
 import org.springframework.data.jpa.domain.support.AuditingEntityListener
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
+import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Note
 import uk.gov.justice.digital.hmpps.sentenceplan.exceptions.NotFoundException
 import java.time.LocalDateTime
@@ -139,18 +142,37 @@ enum class PublishState {
   ARCHIVED,
 }
 
-interface PlanRepository : JpaRepository<PlanEntity, Long> {
-  fun findByUuid(planUuid: UUID): PlanEntity
+@Repository
+interface PlanEntityRepository :
+  JpaRepository<PlanEntity, Long>,
+  PlanEntityExceptionHandlingRepository {
 
   // this uses the NoteMapping annotated on the PlanEntity class above
   @Query(nativeQuery = true)
   fun getPlanAndGoalNotes(planUuid: UUID): List<Note>
 }
 
-fun PlanRepository.getPlanByUuid(planUuid: UUID): PlanEntity {
-  try {
-    return findByUuid(planUuid)
-  } catch (e: EmptyResultDataAccessException) {
-    throw NotFoundException("Plan not found for id $planUuid")
+interface PlanEntityExceptionHandlingRepository {
+  fun getByUuid(planUuid: UUID): PlanEntity
+}
+
+@Repository
+class PlanEntityExceptionHandlingRepositoryImpl(
+  @PersistenceContext private val entityManager: EntityManager,
+) : PlanEntityExceptionHandlingRepository {
+  override fun getByUuid(planUuid: UUID): PlanEntity {
+    try {
+      return entityManager.createQuery(
+        """
+        SELECT p
+        FROM PlanEntity p
+        WHERE p.uuid = :planUuid
+        """,
+      )
+        .setParameter("planUuid", planUuid)
+        .singleResult as PlanEntity
+    } catch (e: EmptyResultDataAccessException) {
+      throw NotFoundException("Plan not found for id $planUuid")
+    }
   }
 }

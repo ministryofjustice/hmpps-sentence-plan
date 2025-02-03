@@ -19,8 +19,8 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.CountersigningStatus
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalStatus
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanAgreementStatus
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntityRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanProgressNotesRepository
-import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepStatus
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.SignRequest
@@ -42,7 +42,7 @@ class VersionServiceIntegrationTest : IntegrationTestBase() {
   lateinit var versionService: VersionService
 
   @Autowired
-  lateinit var planRepository: PlanRepository
+  lateinit var planRepository: PlanEntityRepository
 
   @Autowired
   lateinit var planVersionRepository: PlanVersionRepository
@@ -96,7 +96,7 @@ class VersionServiceIntegrationTest : IntegrationTestBase() {
     assertThat(planVersionRepository.findAll().size).isEqualTo(2)
 
     // check that when fetched the plan references the version with ID 1
-    val planEntity = planRepository.findByUuid(testPlanUuid)
+    val planEntity = planRepository.getByUuid(testPlanUuid)
     assertThat(planEntity.currentVersion!!.version).isEqualTo(1)
 
     // check that the UUID of version 0 is now different to the original UUID

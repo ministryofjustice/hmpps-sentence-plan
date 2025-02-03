@@ -20,10 +20,9 @@ import uk.gov.justice.digital.hmpps.sentenceplan.data.CreatePlanRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.data.LockPlanRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.data.UserDetails
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.CountersigningStatus
-import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntityRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanType
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionRepository
-import uk.gov.justice.digital.hmpps.sentenceplan.entity.getPlanByUuid
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.ClonePlanVersionRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.CounterSignPlanRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.CountersignType
@@ -46,7 +45,7 @@ class CoordinatorControllerTest : IntegrationTestBase() {
   val userDetails = UserDetails("1", "Tom C")
 
   @Autowired
-  lateinit var planRepository: PlanRepository
+  lateinit var planRepository: PlanEntityRepository
 
   @Autowired
   lateinit var planVersionRepository: PlanVersionRepository
@@ -248,7 +247,7 @@ class CoordinatorControllerTest : IntegrationTestBase() {
         userDetails = userDetails,
       )
 
-      val beforePlanVersion = planRepository.getPlanByUuid(planUuid).currentVersion
+      val beforePlanVersion = planRepository.getByUuid(planUuid).currentVersion
       val beforeVersionStatus = beforePlanVersion?.status!!
       val beforeVersion = beforePlanVersion.version
 
@@ -266,7 +265,7 @@ class CoordinatorControllerTest : IntegrationTestBase() {
         }
 
       val afterStatus = planVersionRepository.getVersionByUuidAndVersion(planUuid, beforeVersion).status
-      val newPlanVersion = planRepository.getPlanByUuid(planUuid).currentVersion
+      val newPlanVersion = planRepository.getByUuid(planUuid).currentVersion
 
       assertThat(afterStatus).isNotEqualTo(beforeVersionStatus)
       assertThat(afterStatus).isEqualTo(CountersigningStatus.LOCKED_INCOMPLETE)
@@ -305,7 +304,7 @@ class CoordinatorControllerTest : IntegrationTestBase() {
     @Sql(scripts = ["/db/test/plan_cleanup.sql"], executionPhase = AFTER_TEST_METHOD)
     @Test
     fun `should set the plan version to ROLLED_BACK`() {
-      val beforePlanVersion = planRepository.getPlanByUuid(planUuid).currentVersion
+      val beforePlanVersion = planRepository.getByUuid(planUuid).currentVersion
       val beforeVersionStatus = beforePlanVersion?.status!!
       val beforeVersion = beforePlanVersion.version
 
@@ -373,7 +372,7 @@ class CoordinatorControllerTest : IntegrationTestBase() {
         sentencePlanVersion = 0L,
       )
 
-      val beforePlanVersion = planRepository.getPlanByUuid(planUuid).currentVersion
+      val beforePlanVersion = planRepository.getByUuid(planUuid).currentVersion
       val beforeVersionStatus = beforePlanVersion?.status!!
       val beforeVersion = beforePlanVersion.version
 
@@ -451,7 +450,7 @@ class CoordinatorControllerTest : IntegrationTestBase() {
     @Sql(scripts = ["/db/test/plan_cleanup.sql"], executionPhase = AFTER_TEST_METHOD)
     @Test
     fun `should successfully set all the remaining versions to soft deleted`() {
-      val plan = planRepository.getPlanByUuid(planUuid)
+      val plan = planRepository.getByUuid(planUuid)
       val allVersionsBefore = planVersionRepository.findAllByPlanId(plan.id!!).filter { !it.softDeleted }
       assertThat(allVersionsBefore.size).isEqualTo(5)
       val softDeletePlanVersionsRequest = SoftDeletePlanVersionsRequest(
@@ -471,7 +470,7 @@ class CoordinatorControllerTest : IntegrationTestBase() {
           assertThat(responseBody?.planVersion).isEqualTo(5)
         }
 
-      val planAfter = planRepository.getPlanByUuid(planUuid)
+      val planAfter = planRepository.getByUuid(planUuid)
       val allVersionsAfter = planVersionRepository.findAllByPlanId(plan.id!!).filter { !it.softDeleted }
       assertThat(allVersionsAfter.size).isEqualTo(1)
       assertThat(planAfter.currentVersion?.version).isEqualTo(5)
@@ -481,7 +480,7 @@ class CoordinatorControllerTest : IntegrationTestBase() {
     @Sql(scripts = ["/db/test/plan_cleanup.sql"], executionPhase = AFTER_TEST_METHOD)
     @Test
     fun `should return empty body if all records have been soft deleted`() {
-      val plan = planRepository.getPlanByUuid(planUuid)
+      val plan = planRepository.getByUuid(planUuid)
       val allVersionsBefore = planVersionRepository.findAllByPlanId(plan.id!!).filter { !it.softDeleted }
       assertThat(allVersionsBefore.size).isEqualTo(10)
       val softDeletePlanVersionsRequest = SoftDeletePlanVersionsRequest(
@@ -497,7 +496,7 @@ class CoordinatorControllerTest : IntegrationTestBase() {
         .expectStatus().isOk
         .expectBody()
 
-      val planAfter = planRepository.getPlanByUuid(planUuid)
+      val planAfter = planRepository.getByUuid(planUuid)
       val allVersionsAfter = planVersionRepository.findAllByPlanId(plan.id!!).filter { !it.softDeleted }
       assertThat(allVersionsAfter.size).isEqualTo(0)
       assertThat(planAfter.currentVersion?.version).isEqualTo(9)
@@ -556,7 +555,7 @@ class CoordinatorControllerTest : IntegrationTestBase() {
     @Sql(scripts = ["/db/test/plan_cleanup.sql"], executionPhase = AFTER_TEST_METHOD)
     @Test
     fun `should successfully restore the set of soft_deleted records`() {
-      val plan = planRepository.getPlanByUuid(planUuid)
+      val plan = planRepository.getByUuid(planUuid)
       val allSoftDeletedVersionsBefore = planVersionRepository.findAllByPlanId(plan.id!!).filter { it.softDeleted }
       assertThat(allSoftDeletedVersionsBefore.size).isEqualTo(5)
 
@@ -586,7 +585,7 @@ class CoordinatorControllerTest : IntegrationTestBase() {
     @Sql(scripts = ["/db/test/plan_cleanup.sql"], executionPhase = AFTER_TEST_METHOD)
     @Test
     fun `should successfully restore the latest soft_deleted record`() {
-      val plan = planRepository.getPlanByUuid(planUuid)
+      val plan = planRepository.getByUuid(planUuid)
       val allSoftDeletedVersionsBefore = planVersionRepository.findAllByPlanId(plan.id!!).filter { it.softDeleted }
       assertThat(allSoftDeletedVersionsBefore.size).isEqualTo(1)
 
@@ -614,7 +613,7 @@ class CoordinatorControllerTest : IntegrationTestBase() {
       val allNonDeletedVersionsAfter = planVersionRepository.findAllByPlanId(plan.id!!).filter { !it.softDeleted }
       assertThat(allNonDeletedVersionsAfter.size).isEqualTo(2)
 
-      assertThat(planRepository.getPlanByUuid(planUuid).currentVersion?.version).isEqualTo(1)
+      assertThat(planRepository.getByUuid(planUuid).currentVersion?.version).isEqualTo(1)
     }
 
     @Sql(scripts = ["/db/test/oasys_assessment_pk_partial_soft_deleted_data.sql"], executionPhase = BEFORE_TEST_METHOD)
@@ -672,7 +671,7 @@ class CoordinatorControllerTest : IntegrationTestBase() {
     @Sql(scripts = ["/db/test/plan_cleanup.sql"], executionPhase = AFTER_TEST_METHOD)
     @Test
     fun `should clone the latest version into a new version`() {
-      val beforePlan = planRepository.getPlanByUuid(planUuid)
+      val beforePlan = planRepository.getByUuid(planUuid)
       assertThat(beforePlan?.currentVersion?.version).isEqualTo(0L)
 
       val clonePlanVersionRequest = ClonePlanVersionRequest(
@@ -690,7 +689,7 @@ class CoordinatorControllerTest : IntegrationTestBase() {
         .expectBody<PlanVersionResponse>()
         .returnResult().responseBody
 
-      val afterPlan = planRepository.getPlanByUuid(planUuid)
+      val afterPlan = planRepository.getByUuid(planUuid)
       assertThat(afterPlan?.currentVersion?.version).isEqualTo(1L)
       assertThat(afterPlan?.currentVersion?.planType).isEqualTo(PlanType.OTHER)
 

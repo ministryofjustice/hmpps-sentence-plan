@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.sentenceplan.services
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import jakarta.persistence.EntityManager
 import jakarta.validation.ValidationException
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -24,11 +25,10 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.CountersigningStatus
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanAgreementNoteRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanAgreementStatus
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntity
-import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntityRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanType
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionRepository
-import uk.gov.justice.digital.hmpps.sentenceplan.entity.getPlanByUuid
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.CounterSignPlanRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.CountersignType
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.SignRequest
@@ -40,7 +40,7 @@ import java.util.stream.Stream
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class PlanServiceTest {
-  private val planRepository: PlanRepository = mockk(relaxed = true)
+  private val planRepository: PlanEntityRepository = mockk(relaxed = true)
   private val planVersionRepository: PlanVersionRepository = mockk(relaxed = true)
   private val planAgreementNoteRepository: PlanAgreementNoteRepository = mockk()
   private val versionService: VersionService = mockk<VersionService>(relaxed = true)
@@ -74,7 +74,7 @@ class PlanServiceTest {
     fun `should return plan version when plan exists with given UUID`() {
       val planUuid = UUID.randomUUID()
 
-      every { planRepository.findByUuid(planUuid) } returns planEntity
+      every { planRepository.getByUuid(planUuid) } returns planEntity
 
       val result = planService.getPlanVersionByPlanUuid(planUuid)
 
@@ -83,15 +83,15 @@ class PlanServiceTest {
 
     @Test
     fun `should throw exception when no plan exists with given UUID`() {
-      every { planRepository.findByUuid(any()) } throws EmptyResultDataAccessException(1)
+      val entityManager: EntityManager = mockk()
 
       val planUuid = UUID.randomUUID()
+      every { entityManager.createQuery(any<String>()).setParameter(any<String>(), planUuid).singleResult }
+        .throws(EmptyResultDataAccessException(1))
 
-      val exception = assertThrows(NotFoundException::class.java) {
-        planService.getPlanVersionByPlanUuid(planUuid)
+      assertThrows<NotFoundException> {
+        planRepository.getByUuid(planUuid)
       }
-
-      assertEquals("Plan not found for id $planUuid", exception.message)
     }
   }
 
@@ -140,7 +140,7 @@ class PlanServiceTest {
 
     @Test
     fun `should agree plan version`() {
-      every { planRepository.findByUuid(any()) } returns planEntity
+      every { planRepository.getByUuid(any()) } returns planEntity
       every { planVersionRepository.save(planVersionEntity) } returns planVersionEntity
       every { planVersionRepository.save(newPlanVersionEntity) } returns agreedNewPlanVersionEntity
       every { planAgreementNoteRepository.save(any()) } returns any()
@@ -157,7 +157,7 @@ class PlanServiceTest {
     fun `should throw exception when plan already agreed`() {
       planVersionEntity.agreementStatus = PlanAgreementStatus.AGREED
 
-      every { planRepository.findByUuid(any()) } returns planEntity
+      every { planRepository.getByUuid(any()) } returns planEntity
       every { versionService.conditionallyCreateNewPlanVersion(any()) } returns agreedNewPlanVersionEntity
 
       val exception = assertThrows(ConflictException::class.java) {
@@ -169,7 +169,7 @@ class PlanServiceTest {
 
     @Test
     fun `should throw exception when plan not found`() {
-      every { planRepository.findByUuid(any()) } throws EmptyResultDataAccessException(1)
+      every { planRepository.getByUuid(any()) } throws EmptyResultDataAccessException(1)
 
       val exception = assertThrows(NotFoundException::class.java) {
         planService.agreeLatestPlanVersion(UUID.fromString("1c93ebe7-1d8d-4fcc-aef2-f97c4c983a6b"), agreement)
@@ -189,7 +189,7 @@ class PlanServiceTest {
 
     @Test
     fun `should mark plan as self-signed`() {
-      every { planRepository.findByUuid(any()) } returns planEntity.apply { currentVersion?.agreementStatus = PlanAgreementStatus.AGREED }
+      every { planRepository.getByUuid(any()) } returns planEntity.apply { currentVersion?.agreementStatus = PlanAgreementStatus.AGREED }
       every { planVersionRepository.save(any()) } returnsArgument 0
       every { planVersionRepository.getVersionByUuidAndVersion(any(), any()) } returns newPlanVersionEntity
       every { versionService.alwaysCreateNewPlanVersion(any()) } returns newPlanVersionEntity
@@ -206,7 +206,7 @@ class PlanServiceTest {
 
     @Test
     fun `should mark plan as awaiting-countersign`() {
-      every { planRepository.findByUuid(any()) } returns planEntity.apply { currentVersion?.agreementStatus = PlanAgreementStatus.AGREED }
+      every { planRepository.getByUuid(any()) } returns planEntity.apply { currentVersion?.agreementStatus = PlanAgreementStatus.AGREED }
       every { planVersionRepository.save(any()) } returnsArgument 0
       every { planVersionRepository.getVersionByUuidAndVersion(any(), any()) } returns newPlanVersionEntity
       every { versionService.conditionallyCreateNewPlanVersion(any()) } returns newPlanVersionEntity
@@ -223,7 +223,7 @@ class PlanServiceTest {
 
     @Test
     fun `should prevent signing, as plan is in a draft state`() {
-      every { planRepository.findByUuid(any()) } returns planEntity
+      every { planRepository.getByUuid(any()) } returns planEntity
       every { planVersionRepository.save(any()) } returnsArgument 0
       every { versionService.alwaysCreateNewPlanVersion(any()) } returns newPlanVersionEntity
 
@@ -399,7 +399,7 @@ class PlanServiceTest {
         }
       }
       planEntity.apply { currentVersion = planVersionEntities.filter { !it.softDeleted }.maxByOrNull { it.version } }
-      every { planRepository.getPlanByUuid(any()) } returns planEntity
+      every { planRepository.getByUuid(any()) } returns planEntity
       every { planRepository.save(any()) } returns planEntity
       every { planVersionRepository.findAllByPlanId(any()) } returns planVersionEntities
       val result = assertThrows<ValidationException> { planService.softDelete(UUID.randomUUID(), from, to, softDelete) }
@@ -416,7 +416,7 @@ class PlanServiceTest {
         }
       }
       planEntity.apply { currentVersion = planVersionEntities.filter { !it.softDeleted }.maxByOrNull { it.version } }
-      every { planRepository.getPlanByUuid(any()) } returns planEntity
+      every { planRepository.getByUuid(any()) } returns planEntity
       every { planRepository.save(any()) } returns planEntity
       every { planVersionRepository.findAllByPlanId(any()) } returns planVersionEntities
       every { planVersionRepository.findFirstByPlanIdAndSoftDeletedOrderByVersionDesc(any(), false) } returns planVersionEntities.reversed().firstOrNull { !it.softDeleted }
@@ -473,7 +473,7 @@ class PlanServiceTest {
           version = planEntity.currentVersion!!.version.inc(),
         )
       }
-      every { planRepository.getPlanByUuid(any()) } returns planEntity
+      every { planRepository.getByUuid(any()) } returns planEntity
       every { versionService.alwaysCreateNewPlanVersion(any()) } returns updatedPlanEntity.currentVersion!!
       every { planVersionRepository.save(any()) } returns updatedPlanEntity.currentVersion
       val result = planService.clone(planUUID, PlanType.OTHER)

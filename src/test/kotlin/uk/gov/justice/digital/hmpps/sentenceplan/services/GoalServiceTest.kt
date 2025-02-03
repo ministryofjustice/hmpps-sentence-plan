@@ -23,7 +23,7 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalNoteType
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalStatus
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntity
-import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntityRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepEntity
@@ -38,7 +38,7 @@ import java.util.UUID
 class GoalServiceTest {
   private val goalRepository: GoalRepository = mockk()
   private val areaOfNeedRepository: AreaOfNeedRepository = mockk()
-  private val planRepository: PlanRepository = mockk()
+  private val planRepository: PlanEntityRepository = mockk()
   private val planVersionRepository: PlanVersionRepository = mockk()
   private val stepRepository: StepRepository = mockk()
   private val versionService: VersionService = mockk()
@@ -125,7 +125,7 @@ class GoalServiceTest {
 
     @Test
     fun `create new goal with random Plan UUID should throw Exception`() {
-      every { planRepository.findByUuid(any()) } throws EmptyResultDataAccessException(1)
+      every { planRepository.getByUuid(any()) } throws EmptyResultDataAccessException(1)
 
       val exception = assertThrows<Exception> {
         goalService.createNewGoal(UUID.randomUUID(), goal)
@@ -136,7 +136,7 @@ class GoalServiceTest {
 
     @Test
     fun `create new goal with Area Of Need that doesn't exist should throw Exception`() {
-      every { planRepository.findByUuid(any()) } returns planEntity
+      every { planRepository.getByUuid(any()) } returns planEntity
       every { areaOfNeedRepository.findByNameIgnoreCase(any()) } throws EmptyResultDataAccessException(1)
       every { versionService.conditionallyCreateNewPlanVersion(any()) } returns newPlanVersionEntity
 
@@ -156,7 +156,7 @@ class GoalServiceTest {
 
     @Test
     fun `create new goal with Related Areas Of Need that don't exist should throw Exception`() {
-      every { planRepository.findByUuid(any()) } returns planEntity
+      every { planRepository.getByUuid(any()) } returns planEntity
       every { areaOfNeedRepository.findByNameIgnoreCase(any()) } returns areaOfNeedEntity
       every { areaOfNeedRepository.findAllByNames(any()) } returns null
       every { versionService.conditionallyCreateNewPlanVersion(any()) } returns newPlanVersionEntity
@@ -177,7 +177,7 @@ class GoalServiceTest {
 
     @Test
     fun `create new goal with no Related Areas of Need should call save`() {
-      every { planRepository.findByUuid(any()) } returns planEntity
+      every { planRepository.getByUuid(any()) } returns planEntity
       every { areaOfNeedRepository.findByNameIgnoreCase(any()) } returns areaOfNeedEntity
       every { areaOfNeedRepository.findAllByNames(any()) } returns null
       every { versionService.conditionallyCreateNewPlanVersion(any()) } returns newPlanVersionEntity
@@ -193,7 +193,7 @@ class GoalServiceTest {
 
     @Test
     fun `creating two goals should set incrementing goal order values`() {
-      every { planRepository.findByUuid(any()) } returns planEntity
+      every { planRepository.getByUuid(any()) } returns planEntity
       every { areaOfNeedRepository.findByNameIgnoreCase(any()) } returns areaOfNeedEntity
       every { areaOfNeedRepository.findAllByNames(any()) } returns null
       every { versionService.conditionallyCreateNewPlanVersion(any()) } returns newPlanVersionEntity

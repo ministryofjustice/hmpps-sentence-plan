@@ -24,7 +24,6 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanType
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.getPlanByUuid
-import uk.gov.justice.digital.hmpps.sentenceplan.entity.getVersionByUuidAndVersion
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.ClonePlanVersionRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.CounterSignPlanRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.CountersignType
@@ -522,7 +521,7 @@ class CoordinatorControllerTest : IntegrationTestBase() {
         .expectBody<ErrorResponse>()
         .returnResult().responseBody
 
-      assertThat(response.userMessage).isEqualTo("Validation failure: The specified range contains version(s) (3, 4) that do not exist or have already had soft_deleted set to true")
+      assertThat(response?.userMessage).isEqualTo("Validation failure: The specified range contains version(s) (3, 4) that do not exist or have already had soft_deleted set to true")
     }
 
     @Test
@@ -637,7 +636,7 @@ class CoordinatorControllerTest : IntegrationTestBase() {
         .expectBody<ErrorResponse>()
         .returnResult().responseBody
 
-      assertThat(response.userMessage).isEqualTo("Validation failure: The specified range contains version(s) (5) that do not exist or have already had soft_deleted set to false")
+      assertThat(response?.userMessage).isEqualTo("Validation failure: The specified range contains version(s) (5) that do not exist or have already had soft_deleted set to false")
     }
 
     @Test

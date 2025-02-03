@@ -64,7 +64,7 @@ class PlanController(
     try {
       return planService.getPlanVersionByPlanUuidAndPlanVersion(planUuid, planVersionNumber)
     } catch (e: NotFoundException) {
-      throw NoResourceFoundException(HttpMethod.GET, e.message)
+      throw NoResourceFoundException(HttpMethod.GET, e.message!!)
     }
   }
 

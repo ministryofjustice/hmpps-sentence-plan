@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.sentenceplan.services
 
 import jakarta.validation.ValidationException
+import org.springframework.dao.EmptyResultDataAccessException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Agreement
@@ -21,6 +22,7 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.SignRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.SignType
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.response.SoftDeletePlanVersionsResponse
 import uk.gov.justice.digital.hmpps.sentenceplan.exceptions.ConflictException
+import uk.gov.justice.digital.hmpps.sentenceplan.exceptions.NotFoundException
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -254,5 +256,11 @@ class PlanService(
   }
 
   @Transactional
-  fun getPlanAndGoalNotes(planUuid: UUID): List<Note> = planRepository.getPlanAndGoalNotes(planUuid)
+  fun getPlanAndGoalNotes(planUuid: UUID): List<Note> {
+    try {
+      return planRepository.getPlanAndGoalNotes(planUuid)
+    } catch (e: EmptyResultDataAccessException) {
+      throw NotFoundException("Plan not found for id $planUuid")
+    }
+  }
 }

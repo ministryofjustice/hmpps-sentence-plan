@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.sentenceplan.controller
 
-import org.springframework.dao.EmptyResultDataAccessException
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.security.access.prepost.PreAuthorize
@@ -50,7 +49,7 @@ class PlanController(
   ): List<Note> {
     try {
       return planService.getPlanAndGoalNotes(planUuid)
-    } catch (e: EmptyResultDataAccessException) {
+    } catch (e: NotFoundException) {
       throw NoResourceFoundException(HttpMethod.GET, "Could not find a plan with ID: $planUuid")
     }
   }
@@ -77,7 +76,7 @@ class PlanController(
       val plan = planService.getPlanVersionByPlanUuid(planUuid)
       val (now, future) = plan.goals.partition { it.targetDate != null }
       return mapOf("now" to now, "future" to future)
-    } catch (e: EmptyResultDataAccessException) {
+    } catch (e: NotFoundException) {
       throw NoResourceFoundException(HttpMethod.GET, "Could not retrieve the latest version of plan with ID: $planUuid")
     }
   }

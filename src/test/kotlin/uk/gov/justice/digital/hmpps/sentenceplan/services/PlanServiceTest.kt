@@ -3,7 +3,6 @@ package uk.gov.justice.digital.hmpps.sentenceplan.services
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import jakarta.persistence.EntityManager
 import jakarta.validation.ValidationException
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -18,15 +17,12 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import org.mockito.kotlin.any
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Agreement
 import uk.gov.justice.digital.hmpps.sentenceplan.data.UserDetails
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.CountersigningStatus
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanAgreementNoteRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanAgreementStatus
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntity
-import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntityExceptionHandlingRepositoryImpl
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntityRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanType
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionEntity
@@ -481,14 +477,4 @@ class PlanServiceTest {
       assertThat(result.planType).isEqualTo(PlanType.OTHER)
     }
   }
-}
-
-@Configuration
-class TestConfig {
-
-  @Bean
-  fun entityManager(): EntityManager = mockk()
-
-  @Bean
-  fun planEntityExceptionHandlingRepositoryImpl(entityManager: EntityManager): PlanEntityExceptionHandlingRepositoryImpl = PlanEntityExceptionHandlingRepositoryImpl(entityManager)
 }

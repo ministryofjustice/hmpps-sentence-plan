@@ -7,7 +7,6 @@ import jakarta.persistence.ColumnResult
 import jakarta.persistence.ConstructorResult
 import jakarta.persistence.Entity
 import jakarta.persistence.EntityListeners
-import jakarta.persistence.EntityManager
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
 import jakarta.persistence.GeneratedValue
@@ -16,9 +15,7 @@ import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.NamedNativeQuery
-import jakarta.persistence.NoResultException
 import jakarta.persistence.OneToOne
-import jakarta.persistence.PersistenceContext
 import jakarta.persistence.SqlResultSetMapping
 import jakarta.persistence.Table
 import org.springframework.data.annotation.CreatedBy
@@ -30,7 +27,7 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Note
-import uk.gov.justice.digital.hmpps.sentenceplan.exceptions.NotFoundException
+import uk.gov.justice.digital.hmpps.sentenceplan.repository.PlanEntityExceptionHandlingRepository
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -150,28 +147,4 @@ interface PlanEntityRepository :
   // this uses the NoteMapping annotated on the PlanEntity class above
   @Query(nativeQuery = true)
   fun getPlanAndGoalNotes(planUuid: UUID): List<Note>
-}
-
-interface PlanEntityExceptionHandlingRepository {
-  fun getByUuid(planUuid: UUID): PlanEntity
-}
-
-@Repository
-class PlanEntityExceptionHandlingRepositoryImpl(
-  @PersistenceContext private val entityManager: EntityManager,
-) : PlanEntityExceptionHandlingRepository {
-  override fun getByUuid(planUuid: UUID): PlanEntity = try {
-    entityManager.createQuery(
-      """
-        SELECT p
-        FROM PlanEntity p
-        WHERE p.uuid = :planUuid
-        """,
-      PlanEntity::class.java,
-    )
-      .setParameter("planUuid", planUuid)
-      .singleResult
-  } catch (e: NoResultException) {
-    throw NotFoundException("Plan not found for id $planUuid")
-  }
 }

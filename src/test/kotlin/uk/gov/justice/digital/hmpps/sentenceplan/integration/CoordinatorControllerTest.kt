@@ -75,11 +75,11 @@ class CoordinatorControllerTest : IntegrationTestBase() {
       assertThat(responseBody?.planVersion).isEqualTo(0L)
       assertThat(responseBody?.planId).isNotNull
 
-      planRepository.findPlanByUuid(responseBody.planId).let {
-        assertThat(it?.currentVersion?.version).isEqualTo(0)
-        assertThat(it?.currentVersion?.planType).isEqualTo(planType)
-        assertThat(it?.lastUpdatedBy?.username).isEqualTo(userDetails.name)
-        assertThat(it?.createdBy?.username).isEqualTo(userDetails.name)
+      planRepository.getByUuid(responseBody!!.planId).let {
+        assertThat(it.currentVersion?.version).isEqualTo(0)
+        assertThat(it.currentVersion?.planType).isEqualTo(planType)
+        assertThat(it.lastUpdatedBy?.username).isEqualTo(userDetails.name)
+        assertThat(it.createdBy?.username).isEqualTo(userDetails.name)
       }
     }
   }
@@ -672,7 +672,7 @@ class CoordinatorControllerTest : IntegrationTestBase() {
     @Test
     fun `should clone the latest version into a new version`() {
       val beforePlan = planRepository.getByUuid(planUuid)
-      assertThat(beforePlan?.currentVersion?.version).isEqualTo(0L)
+      assertThat(beforePlan.currentVersion?.version).isEqualTo(0L)
 
       val clonePlanVersionRequest = ClonePlanVersionRequest(
         planType = PlanType.OTHER,
@@ -690,8 +690,8 @@ class CoordinatorControllerTest : IntegrationTestBase() {
         .returnResult().responseBody
 
       val afterPlan = planRepository.getByUuid(planUuid)
-      assertThat(afterPlan?.currentVersion?.version).isEqualTo(1L)
-      assertThat(afterPlan?.currentVersion?.planType).isEqualTo(PlanType.OTHER)
+      assertThat(afterPlan.currentVersion?.version).isEqualTo(1L)
+      assertThat(afterPlan.currentVersion?.planType).isEqualTo(PlanType.OTHER)
 
       assertThat(response?.planVersion).isEqualTo(1L)
       assertThat(response?.planId).isEqualTo(planUuid)

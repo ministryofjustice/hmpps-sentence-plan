@@ -29,6 +29,7 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepStatus
+import uk.gov.justice.digital.hmpps.sentenceplan.exceptions.NotFoundException
 import java.time.LocalDate
 import java.util.UUID
 
@@ -125,13 +126,13 @@ class GoalServiceTest {
 
     @Test
     fun `create new goal with random Plan UUID should throw Exception`() {
-      every { planRepository.getByUuid(any()) } throws EmptyResultDataAccessException(1)
+      every { planRepository.getByUuid(any()) } throws NotFoundException("Plan not found for id")
 
-      val exception = assertThrows<Exception> {
+      val exception = assertThrows<NotFoundException> {
         goalService.createNewGoal(UUID.randomUUID(), goal)
       }
 
-      assertThat(exception.message).startsWith("A Plan with this UUID was not found:")
+      assertThat(exception.message).startsWith("Plan not found for id")
     }
 
     @Test

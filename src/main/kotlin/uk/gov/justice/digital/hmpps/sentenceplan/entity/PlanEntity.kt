@@ -16,11 +16,11 @@ import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.NamedNativeQuery
+import jakarta.persistence.NoResultException
 import jakarta.persistence.OneToOne
 import jakarta.persistence.PersistenceContext
 import jakarta.persistence.SqlResultSetMapping
 import jakarta.persistence.Table
-import org.springframework.dao.EmptyResultDataAccessException
 import org.springframework.data.annotation.CreatedBy
 import org.springframework.data.annotation.CreatedDate
 import org.springframework.data.annotation.LastModifiedBy
@@ -62,7 +62,7 @@ select 'Goal' as note_object,
        null as additional_note,
        CAST(goal_notes.note_type AS VARCHAR) AS note_type,
        goal.title as goal_title,
-       CAST(goal.uuid AS VARCHAR) as goal_uuid, 
+       CAST(goal.uuid AS VARCHAR) as goal_uuid,
        CAST(goal.goal_status AS VARCHAR) as goal_status,
        goal_notes.created_date,
        practitioner.username as created_by
@@ -72,7 +72,7 @@ from "sentence-plan".goal_notes
     inner join "sentence-plan".plan_version on goal.plan_version_id = plan_version.id
     inner join "sentence-plan".plan on plan.current_plan_version_id = plan_version.id
     and plan.uuid = ?1
-        
+
     ORDER BY created_date DESC;
     """,
   resultSetMapping = "NoteMapping",
@@ -160,19 +160,18 @@ interface PlanEntityExceptionHandlingRepository {
 class PlanEntityExceptionHandlingRepositoryImpl(
   @PersistenceContext private val entityManager: EntityManager,
 ) : PlanEntityExceptionHandlingRepository {
-  override fun getByUuid(planUuid: UUID): PlanEntity {
-    try {
-      return entityManager.createQuery(
-        """
+  override fun getByUuid(planUuid: UUID): PlanEntity = try {
+    entityManager.createQuery(
+      """
         SELECT p
         FROM PlanEntity p
         WHERE p.uuid = :planUuid
         """,
-      )
-        .setParameter("planUuid", planUuid)
-        .singleResult as PlanEntity
-    } catch (e: EmptyResultDataAccessException) {
-      throw NotFoundException("Plan not found for id $planUuid")
-    }
+      PlanEntity::class.java,
+    )
+      .setParameter("planUuid", planUuid)
+      .singleResult
+  } catch (e: NoResultException) {
+    throw NotFoundException("Plan not found for id $planUuid")
   }
 }

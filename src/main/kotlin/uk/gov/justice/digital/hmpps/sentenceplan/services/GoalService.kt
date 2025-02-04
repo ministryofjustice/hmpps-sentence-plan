@@ -39,11 +39,7 @@ class GoalService(
   fun createNewGoal(planUuid: UUID, goal: Goal): GoalEntity {
     val planVersionEntity: PlanVersionEntity
 
-    try {
-      planVersionEntity = planRepository.getByUuid(planUuid).currentVersion!!
-    } catch (e: NotFoundException) {
-      throw Exception("A Plan with this UUID was not found: $planUuid")
-    }
+    planVersionEntity = planRepository.getByUuid(planUuid).currentVersion!!
 
     require(goal.areaOfNeed != null && goal.title != null)
 
@@ -52,7 +48,7 @@ class GoalService(
     try {
       areaOfNeedEntity = areaOfNeedRepository.findByNameIgnoreCase(goal.areaOfNeed)
     } catch (e: EmptyResultDataAccessException) {
-      throw Exception("An Area of Need with this name was not found: ${goal.areaOfNeed}")
+      throw NotFoundException("An Area of Need with this name was not found: ${goal.areaOfNeed}")
     }
 
     val relatedAreasOfNeedEntity = getAreasOfNeedByNames(goal.relatedAreasOfNeed)
@@ -80,12 +76,12 @@ class GoalService(
     var relatedAreasOfNeedList: List<AreaOfNeedEntity> = emptyList()
     if (areasOfNeed.isNotEmpty()) {
       relatedAreasOfNeedList = areaOfNeedRepository.findAllByNames(areasOfNeed)
-        ?: throw Exception("One or more of the Related Areas of Need was not found: $areasOfNeed")
+        ?: throw NotFoundException("One or more of the Related Areas of Need was not found: $areasOfNeed")
 
       // findAllByNames doesn't throw an exception if a subset of goal.relatedAreasOfNeed is not found, so we
       // do a hard check on the count of returned items here
       if (areasOfNeed.size != relatedAreasOfNeedList.size) {
-        throw Exception("One or more of the Related Areas of Need was not found")
+        throw NotFoundException("One or more of the Related Areas of Need was not found")
       }
     }
     return relatedAreasOfNeedList
@@ -100,7 +96,7 @@ class GoalService(
   @Transactional
   fun replaceGoalByUuid(goalUuid: UUID, goal: Goal): GoalEntity {
     val goalEntity = goalRepository.findByUuid(goalUuid)
-      ?: throw Exception("This Goal was not found: $goalUuid")
+      ?: throw NotFoundException("This Goal was not found: $goalUuid")
 
     validateGoalFields(goal)
 
@@ -122,7 +118,7 @@ class GoalService(
   @Transactional
   fun addStepsToGoal(goalUuid: UUID, goal: Goal, replaceExistingSteps: Boolean = false): List<StepEntity> {
     var goalEntity: GoalEntity = goalRepository.findByUuid(goalUuid)
-      ?: throw Exception("This Goal was not found: $goalUuid")
+      ?: throw NotFoundException("This Goal was not found: $goalUuid")
 
     if (goal.steps.isEmpty() && goal.note.isNullOrEmpty()) {
       throw IllegalArgumentException("A Step or Note must be provided")
@@ -226,7 +222,7 @@ class GoalService(
       try {
         planVersionEntity = planVersionRepository.findByUuid(goalEntity.planVersion!!.uuid)
       } catch (e: EmptyResultDataAccessException) {
-        throw Exception("A Plan with this UUID was not found: $goalEntity.planVersion!!.uuid")
+        throw NotFoundException("A Plan with this UUID was not found: $goalEntity.planVersion!!.uuid")
       }
 
       val highestGoalOrder = planVersionEntity.goals.maxByOrNull { g -> g.goalOrder }?.goalOrder ?: 0

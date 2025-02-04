@@ -131,7 +131,7 @@ class PlanControllerTest : IntegrationTestBase() {
         .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_READ", "ROLE_SENTENCE_PLAN_WRITE")))
         .bodyValue(goalRequestBodyBadAreaOfNeed)
         .exchange()
-        .expectStatus().is5xxServerError
+        .expectStatus().isNotFound
         .expectBody<ErrorResponse>()
     }
 
@@ -147,11 +147,11 @@ class PlanControllerTest : IntegrationTestBase() {
         .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_READ", "ROLE_SENTENCE_PLAN_WRITE")))
         .bodyValue(goalRequestBodyBadAreaOfNeed)
         .exchange()
-        .expectStatus().is5xxServerError
+        .expectStatus().isNotFound
         .expectBody<ErrorResponse>()
         .returnResult().responseBody
 
-      assertThat(errorResponse?.developerMessage).startsWith("A Plan with this UUID was not found:")
+      assertThat(errorResponse?.developerMessage).startsWith("Plan not found for id")
     }
 
     @Test
@@ -247,13 +247,13 @@ class PlanControllerTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `should return server error when creating goal with invalid Plan UUID`() {
+    fun `should return 404 error when creating goal with invalid Plan UUID`() {
       val randomPlanUuid = UUID.randomUUID()
       webTestClient.post().uri("/plans/$randomPlanUuid/goals").header("Content-Type", "application/json")
         .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_READ", "ROLE_SENTENCE_PLAN_WRITE")))
         .bodyValue(goalRequestBody)
         .exchange()
-        .expectStatus().is5xxServerError
+        .expectStatus().isNotFound
         .expectBody<ErrorResponse>()
     }
   }

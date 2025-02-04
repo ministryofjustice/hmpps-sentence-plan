@@ -18,13 +18,15 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import org.mockito.kotlin.any
-import org.springframework.dao.EmptyResultDataAccessException
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Agreement
 import uk.gov.justice.digital.hmpps.sentenceplan.data.UserDetails
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.CountersigningStatus
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanAgreementNoteRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanAgreementStatus
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntity
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntityExceptionHandlingRepositoryImpl
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntityRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanType
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionEntity
@@ -40,7 +42,8 @@ import java.util.stream.Stream
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class PlanServiceTest {
-  private val planRepository: PlanEntityRepository = mockk(relaxed = true)
+
+  private val planRepository: PlanEntityRepository = mockk()
   private val planVersionRepository: PlanVersionRepository = mockk(relaxed = true)
   private val planAgreementNoteRepository: PlanAgreementNoteRepository = mockk()
   private val versionService: VersionService = mockk<VersionService>(relaxed = true)
@@ -83,14 +86,11 @@ class PlanServiceTest {
 
     @Test
     fun `should throw exception when no plan exists with given UUID`() {
-      val entityManager: EntityManager = mockk()
-
       val planUuid = UUID.randomUUID()
-      every { entityManager.createQuery(any<String>()).setParameter(any<String>(), planUuid).singleResult }
-        .throws(EmptyResultDataAccessException(1))
+      every { planRepository.getByUuid(planUuid) } throws NotFoundException("Plan not found for id $planUuid")
 
       assertThrows<NotFoundException> {
-        planRepository.getByUuid(planUuid)
+        planService.getPlanVersionByPlanUuid(planUuid)
       }
     }
   }
@@ -169,7 +169,7 @@ class PlanServiceTest {
 
     @Test
     fun `should throw exception when plan not found`() {
-      every { planRepository.getByUuid(any()) } throws EmptyResultDataAccessException(1)
+      every { planRepository.getByUuid(any()) } throws NotFoundException("Plan not found for id 1c93ebe7-1d8d-4fcc-aef2-f97c4c983a6b")
 
       val exception = assertThrows(NotFoundException::class.java) {
         planService.agreeLatestPlanVersion(UUID.fromString("1c93ebe7-1d8d-4fcc-aef2-f97c4c983a6b"), agreement)
@@ -481,4 +481,14 @@ class PlanServiceTest {
       assertThat(result.planType).isEqualTo(PlanType.OTHER)
     }
   }
+}
+
+@Configuration
+class TestConfig {
+
+  @Bean
+  fun entityManager(): EntityManager = mockk()
+
+  @Bean
+  fun planEntityExceptionHandlingRepositoryImpl(entityManager: EntityManager): PlanEntityExceptionHandlingRepositoryImpl = PlanEntityExceptionHandlingRepositoryImpl(entityManager)
 }

@@ -37,7 +37,7 @@ class PlanController(
   ): PlanVersionEntity {
     try {
       return planService.getPlanVersionByPlanUuid(planUuid)
-    } catch (e: NotFoundException) {
+    } catch (_: NotFoundException) {
       throw NoResourceFoundException(HttpMethod.GET, "Could not find a plan with ID: $planUuid")
     }
   }
@@ -49,7 +49,7 @@ class PlanController(
   ): List<Note> {
     try {
       return planService.getPlanAndGoalNotes(planUuid)
-    } catch (e: NotFoundException) {
+    } catch (_: NotFoundException) {
       throw NoResourceFoundException(HttpMethod.GET, "Could not find a plan with ID: $planUuid")
     }
   }
@@ -76,7 +76,7 @@ class PlanController(
       val plan = planService.getPlanVersionByPlanUuid(planUuid)
       val (now, future) = plan.goals.partition { it.targetDate != null }
       return mapOf("now" to now, "future" to future)
-    } catch (e: NotFoundException) {
+    } catch (_: NotFoundException) {
       throw NoResourceFoundException(HttpMethod.GET, "Could not retrieve the latest version of plan with ID: $planUuid")
     }
   }

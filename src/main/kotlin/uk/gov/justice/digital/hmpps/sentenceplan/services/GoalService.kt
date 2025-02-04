@@ -14,7 +14,7 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalNoteEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalNoteType
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalStatus
-import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntityRepository
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepEntity
@@ -29,7 +29,7 @@ class GoalService(
   private val goalRepository: GoalRepository,
   private val areaOfNeedRepository: AreaOfNeedRepository,
   private val stepRepository: StepRepository,
-  private val planRepository: PlanEntityRepository,
+  private val planRepository: PlanRepository,
   private val versionService: VersionService,
   private val planVersionRepository: PlanVersionRepository,
 ) {

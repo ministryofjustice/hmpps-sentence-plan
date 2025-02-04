@@ -11,7 +11,7 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanAgreementNoteEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanAgreementNoteRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanAgreementStatus
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntity
-import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntityRepository
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanType
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionRepository
@@ -27,7 +27,7 @@ import java.util.UUID
 
 @Service
 class PlanService(
-  private val planRepository: PlanEntityRepository,
+  private val planRepository: PlanRepository,
   private val planVersionRepository: PlanVersionRepository,
   private val planAgreementNoteRepository: PlanAgreementNoteRepository,
   private val versionService: VersionService,

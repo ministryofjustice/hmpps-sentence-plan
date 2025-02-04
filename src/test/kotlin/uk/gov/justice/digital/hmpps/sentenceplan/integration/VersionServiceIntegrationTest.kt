@@ -19,8 +19,8 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.CountersigningStatus
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalStatus
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanAgreementStatus
-import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntityRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanProgressNotesRepository
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepStatus
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.SignRequest
@@ -42,7 +42,7 @@ class VersionServiceIntegrationTest : IntegrationTestBase() {
   lateinit var versionService: VersionService
 
   @Autowired
-  lateinit var planRepository: PlanEntityRepository
+  lateinit var planRepository: PlanRepository
 
   @Autowired
   lateinit var planVersionRepository: PlanVersionRepository

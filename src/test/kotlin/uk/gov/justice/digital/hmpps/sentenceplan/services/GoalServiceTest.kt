@@ -23,7 +23,7 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalNoteType
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalStatus
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntity
-import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntityRepository
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepEntity
@@ -39,7 +39,7 @@ import java.util.UUID
 class GoalServiceTest {
   private val goalRepository: GoalRepository = mockk()
   private val areaOfNeedRepository: AreaOfNeedRepository = mockk()
-  private val planRepository: PlanEntityRepository = mockk()
+  private val planRepository: PlanRepository = mockk()
   private val planVersionRepository: PlanVersionRepository = mockk()
   private val stepRepository: StepRepository = mockk()
   private val versionService: VersionService = mockk()

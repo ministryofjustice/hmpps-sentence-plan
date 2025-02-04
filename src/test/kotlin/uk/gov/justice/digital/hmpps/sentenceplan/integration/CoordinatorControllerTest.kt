@@ -20,7 +20,7 @@ import uk.gov.justice.digital.hmpps.sentenceplan.data.CreatePlanRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.data.LockPlanRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.data.UserDetails
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.CountersigningStatus
-import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntityRepository
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanType
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.ClonePlanVersionRequest
@@ -45,7 +45,7 @@ class CoordinatorControllerTest : IntegrationTestBase() {
   val userDetails = UserDetails("1", "Tom C")
 
   @Autowired
-  lateinit var planRepository: PlanEntityRepository
+  lateinit var planRepository: PlanRepository
 
   @Autowired
   lateinit var planVersionRepository: PlanVersionRepository

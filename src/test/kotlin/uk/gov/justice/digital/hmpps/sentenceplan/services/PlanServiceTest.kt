@@ -23,7 +23,7 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.CountersigningStatus
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanAgreementNoteRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanAgreementStatus
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntity
-import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntityRepository
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanType
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionRepository
@@ -39,7 +39,7 @@ import java.util.stream.Stream
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class PlanServiceTest {
 
-  private val planRepository: PlanEntityRepository = mockk()
+  private val planRepository: PlanRepository = mockk()
   private val planVersionRepository: PlanVersionRepository = mockk(relaxed = true)
   private val planAgreementNoteRepository: PlanAgreementNoteRepository = mockk()
   private val versionService: VersionService = mockk<VersionService>(relaxed = true)

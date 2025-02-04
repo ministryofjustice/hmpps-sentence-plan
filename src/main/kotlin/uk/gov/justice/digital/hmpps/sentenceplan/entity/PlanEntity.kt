@@ -140,7 +140,7 @@ enum class PublishState {
 }
 
 @Repository
-interface PlanEntityRepository :
+interface PlanRepository :
   JpaRepository<PlanEntity, Long>,
   PlanEntityExceptionHandlingRepository {
 

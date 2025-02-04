@@ -446,7 +446,7 @@ class GoalServiceTest {
       assertThat(savedGoal.notes.first().type).isEqualTo(GoalNoteType.READDED)
       assertThat(savedGoal.relatedAreasOfNeed?.size).isEqualTo(1)
       assertThat(savedGoal.status).isEqualTo(GoalStatus.ACTIVE)
-      assertThat(savedGoal.targetDate).isEqualTo(LocalDate.parse(goalUpdate.targetDate))
+      assertThat(savedGoal.targetDate).isEqualTo(LocalDate.parse(goalUpdate.targetDate!!))
     }
   }
 

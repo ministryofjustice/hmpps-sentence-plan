@@ -242,14 +242,14 @@ class GoalControllerTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `create goal steps should throw a DataIntegrityViolationException if the Goal GUID doesn't exist`() {
+    fun `create goal steps should throw a 404 if the Goal GUID doesn't exist`() {
       val randomUuid = UUID.randomUUID()
       webTestClient.post().uri("/goals/$randomUuid/steps")
         .header("Content-Type", "application/json")
         .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_READ", "ROLE_SENTENCE_PLAN_WRITE")))
         .bodyValue(stepList)
         .exchange()
-        .expectStatus().is5xxServerError
+        .expectStatus().isNotFound
         .expectBody<ErrorResponse>()
     }
 

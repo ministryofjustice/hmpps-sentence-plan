@@ -29,6 +29,7 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepStatus
+import uk.gov.justice.digital.hmpps.sentenceplan.exceptions.NotFoundException
 import java.time.LocalDate
 import java.util.UUID
 
@@ -125,18 +126,18 @@ class GoalServiceTest {
 
     @Test
     fun `create new goal with random Plan UUID should throw Exception`() {
-      every { planRepository.findByUuid(any()) } throws EmptyResultDataAccessException(1)
+      every { planRepository.getByUuid(any()) } throws NotFoundException("Plan not found for id")
 
-      val exception = assertThrows<Exception> {
+      val exception = assertThrows<NotFoundException> {
         goalService.createNewGoal(UUID.randomUUID(), goal)
       }
 
-      assertThat(exception.message).startsWith("A Plan with this UUID was not found:")
+      assertThat(exception.message).startsWith("Plan not found for id")
     }
 
     @Test
     fun `create new goal with Area Of Need that doesn't exist should throw Exception`() {
-      every { planRepository.findByUuid(any()) } returns planEntity
+      every { planRepository.getByUuid(any()) } returns planEntity
       every { areaOfNeedRepository.findByNameIgnoreCase(any()) } throws EmptyResultDataAccessException(1)
       every { versionService.conditionallyCreateNewPlanVersion(any()) } returns newPlanVersionEntity
 
@@ -156,7 +157,7 @@ class GoalServiceTest {
 
     @Test
     fun `create new goal with Related Areas Of Need that don't exist should throw Exception`() {
-      every { planRepository.findByUuid(any()) } returns planEntity
+      every { planRepository.getByUuid(any()) } returns planEntity
       every { areaOfNeedRepository.findByNameIgnoreCase(any()) } returns areaOfNeedEntity
       every { areaOfNeedRepository.findAllByNames(any()) } returns null
       every { versionService.conditionallyCreateNewPlanVersion(any()) } returns newPlanVersionEntity
@@ -177,7 +178,7 @@ class GoalServiceTest {
 
     @Test
     fun `create new goal with no Related Areas of Need should call save`() {
-      every { planRepository.findByUuid(any()) } returns planEntity
+      every { planRepository.getByUuid(any()) } returns planEntity
       every { areaOfNeedRepository.findByNameIgnoreCase(any()) } returns areaOfNeedEntity
       every { areaOfNeedRepository.findAllByNames(any()) } returns null
       every { versionService.conditionallyCreateNewPlanVersion(any()) } returns newPlanVersionEntity
@@ -193,7 +194,7 @@ class GoalServiceTest {
 
     @Test
     fun `creating two goals should set incrementing goal order values`() {
-      every { planRepository.findByUuid(any()) } returns planEntity
+      every { planRepository.getByUuid(any()) } returns planEntity
       every { areaOfNeedRepository.findByNameIgnoreCase(any()) } returns areaOfNeedEntity
       every { areaOfNeedRepository.findAllByNames(any()) } returns null
       every { versionService.conditionallyCreateNewPlanVersion(any()) } returns newPlanVersionEntity
@@ -445,7 +446,7 @@ class GoalServiceTest {
       assertThat(savedGoal.notes.first().type).isEqualTo(GoalNoteType.READDED)
       assertThat(savedGoal.relatedAreasOfNeed?.size).isEqualTo(1)
       assertThat(savedGoal.status).isEqualTo(GoalStatus.ACTIVE)
-      assertThat(savedGoal.targetDate).isEqualTo(LocalDate.parse(goalUpdate.targetDate))
+      assertThat(savedGoal.targetDate).isEqualTo(LocalDate.parse(goalUpdate.targetDate!!))
     }
   }
 

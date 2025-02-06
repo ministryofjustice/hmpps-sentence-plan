@@ -41,6 +41,11 @@ dependencies {
   developmentOnly("org.springframework.boot:spring-boot-devtools")
 }
 
+// Temporary fix until a new version of the lint library is released
+ktlint {
+  version.set("1.5.0")
+}
+
 kotlin {
   jvmToolchain(21)
 }

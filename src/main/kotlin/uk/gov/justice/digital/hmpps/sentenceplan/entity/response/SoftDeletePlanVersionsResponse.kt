@@ -15,13 +15,11 @@ data class SoftDeletePlanVersionsResponse(
       planId: UUID,
       softDelete: Boolean,
       updatedVersions: List<Int>,
-    ): SoftDeletePlanVersionsResponse {
-      return SoftDeletePlanVersionsResponse(
-        planId = planId,
-        planVersion = planVersion.version.toLong(),
-        versionsSoftDeleted = if (softDelete) updatedVersions else null,
-        versionsRestored = if (!softDelete) updatedVersions else null,
-      )
-    }
+    ): SoftDeletePlanVersionsResponse = SoftDeletePlanVersionsResponse(
+      planId = planId,
+      planVersion = planVersion.version.toLong(),
+      versionsSoftDeleted = if (softDelete) updatedVersions else null,
+      versionsRestored = if (!softDelete) updatedVersions else null,
+    )
   }
 }

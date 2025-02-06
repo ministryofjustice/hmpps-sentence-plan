@@ -17,7 +17,5 @@ class StepController(private val service: StepService) {
   @GetMapping("/{stepUuid}")
   fun getStep(
     @PathVariable stepUuid: UUID,
-  ): StepEntity {
-    return service.getStepByUuid(stepUuid) ?: throw NoResourceFoundException(HttpMethod.GET, "No step found for $stepUuid")
-  }
+  ): StepEntity = service.getStepByUuid(stepUuid) ?: throw NoResourceFoundException(HttpMethod.GET, "No step found for $stepUuid")
 }

@@ -9,18 +9,14 @@ data class PlanVersionResponse(
   val planVersion: Long,
 ) {
   companion object {
-    fun from(planEntity: PlanEntity): PlanVersionResponse {
-      return PlanVersionResponse(
-        planId = planEntity.uuid,
-        planVersion = planEntity.currentVersion?.version?.toLong()!!,
-      )
-    }
+    fun from(planEntity: PlanEntity): PlanVersionResponse = PlanVersionResponse(
+      planId = planEntity.uuid,
+      planVersion = planEntity.currentVersion?.version?.toLong()!!,
+    )
 
-    fun from(planVersionEntity: PlanVersionEntity): PlanVersionResponse {
-      return PlanVersionResponse(
-        planId = planVersionEntity.uuid,
-        planVersion = planVersionEntity.version.toLong(),
-      )
-    }
+    fun from(planVersionEntity: PlanVersionEntity): PlanVersionResponse = PlanVersionResponse(
+      planId = planVersionEntity.uuid,
+      planVersion = planVersionEntity.version.toLong(),
+    )
   }
 }

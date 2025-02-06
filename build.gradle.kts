@@ -6,8 +6,6 @@ plugins {
   id("uk.gov.justice.hmpps.gradle-spring-boot") version "7.0.0"
   kotlin("plugin.spring") version "2.1.10"
   kotlin("plugin.jpa") version "2.1.10"
-  kotlin("jvm") version "2.1.10"
-  id("org.jlleitschuh.gradle.ktlint") version "12.1.2"
   id("org.openapi.generator") version "7.11.0"
   jacoco
 }
@@ -39,11 +37,6 @@ dependencies {
 
   // Dev dependencies
   developmentOnly("org.springframework.boot:spring-boot-devtools")
-}
-
-// Temporary fix until a new version of the lint library is released
-ktlint {
-  version.set("1.5.0")
 }
 
 kotlin {

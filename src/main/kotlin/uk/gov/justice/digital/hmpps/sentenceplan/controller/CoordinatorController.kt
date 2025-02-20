@@ -6,7 +6,6 @@ import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import jakarta.validation.Valid
-import org.springframework.dao.EmptyResultDataAccessException
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.security.access.prepost.PreAuthorize
@@ -29,6 +28,7 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.SignRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.SoftDeletePlanVersionsRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.response.GetPlanResponse
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.response.PlanVersionResponse
+import uk.gov.justice.digital.hmpps.sentenceplan.exceptions.NotFoundException
 import uk.gov.justice.digital.hmpps.sentenceplan.services.PlanService
 import java.util.UUID
 
@@ -95,7 +95,7 @@ class CoordinatorController(
     try {
       return planService.getPlanVersionByPlanUuid(planUuid)
         .run(GetPlanResponse::from)
-    } catch (_: EmptyResultDataAccessException) {
+    } catch (_: NotFoundException) {
       throw NoResourceFoundException(HttpMethod.GET, "Could not find a plan with ID: $planUuid")
     }
   }
@@ -133,7 +133,7 @@ class CoordinatorController(
     try {
       return planService.signPlan(planUuid, signRequest)
         .run(PlanVersionResponse::from)
-    } catch (_: EmptyResultDataAccessException) {
+    } catch (_: NotFoundException) {
       throw NoResourceFoundException(HttpMethod.GET, "Could not find a plan with ID: $planUuid")
     }
   }

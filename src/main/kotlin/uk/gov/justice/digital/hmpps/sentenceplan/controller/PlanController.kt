@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.sentenceplan.controller
 
-import org.springframework.dao.EmptyResultDataAccessException
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.security.access.prepost.PreAuthorize
@@ -19,6 +18,7 @@ import uk.gov.justice.digital.hmpps.sentenceplan.data.Note
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.exceptions.ConflictException
+import uk.gov.justice.digital.hmpps.sentenceplan.exceptions.NotFoundException
 import uk.gov.justice.digital.hmpps.sentenceplan.services.GoalService
 import uk.gov.justice.digital.hmpps.sentenceplan.services.PlanService
 import java.util.UUID
@@ -37,7 +37,7 @@ class PlanController(
   ): PlanVersionEntity {
     try {
       return planService.getPlanVersionByPlanUuid(planUuid)
-    } catch (e: EmptyResultDataAccessException) {
+    } catch (_: NotFoundException) {
       throw NoResourceFoundException(HttpMethod.GET, "Could not find a plan with ID: $planUuid")
     }
   }
@@ -49,7 +49,7 @@ class PlanController(
   ): List<Note> {
     try {
       return planService.getPlanAndGoalNotes(planUuid)
-    } catch (e: EmptyResultDataAccessException) {
+    } catch (_: NotFoundException) {
       throw NoResourceFoundException(HttpMethod.GET, "Could not find a plan with ID: $planUuid")
     }
   }
@@ -62,8 +62,8 @@ class PlanController(
   ): PlanVersionEntity {
     try {
       return planService.getPlanVersionByPlanUuidAndPlanVersion(planUuid, planVersionNumber)
-    } catch (e: EmptyResultDataAccessException) {
-      throw NoResourceFoundException(HttpMethod.GET, "Could not find a plan with ID: $planUuid and version number: $planVersionNumber")
+    } catch (e: NotFoundException) {
+      throw NoResourceFoundException(HttpMethod.GET, e.message!!)
     }
   }
 
@@ -76,7 +76,7 @@ class PlanController(
       val plan = planService.getPlanVersionByPlanUuid(planUuid)
       val (now, future) = plan.goals.partition { it.targetDate != null }
       return mapOf("now" to now, "future" to future)
-    } catch (e: EmptyResultDataAccessException) {
+    } catch (_: NotFoundException) {
       throw NoResourceFoundException(HttpMethod.GET, "Could not retrieve the latest version of plan with ID: $planUuid")
     }
   }
@@ -98,7 +98,7 @@ class PlanController(
   ): PlanVersionEntity {
     try {
       return planService.agreeLatestPlanVersion(planUuid, agreement)
-    } catch (e: EmptyResultDataAccessException) {
+    } catch (e: NotFoundException) {
       throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, e.message)
     } catch (e: ConflictException) {
       throw ResponseStatusException(HttpStatus.CONFLICT, e.message)

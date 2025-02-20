@@ -15,10 +15,8 @@ class WebClientConfiguration(
   @Value("\${api.timeout:20s}") val timeout: Duration,
 ) {
   @Bean
-  fun arnsRestClient(authorizedClientManager: OAuth2AuthorizedClientManager, builder: WebClient.Builder): WebClient =
-    builder.authorisedWebClient(authorizedClientManager, registrationId = "arns-api", url = arnsApiBaseUrl, timeout)
+  fun arnsRestClient(authorizedClientManager: OAuth2AuthorizedClientManager, builder: WebClient.Builder): WebClient = builder.authorisedWebClient(authorizedClientManager, registrationId = "arns-api", url = arnsApiBaseUrl, timeout)
 
   @Bean
-  fun deliusRestClient(authorizedClientManager: OAuth2AuthorizedClientManager, builder: WebClient.Builder): WebClient =
-    builder.authorisedWebClient(authorizedClientManager, registrationId = "delius-api", url = deliusApiBaseUrl, timeout)
+  fun deliusRestClient(authorizedClientManager: OAuth2AuthorizedClientManager, builder: WebClient.Builder): WebClient = builder.authorisedWebClient(authorizedClientManager, registrationId = "delius-api", url = deliusApiBaseUrl, timeout)
 }

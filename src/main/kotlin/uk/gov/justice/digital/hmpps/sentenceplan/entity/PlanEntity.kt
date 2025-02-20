@@ -25,8 +25,9 @@ import org.springframework.data.annotation.LastModifiedDate
 import org.springframework.data.jpa.domain.support.AuditingEntityListener
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
+import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Note
-import uk.gov.justice.digital.hmpps.sentenceplan.exceptions.NotFoundException
+import uk.gov.justice.digital.hmpps.sentenceplan.repository.PlanEntityExceptionHandlingRepository
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -58,7 +59,7 @@ select 'Goal' as note_object,
        null as additional_note,
        CAST(goal_notes.note_type AS VARCHAR) AS note_type,
        goal.title as goal_title,
-       CAST(goal.uuid AS VARCHAR) as goal_uuid, 
+       CAST(goal.uuid AS VARCHAR) as goal_uuid,
        CAST(goal.goal_status AS VARCHAR) as goal_status,
        goal_notes.created_date,
        practitioner.username as created_by
@@ -68,7 +69,7 @@ from "sentence-plan".goal_notes
     inner join "sentence-plan".plan_version on goal.plan_version_id = plan_version.id
     inner join "sentence-plan".plan on plan.current_plan_version_id = plan_version.id
     and plan.uuid = ?1
-        
+
     ORDER BY created_date DESC;
     """,
   resultSetMapping = "NoteMapping",
@@ -138,19 +139,12 @@ enum class PublishState {
   ARCHIVED,
 }
 
-interface PlanRepository : JpaRepository<PlanEntity, Long> {
-  fun findByUuid(planUuid: UUID): PlanEntity
+@Repository
+interface PlanRepository :
+  JpaRepository<PlanEntity, Long>,
+  PlanEntityExceptionHandlingRepository {
 
-  @Query(
-    """
-    select p from PlanEntity p
-    where p.uuid = :planUuid
-  """,
-  )
-  fun findPlanByUuid(planUuid: UUID): PlanEntity?
-
+  // this uses the NoteMapping annotated on the PlanEntity class above
   @Query(nativeQuery = true)
   fun getPlanAndGoalNotes(planUuid: UUID): List<Note>
 }
-
-fun PlanRepository.getPlanByUuid(planUuid: UUID) = findPlanByUuid(planUuid) ?: throw NotFoundException("Plan not found for id $planUuid")

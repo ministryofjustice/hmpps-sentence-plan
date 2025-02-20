@@ -30,7 +30,8 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener
 import org.springframework.data.jpa.repository.EntityGraph
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
-import uk.gov.justice.digital.hmpps.sentenceplan.exceptions.NotFoundException
+import org.springframework.stereotype.Repository
+import uk.gov.justice.digital.hmpps.sentenceplan.repository.PlanVersionExceptionHandlingRepository
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -183,44 +184,20 @@ enum class PlanType {
   OTHER,
 }
 
-interface PlanVersionRepository : JpaRepository<PlanVersionEntity, Long> {
+@Repository
+interface PlanVersionRepository :
+  JpaRepository<PlanVersionEntity, Long>,
+  PlanVersionExceptionHandlingRepository {
   fun findByUuid(planVersionUuid: UUID): PlanVersionEntity
 
   @Query(
     """
-    SELECT pv
+    SELECT COALESCE(MAX(pv.version) + 1, 0)
     FROM PlanVersion pv
-    WHERE pv.planId = (
-        SELECT p.id
-        FROM PlanEntity p
-        WHERE p.uuid = :planUuid
-    ) AND pv.version = :versionNumber
+    WHERE pv.planId = :planId
     """,
   )
-  fun findByPlanUuidAndVersionNumber(planUuid: UUID, versionNumber: Int): PlanVersionEntity
-
-  @Query(
-    """
-    SELECT pv
-    FROM PlanVersion pv
-    WHERE pv.planId = (
-        SELECT p.id
-        FROM PlanEntity p
-        WHERE p.uuid = :planUuid
-    ) AND pv.version = :versionNumber
-    """,
-  )
-  fun findPlanVersionByPlanUuidAndVersion(planUuid: UUID, versionNumber: Int): PlanVersionEntity?
-
-  @Query(
-    """
-        select max(pv.version)
-        from plan_version pv
-        where pv.plan_id = :planId
-    """,
-    nativeQuery = true,
-  )
-  fun findLatestPlanVersion(planId: Long): Int?
+  fun findNextPlanVersion(planId: Long): Int
 
   fun findFirstByPlanIdAndSoftDeletedOrderByVersionDesc(planId: Long, softDeleted: Boolean): PlanVersionEntity?
 
@@ -229,7 +206,3 @@ interface PlanVersionRepository : JpaRepository<PlanVersionEntity, Long> {
   @EntityGraph(value = "graph.planversion.eager", type = EntityGraph.EntityGraphType.FETCH)
   fun getWholePlanVersionByUuid(planVersionUuid: UUID): PlanVersionEntity
 }
-
-fun PlanVersionRepository.getVersionByUuidAndVersion(planUuid: UUID, versionNumber: Int) = findPlanVersionByPlanUuidAndVersion(planUuid, versionNumber) ?: throw NotFoundException("Plan version $versionNumber not found for Plan uuid $planUuid")
-
-fun PlanVersionRepository.getNextPlanVersion(planId: Long) = findLatestPlanVersion(planId)?.inc() ?: 0

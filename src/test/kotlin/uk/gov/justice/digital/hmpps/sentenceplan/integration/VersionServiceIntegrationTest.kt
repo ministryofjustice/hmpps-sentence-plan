@@ -96,11 +96,11 @@ class VersionServiceIntegrationTest : IntegrationTestBase() {
     assertThat(planVersionRepository.findAll().size).isEqualTo(2)
 
     // check that when fetched the plan references the version with ID 1
-    val planEntity = planRepository.findByUuid(testPlanUuid)
+    val planEntity = planRepository.getByUuid(testPlanUuid)
     assertThat(planEntity.currentVersion!!.version).isEqualTo(1)
 
     // check that the UUID of version 0 is now different to the original UUID
-    val planVersionZero = planVersionRepository.findByPlanUuidAndVersionNumber(testPlanUuid, 0)
+    val planVersionZero = planVersionRepository.getVersionByUuidAndVersion(testPlanUuid, 0)
     assertThat(planVersionZero.uuid).isNotEqualTo(testPlanVersionUuid)
 
     // check that both versions reference the same plan
@@ -153,8 +153,8 @@ class VersionServiceIntegrationTest : IntegrationTestBase() {
 
     assertThat(planVersionRepository.findAll().size).isEqualTo(2)
 
-    assertThat(planVersionRepository.findByPlanUuidAndVersionNumber(testPlanUuid, 0).goals.size).isEqualTo(0)
-    assertThat(planVersionRepository.findByPlanUuidAndVersionNumber(testPlanUuid, 1).goals.size).isEqualTo(1)
+    assertThat(planVersionRepository.getVersionByUuidAndVersion(testPlanUuid, 0).goals.size).isEqualTo(0)
+    assertThat(planVersionRepository.getVersionByUuidAndVersion(testPlanUuid, 1).goals.size).isEqualTo(1)
 
     assertThat(planVersionRepository.findByUuid(testPlanVersionUuid).goals.size).isEqualTo(1)
   }
@@ -179,14 +179,14 @@ class VersionServiceIntegrationTest : IntegrationTestBase() {
     // we should now have two versions, original and once made when adding steps
     assertThat(planVersionRepository.findAll().size).isEqualTo(2)
 
-    assertThat(planVersionRepository.findByPlanUuidAndVersionNumber(testPlanUuid, 0).goals.size).isEqualTo(2)
-    assertThat(planVersionRepository.findByPlanUuidAndVersionNumber(testPlanUuid, 1).goals.size).isEqualTo(2)
+    assertThat(planVersionRepository.getVersionByUuidAndVersion(testPlanUuid, 0).goals.size).isEqualTo(2)
+    assertThat(planVersionRepository.getVersionByUuidAndVersion(testPlanUuid, 1).goals.size).isEqualTo(2)
 
-    val planVersionZero = planVersionRepository.findByPlanUuidAndVersionNumber(testPlanUuid, 0)
+    val planVersionZero = planVersionRepository.getVersionByUuidAndVersion(testPlanUuid, 0)
     val wholePlanVersionZero = planVersionRepository.getWholePlanVersionByUuid(planVersionZero.uuid)
     assertThat(wholePlanVersionZero.goals.first().steps.size).isEqualTo(0)
 
-    val planVersionOne = planVersionRepository.findByPlanUuidAndVersionNumber(testPlanUuid, 1)
+    val planVersionOne = planVersionRepository.getVersionByUuidAndVersion(testPlanUuid, 1)
     val wholePlanVersionOne = planVersionRepository.getWholePlanVersionByUuid(planVersionOne.uuid)
     assertThat(wholePlanVersionOne.goals.first().steps.size).isEqualTo(1)
   }
@@ -207,14 +207,14 @@ class VersionServiceIntegrationTest : IntegrationTestBase() {
     // we should now have two planversions, original and once made when adding the new step
     assertThat(planVersionRepository.findAll().size).isEqualTo(2)
 
-    assertThat(planVersionRepository.findByPlanUuidAndVersionNumber(testPlanUuid, 0).goals.size).isEqualTo(2)
-    assertThat(planVersionRepository.findByPlanUuidAndVersionNumber(testPlanUuid, 1).goals.size).isEqualTo(2)
+    assertThat(planVersionRepository.getVersionByUuidAndVersion(testPlanUuid, 0).goals.size).isEqualTo(2)
+    assertThat(planVersionRepository.getVersionByUuidAndVersion(testPlanUuid, 1).goals.size).isEqualTo(2)
 
-    val planVersionZero = planVersionRepository.findByPlanUuidAndVersionNumber(testPlanUuid, 0)
+    val planVersionZero = planVersionRepository.getVersionByUuidAndVersion(testPlanUuid, 0)
     val wholePlanVersionZero = planVersionRepository.getWholePlanVersionByUuid(planVersionZero.uuid)
     assertThat(wholePlanVersionZero.goals.first().steps.size).isEqualTo(1)
 
-    val planVersionOne = planVersionRepository.findByPlanUuidAndVersionNumber(testPlanUuid, 1)
+    val planVersionOne = planVersionRepository.getVersionByUuidAndVersion(testPlanUuid, 1)
     val wholePlanVersionOne = planVersionRepository.getWholePlanVersionByUuid(planVersionOne.uuid)
     assertThat(wholePlanVersionOne.goals.first().steps.size).isEqualTo(2)
   }
@@ -240,8 +240,8 @@ class VersionServiceIntegrationTest : IntegrationTestBase() {
     // we should now have two PlanVersions, original and once made when agreeing the Plan
     assertThat(planVersionRepository.findAll().size).isEqualTo(2)
 
-    val planVersionZero = planVersionRepository.findByPlanUuidAndVersionNumber(testPlanUuid, 0)
-    val planVersionOne = planVersionRepository.findByPlanUuidAndVersionNumber(testPlanUuid, 1)
+    val planVersionZero = planVersionRepository.getVersionByUuidAndVersion(testPlanUuid, 0)
+    val planVersionOne = planVersionRepository.getVersionByUuidAndVersion(testPlanUuid, 1)
 
     assertThat(planVersionZero.agreementNote).isNull()
     assertThat(planVersionOne.agreementNote).isNotNull
@@ -269,8 +269,8 @@ class VersionServiceIntegrationTest : IntegrationTestBase() {
     // we should now have two plan versions, original and one made before signing the Plan
     assertThat(planVersionRepository.findAll().size).isEqualTo(2)
 
-    val planVersionZero = planVersionRepository.findByPlanUuidAndVersionNumber(testPlanUuid, 0)
-    val planVersionOne = planVersionRepository.findByPlanUuidAndVersionNumber(testPlanUuid, 1)
+    val planVersionZero = planVersionRepository.getVersionByUuidAndVersion(testPlanUuid, 0)
+    val planVersionOne = planVersionRepository.getVersionByUuidAndVersion(testPlanUuid, 1)
 
     assertThat(planVersionZero.status).isEqualTo(CountersigningStatus.SELF_SIGNED)
     assertThat(planVersionOne.status).isEqualTo(CountersigningStatus.UNSIGNED)

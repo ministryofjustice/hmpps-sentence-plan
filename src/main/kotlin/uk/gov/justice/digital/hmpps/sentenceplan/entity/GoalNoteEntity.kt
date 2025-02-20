@@ -56,9 +56,7 @@ class GoalNoteEntity(
 ) {
   @JsonProperty("practitionerName")
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  fun getPractitionerName(): String? {
-    return createdBy?.username
-  }
+  fun getPractitionerName(): String? = createdBy?.username
 }
 
 enum class GoalNoteType {

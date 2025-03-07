@@ -38,7 +38,7 @@ class ARNSApiService(
           .onErrorResume(WebClientResponseException.NotFound::class.java) { throw ResponseStatusException(HttpStatus.NOT_FOUND) }
           .block()
       }
-    // TODO sort source of below hard coded values
+
     return PopInfoResponse(
       "Miss",
       caseDetail.name?.forename,

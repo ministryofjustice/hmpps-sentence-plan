@@ -13,7 +13,7 @@ permissions:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
 
@@ -59,27 +59,35 @@ jobs:
 
   deploy_test:
     name: Deploy to the test environment
-    needs: publish_docker
+    needs:
+      - build_docker
+      - publish_docker
     uses: ministryofjustice/hmpps-github-actions/.github/workflows/deploy_env.yml@v2
     secrets: inherit
     with:
       environment: 'test'
-      app_version: '${{ needs.build_docker.outputs.app_version }}'
+      app_version: ${{ needs.build_docker.outputs.app_version }}
 
   deploy_preprod:
     name: Deploy to pre-production environment
-    needs: deploy_test
+    needs:
+      - deploy_test
+      - build_docker
+      - publish_docker
     uses: ministryofjustice/hmpps-github-actions/.github/workflows/deploy_env.yml@v2
     secrets: inherit
     with:
       environment: 'preprod'
-      app_version: '${{ needs.build_docker.outputs.app_version }}'
+      app_version: ${{ needs.build_docker.outputs.app_version }}
 
   deploy_prod:
     name: Deploy to production environment
-    needs: deploy_preprod
+    needs:
+      - deploy_preprod
+      - build_docker
+      - publish_docker
     uses: ministryofjustice/hmpps-github-actions/.github/workflows/deploy_env.yml@v2
     secrets: inherit
     with:
       environment: 'prod'
-      app_version: '${{ needs.build_docker.outputs.app_version }}'
+      app_version: ${{ needs.build_docker.outputs.app_version }}

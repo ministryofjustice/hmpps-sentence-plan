@@ -13,7 +13,7 @@ permissions:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
 
@@ -64,7 +64,7 @@ jobs:
     secrets: inherit
     with:
       environment: 'test'
-      app_version: '${{ needs.build_docker.outputs.app_version }}'
+      app_version: ${{ needs.build_docker.outputs.app_version }}
 
   deploy_preprod:
     name: Deploy to pre-production environment
@@ -73,7 +73,7 @@ jobs:
     secrets: inherit
     with:
       environment: 'preprod'
-      app_version: '${{ needs.build_docker.outputs.app_version }}'
+      app_version: ${{ needs.build_docker.outputs.app_version }}
 
   deploy_prod:
     name: Deploy to production environment
@@ -82,4 +82,4 @@ jobs:
     secrets: inherit
     with:
       environment: 'prod'
-      app_version: '${{ needs.build_docker.outputs.app_version }}'
+      app_version: ${{ needs.build_docker.outputs.app_version }}

@@ -82,7 +82,10 @@ jobs:
 
   deploy_prod:
     name: Deploy to production environment
-    needs: deploy_preprod
+    needs:
+      - deploy_preprod
+      - build_docker
+      - publish_docker
     uses: ministryofjustice/hmpps-github-actions/.github/workflows/deploy_env.yml@v2
     secrets: inherit
     with:

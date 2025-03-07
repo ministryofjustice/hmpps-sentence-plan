@@ -32,6 +32,8 @@ jobs:
 
   build_docker:
     name: Build docker image
+    needs:
+      - validate
     uses: ministryofjustice/hmpps-github-actions/.github/workflows/docker_build.yml@v2
     with:
       docker_registry: 'ghcr.io'

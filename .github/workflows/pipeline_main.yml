@@ -58,7 +58,9 @@ jobs:
 
   deploy_dev:
     name: Deploy to the development environment
-    needs: publish_docker
+    needs:
+      - build_docker
+      - publish_docker
     uses: ministryofjustice/hmpps-github-actions/.github/workflows/deploy_env.yml@v2
     secrets: inherit
     with:

@@ -59,7 +59,9 @@ jobs:
 
   deploy_test:
     name: Deploy to the test environment
-    needs: publish_docker
+    needs:
+      - build_docker
+      - publish_docker
     uses: ministryofjustice/hmpps-github-actions/.github/workflows/deploy_env.yml@v2
     secrets: inherit
     with:
@@ -68,7 +70,10 @@ jobs:
 
   deploy_preprod:
     name: Deploy to pre-production environment
-    needs: deploy_test
+    needs:
+      - deploy_test
+      - build_docker
+      - publish_docker
     uses: ministryofjustice/hmpps-github-actions/.github/workflows/deploy_env.yml@v2
     secrets: inherit
     with:

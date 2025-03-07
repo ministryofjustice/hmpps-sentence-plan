@@ -1,0 +1,40 @@
+name: Validate
+
+on:
+  workflow_call:
+
+permissions:
+  checks: write
+  pull-requests: write
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    env:
+      APP_VERSION: ${{ inputs.app_version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate
+        run: make dev-up lint test
+
+      - name: Export container logs
+        if: failure()
+        run: make save-logs OUTPUT_LOGS_DIR=${{ runner.temp }}/docker-logs
+
+      - name: Upload test results
+        if: '!cancelled()'
+        uses: actions/upload-artifact@v4
+        with:
+          name: test_artifacts
+          path: |
+            build/test-results
+            build/reports/tests
+            ${{ runner.temp }}/docker-logs
+
+      - name: Publish Unit Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: ${{ always() }}
+        with:
+          check_name: "Unit Test Results"
+          files: build/test-results/**/*.xml

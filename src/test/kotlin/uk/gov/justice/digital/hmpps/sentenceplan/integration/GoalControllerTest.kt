@@ -539,6 +539,66 @@ class GoalControllerTest : IntegrationTestBase() {
   }
 
   @Nested
+  @DisplayName("achieveGoal")
+  @Sql(scripts = [ "/db/test/plan_data.sql", "/db/test/goals_data.sql", "/db/test/related_area_of_need_data.sql" ], executionPhase = BEFORE_TEST_CLASS)
+  @Sql(scripts = [ "/db/test/related_area_of_need_cleanup.sql", "/db/test/goals_cleanup.sql", "/db/test/plan_cleanup.sql" ], executionPhase = AFTER_TEST_CLASS)
+  open inner class AchieveGoalTests {
+    @Test
+    @Transactional
+    open fun `achieve goal without a note`() {
+      val goalUuid = "31d7e986-4078-4f5c-af1d-115f9ba3722d"
+      val note = Goal(note = "")
+
+      // If you goalRepository.findByUuid() here, the test will fail.
+
+      webTestClient.post().uri("/goals/$goalUuid/achieve").header("Content-Type", "application/json")
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_READ", "ROLE_SENTENCE_PLAN_WRITE")))
+        .bodyValue(note)
+        .exchange()
+        .expectStatus().isOk
+
+      val goal = goalRepository.getGoalByUuid(UUID.fromString(goalUuid))
+      assertThat(goal.status).isEqualTo(GoalStatus.ACHIEVED)
+      assertThat(goal.relatedAreasOfNeed).isNotEmpty()
+      assertThat(goal.notes.first().note).isEqualTo("")
+      assertThat(goal.notes.first().type).isEqualTo(GoalNoteType.ACHIEVED)
+    }
+
+    @Test
+    @Transactional
+    open fun `achieve goal with a note and related areas of need are preserved`() {
+      val note = Goal(note = "A note")
+      val goalUuid = "31d7e986-4078-4f5c-af1d-115f9ba3722d"
+
+      // If you goalRepository.findByUuid() here, the test will fail.
+
+      webTestClient.post().uri("/goals/$goalUuid/achieve").header("Content-Type", "application/json")
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_READ", "ROLE_SENTENCE_PLAN_WRITE")))
+        .bodyValue(note)
+        .exchange()
+        .expectStatus().isOk
+
+      val goal = goalRepository.getGoalByUuid(UUID.fromString(goalUuid))
+      assertThat(goal.status).isEqualTo(GoalStatus.ACHIEVED)
+      assertThat(goal.relatedAreasOfNeed).isNotEmpty()
+      assertThat(goal.notes.first().note).isEqualTo("A note")
+      assertThat(goal.notes.first().type).isEqualTo(GoalNoteType.ACHIEVED)
+    }
+  }
+
+  @Nested
+  @DisplayName("removeGoal")
+  @Sql(scripts = [ "/db/test/plan_data.sql", "/db/test/goals_data.sql", "/db/test/related_area_of_need_data.sql" ], executionPhase = BEFORE_TEST_CLASS)
+  @Sql(scripts = [ "/db/test/related_area_of_need_cleanup.sql", "/db/test/goals_cleanup.sql", "/db/test/plan_cleanup.sql" ], executionPhase = AFTER_TEST_CLASS)
+  open inner class RemoveGoalTests
+
+  @Nested
+  @DisplayName("reAddGoal")
+  @Sql(scripts = [ "/db/test/plan_data.sql", "/db/test/goals_data.sql", "/db/test/related_area_of_need_data.sql" ], executionPhase = BEFORE_TEST_CLASS)
+  @Sql(scripts = [ "/db/test/related_area_of_need_cleanup.sql", "/db/test/goals_cleanup.sql", "/db/test/plan_cleanup.sql" ], executionPhase = AFTER_TEST_CLASS)
+  open inner class ReaddGoalTests
+
+  @Nested
   @DisplayName("updateGoal")
   @Sql(scripts = [ "/db/test/plan_data.sql", "/db/test/goals_data.sql", "/db/test/related_area_of_need_data.sql" ], executionPhase = BEFORE_TEST_CLASS)
   @Sql(scripts = [ "/db/test/related_area_of_need_cleanup.sql", "/db/test/goals_cleanup.sql", "/db/test/plan_cleanup.sql" ], executionPhase = AFTER_TEST_CLASS)

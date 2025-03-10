@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.servlet.resource.NoResourceFoundException
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Goal
 import uk.gov.justice.digital.hmpps.sentenceplan.data.GoalOrder
-import uk.gov.justice.digital.hmpps.sentenceplan.data.ReAddGoal
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Step
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalStatus
@@ -62,9 +61,9 @@ class GoalController(private val service: GoalService) {
   @ResponseStatus(HttpStatus.OK)
   fun achieveGoal(
     @PathVariable goalUuid: UUID,
-    @RequestBody note: String,
+    @RequestBody achieveGoal: Goal,
   ): GoalEntity {
-    val goal = Goal(status = GoalStatus.ACHIEVED, note = note)
+    val goal = Goal(status = GoalStatus.ACHIEVED, note = achieveGoal.note)
     return service.updateGoalStatus(goalUuid, goal)
   }
 
@@ -73,9 +72,9 @@ class GoalController(private val service: GoalService) {
   @ResponseStatus(HttpStatus.OK)
   fun removeGoal(
     @PathVariable goalUuid: UUID,
-    @RequestBody note: String,
+    @RequestBody removeGoal: Goal,
   ): GoalEntity {
-    val goal = Goal(status = GoalStatus.REMOVED, note = note)
+    val goal = Goal(status = GoalStatus.REMOVED, note = removeGoal.note)
     return service.updateGoalStatus(goalUuid, goal)
   }
 
@@ -84,18 +83,10 @@ class GoalController(private val service: GoalService) {
   @ResponseStatus(HttpStatus.OK)
   fun reAddGoal(
     @PathVariable goalUuid: UUID,
-    @RequestBody reAddGoal: ReAddGoal,
+    @RequestBody reAddGoal: Goal,
   ): GoalEntity {
-    var goalStatus = GoalStatus.FUTURE
-    if (!reAddGoal.targetDate.isNullOrEmpty()) {
-      goalStatus = GoalStatus.ACTIVE
-    }
-    val goal = Goal(
-      note = reAddGoal.note,
-      targetDate = reAddGoal.targetDate,
-      status = goalStatus,
-    )
-    return service.updateGoalStatus(goalUuid, goal)
+    reAddGoal.status = if (reAddGoal.targetDate.isNullOrEmpty()) GoalStatus.FUTURE else GoalStatus.ACTIVE
+    return service.updateGoalStatus(goalUuid, reAddGoal)
   }
 
   @PatchMapping("/{goalUuid}")

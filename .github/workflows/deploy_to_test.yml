@@ -1,18 +1,8 @@
-name: Deploy to environment
+name: Deploy to Test environment
 
 on:
   workflow_dispatch:
     inputs:
-      environment:
-        description: Environment
-        type: choice
-        required: true
-        options:
-          - dev
-          - test
-          - preprod
-          - prod
-        default: 'dev'
       image_tag:
         description: Optional image tag to deploy. If left blank, a new image will be built, pushed and deployed
         required: false
@@ -29,7 +19,7 @@ jobs:
     uses: ministryofjustice/hmpps-github-actions/.github/workflows/test_helm_lint.yml@v2
     secrets: inherit
     with:
-      environment: ${{ inputs.environment }}
+      environment: 'test'
 
   build_docker:
     if: ${{ inputs.image_tag == '' }}
@@ -51,7 +41,7 @@ jobs:
     uses: ministryofjustice/hmpps-github-actions/.github/workflows/deploy_env.yml@v2
     secrets: inherit
     with:
-      environment: ${{ inputs.environment }}
+      environment: 'test'
       app_version: ${{ needs.build_docker.outputs.app_version }}
 
   deploy_env_prebuilt:
@@ -62,5 +52,5 @@ jobs:
     uses: ministryofjustice/hmpps-github-actions/.github/workflows/deploy_env.yml@v2
     secrets: inherit
     with:
-      environment: ${{ inputs.environment }}
+      environment: 'test'
       app_version: ${{ inputs.image_tag }}

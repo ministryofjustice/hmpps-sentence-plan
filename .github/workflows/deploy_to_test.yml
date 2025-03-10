@@ -14,5 +14,5 @@ jobs:
     uses: ministryofjustice/hmpps-assess-risks-and-needs-github-actions/.github/workflows/deploy_to_env.yml@v1
     secrets: inherit
     with:
-      environment: 'test''
+      environment: 'test'
       image_tag: ${{ inputs.image_tag }}

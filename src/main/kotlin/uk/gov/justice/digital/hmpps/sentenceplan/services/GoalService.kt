@@ -193,8 +193,7 @@ class GoalService(
     // 1. if we have a note value, create a new note of the correct type
     // 2. update the current goal status
 
-    val requiredFields = listOf(updatedGoal.status, updatedGoal.note)
-    if (requiredFields.any { it == null }) {
+    if (updatedGoal.status == null || (updatedGoal.status == GoalStatus.REMOVED && updatedGoal.note.isNullOrEmpty())) {
       throw ValidationException("One or more required fields are null")
     }
 

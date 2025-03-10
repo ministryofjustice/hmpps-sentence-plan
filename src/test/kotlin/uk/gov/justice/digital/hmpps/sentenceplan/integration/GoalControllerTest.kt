@@ -282,7 +282,7 @@ class GoalControllerTest : IntegrationTestBase() {
   }
 
   @Nested
-  @DisplayName("deleteTests")
+  @DisplayName("deleteGoal")
   @Sql(scripts = [ "/db/test/plan_data.sql", "/db/test/goals_data.sql", "/db/test/step_data.sql" ], executionPhase = BEFORE_TEST_CLASS)
   @Sql(scripts = [ "/db/test/step_cleanup.sql", "/db/test/goals_cleanup.sql", "/db/test/plan_cleanup.sql" ], executionPhase = AFTER_TEST_CLASS)
   inner class GoalControllerDeleteTests {
@@ -590,7 +590,48 @@ class GoalControllerTest : IntegrationTestBase() {
   @DisplayName("removeGoal")
   @Sql(scripts = [ "/db/test/plan_data.sql", "/db/test/goals_data.sql", "/db/test/related_area_of_need_data.sql" ], executionPhase = BEFORE_TEST_CLASS)
   @Sql(scripts = [ "/db/test/related_area_of_need_cleanup.sql", "/db/test/goals_cleanup.sql", "/db/test/plan_cleanup.sql" ], executionPhase = AFTER_TEST_CLASS)
-  open inner class RemoveGoalTests
+  open inner class RemoveGoalTests {
+    @Test
+    @Transactional
+    open fun `remove goal with a note`() {
+      val goalUuid = "31d7e986-4078-4f5c-af1d-115f9ba3722d"
+      val note = Goal(note = "Removing note")
+
+      // If you goalRepository.findByUuid() here, the test will fail.
+
+      webTestClient.post().uri("/goals/$goalUuid/remove").header("Content-Type", "application/json")
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_READ", "ROLE_SENTENCE_PLAN_WRITE")))
+        .bodyValue(note)
+        .exchange()
+        .expectStatus().isOk
+
+      val goal = goalRepository.getGoalByUuid(UUID.fromString(goalUuid))
+      assertThat(goal.status).isEqualTo(GoalStatus.REMOVED)
+      assertThat(goal.relatedAreasOfNeed).isNotEmpty()
+      assertThat(goal.notes.first().note).isEqualTo("Removing note")
+      assertThat(goal.notes.first().type).isEqualTo(GoalNoteType.REMOVED)
+    }
+
+    @Test
+    @Transactional
+    open fun `remove goal without a note should fail`() {
+      val goalUuid = "31d7e986-4078-4f5c-af1d-115f9ba3722d"
+      val note = Goal(note = "")
+
+      // If you goalRepository.findByUuid() here, the test will fail.
+
+      webTestClient.post().uri("/goals/$goalUuid/remove").header("Content-Type", "application/json")
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_READ", "ROLE_SENTENCE_PLAN_WRITE")))
+        .bodyValue(note)
+        .exchange()
+        .expectStatus().is4xxClientError
+
+      val goal = goalRepository.getGoalByUuid(UUID.fromString(goalUuid))
+      assertThat(goal.status).isEqualTo(GoalStatus.ACTIVE)
+      assertThat(goal.relatedAreasOfNeed).isNotEmpty()
+      assertThat(goal.notes.size).isEqualTo(0)
+    }
+  }
 
   @Nested
   @DisplayName("reAddGoal")

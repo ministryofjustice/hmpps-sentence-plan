@@ -1,4 +1,4 @@
-name: Deploy to Test environment
+name: Deploy to test environment
 
 on:
   workflow_dispatch:

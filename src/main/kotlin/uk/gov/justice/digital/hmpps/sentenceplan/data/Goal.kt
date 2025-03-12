@@ -7,7 +7,7 @@ data class Goal(
   val areaOfNeed: String? = null,
   val targetDate: String? = null,
   val relatedAreasOfNeed: List<String> = emptyList(),
-  val status: GoalStatus? = null,
+  var status: GoalStatus? = null,
   val note: String? = null,
   val steps: List<Step> = emptyList(),
 )

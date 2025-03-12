@@ -193,15 +193,14 @@ class GoalService(
     // 1. if we have a note value, create a new note of the correct type
     // 2. update the current goal status
 
-    val requiredFields = listOf(updatedGoal.status, updatedGoal.note)
-    if (requiredFields.any { it == null }) {
+    if (updatedGoal.status == null || (updatedGoal.status == GoalStatus.REMOVED && updatedGoal.note.isNullOrEmpty())) {
       throw ValidationException("One or more required fields are null")
     }
 
     val goalEntity = goalRepository.getGoalByUuid(goalUuid)
 
     // TODO this needs changing to remove the first two lines of the `when` so that we only expect a status
-    // when the goal is being removed or achieved; otherwise the new goal status should be calculated from the targetDate.
+    // when the goal is being removed or achieved; otherwise the goal's new status should be calculated from the targetDate.
 
     // If the existing goal status is REMOVED and the new status adds it back to plan, mark the note as READDED
     val goalNoteEntity = GoalNoteEntity(note = updatedGoal.note!!, goal = goalEntity).apply {

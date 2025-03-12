@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.sentenceplan.data.Goal
 import uk.gov.justice.digital.hmpps.sentenceplan.data.GoalOrder
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Step
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalEntity
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalStatus
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.services.GoalService
 import java.util.UUID
@@ -53,6 +54,39 @@ class GoalController(private val service: GoalService) {
     if (service.deleteGoalByUuid(goalUuid) != ONE_ROW_DELETED) {
       throw NoResourceFoundException(HttpMethod.DELETE, "No goal found for $goalUuid")
     }
+  }
+
+  @PostMapping("/{goalUuid}/achieve")
+  @PreAuthorize("hasAnyRole('ROLE_SENTENCE_PLAN_WRITE')")
+  @ResponseStatus(HttpStatus.OK)
+  fun achieveGoal(
+    @PathVariable goalUuid: UUID,
+    @RequestBody achieveGoal: Goal,
+  ): GoalEntity {
+    val goal = Goal(status = GoalStatus.ACHIEVED, note = achieveGoal.note)
+    return service.updateGoalStatus(goalUuid, goal)
+  }
+
+  @PostMapping("/{goalUuid}/remove")
+  @PreAuthorize("hasAnyRole('ROLE_SENTENCE_PLAN_WRITE')")
+  @ResponseStatus(HttpStatus.OK)
+  fun removeGoal(
+    @PathVariable goalUuid: UUID,
+    @RequestBody removeGoal: Goal,
+  ): GoalEntity {
+    val goal = Goal(status = GoalStatus.REMOVED, note = removeGoal.note)
+    return service.updateGoalStatus(goalUuid, goal)
+  }
+
+  @PostMapping("/{goalUuid}/readd")
+  @PreAuthorize("hasAnyRole('ROLE_SENTENCE_PLAN_WRITE')")
+  @ResponseStatus(HttpStatus.OK)
+  fun reAddGoal(
+    @PathVariable goalUuid: UUID,
+    @RequestBody reAddGoal: Goal,
+  ): GoalEntity {
+    reAddGoal.status = if (reAddGoal.targetDate.isNullOrEmpty()) GoalStatus.FUTURE else GoalStatus.ACTIVE
+    return service.updateGoalStatus(goalUuid, reAddGoal)
   }
 
   @PatchMapping("/{goalUuid}")

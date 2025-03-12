@@ -652,15 +652,16 @@ class GoalControllerTest : IntegrationTestBase() {
         .bodyValue(note)
         .exchange()
         .expectStatus().isOk
-
-//      val goal = goalRepository.getGoalByUuid(UUID.fromString(goalUuid))
-//      assertThat(goal.status).isEqualTo(GoalStatus.FUTURE)
-//      assertThat(goal.relatedAreasOfNeed).isNotEmpty()
-//      assertThat(goal.notes.first().note).isEqualTo("Re-adding note")
-//      assertThat(goal.notes.first().type).isEqualTo(GoalNoteType.READDED)
+        .expectBody<GoalEntity>()
+        .consumeWith { response ->
+          val goal = response.responseBody
+          assertThat(goal.status).isEqualTo(GoalStatus.FUTURE)
+          assertThat(goal.relatedAreasOfNeed).isNotEmpty()
+          assertThat(goal.notes.first().note).isEqualTo("Re-adding note")
+          assertThat(goal.notes.first().type).isEqualTo(GoalNoteType.READDED)
+        }
     }
 
-    //    @Sql(scripts = ["/db/test/goal_removed.sql"], executionPhase = BEFORE_TEST_METHOD)
     @Test
     fun `re-add goal with a note and a target date`() {
       val goalUuid = "778b8e52-5927-42d4-9c05-7029ef3c6f6d" // goal for the future

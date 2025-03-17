@@ -1,0 +1,65 @@
+{
+  "riskToSelf": {
+    "suicide": {
+      "risk": "{{pickRandom 'YES' 'NO'}}"
+    },
+    "selfHarm": {
+      "risk": "{{pickRandom 'YES' 'NO'}}",
+      "previous": "{{pickRandom 'YES' 'NO'}}",
+      "previousConcernsText": "N/A",
+      "current": "{{pickRandom 'YES' 'NO'}}",
+      "currentConcernsText": "N/A"
+    },
+    "custody": {
+      "risk": "{{pickRandom 'YES' 'NO'}}",
+      "previous": "{{pickRandom 'YES' 'NO'}}",
+      "current": "{{pickRandom 'YES' 'NO'}}",
+      "currentConcernsText": "N/A"
+    },
+    "hostelSetting": {
+      "risk": "{{pickRandom 'YES' 'NO'}}",
+      "previous": "{{pickRandom 'YES' 'NO'}}",
+      "current": "{{pickRandom 'YES' 'NO'}}",
+      "currentConcernsText": "N/A"
+    },
+    "vulnerability": {
+      "risk": "{{pickRandom 'YES' 'NO'}}"
+    }
+  },
+  "otherRisks": {
+    "escapeOrAbscond": "{{pickRandom 'YES' 'NO'}}",
+    "controlIssuesDisruptiveBehaviour": "{{pickRandom 'YES' 'NO'}}",
+    "breachOfTrust": "{{pickRandom 'YES' 'NO'}}",
+    "riskToOtherPrisoners": "{{pickRandom 'YES' 'NO'}}"
+  },
+  "summary": {
+    "whoIsAtRisk": "People around him",
+    "natureOfRisk": "People around him",
+    "riskImminence": "When with others",
+    "riskIncreaseFactors": "Access to Alcohol",
+    "riskMitigationFactors": "Being alone",
+    "riskInCommunity": {
+      "LOW": [
+        "Children"
+      ],
+      "HIGH": [
+        "Public",
+        "Known Adult",
+        "Staff"
+      ]
+    },
+    "riskInCustody": {
+      "LOW": [
+        "Children"
+      ],
+      "HIGH": [
+        "Public",
+        "Known Adult",
+        "Staff",
+        "Prisoners"
+      ]
+    },
+    "overallRiskLevel": "HIGH"
+  },
+  "assessedOn": "{{date now format='yyyy-MM-dd\'T\'HH:mm:ss'}}"
+}

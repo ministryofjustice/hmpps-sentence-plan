@@ -2,7 +2,6 @@ package uk.gov.justice.digital.hmpps.sentenceplan.services
 
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
@@ -15,29 +14,21 @@ import uk.gov.justice.digital.hmpps.sentenceplan.data.RiskAssessmentResponse
 import uk.gov.justice.digital.hmpps.sentenceplan.data.RiskInCommunityResponse
 import uk.gov.justice.digital.hmpps.sentenceplan.data.RiskInCustodyResponse
 import uk.gov.justice.digital.hmpps.sentenceplan.data.ScoreEnum
-import uk.gov.justice.digital.hmpps.sentenceplan.stub.StubData
 
 @Service
 class ARNSApiService(
   @Qualifier("arnsRestClient") private val arnsRestClient: WebClient,
   @Qualifier("deliusRestClient")private val deliusRestClient: WebClient,
-  @Value("\${use-stub}") private val useStub: Boolean,
 ) {
 
   fun getPopInfo(crn: String): PopInfoResponse {
     val caseDetail: CaseDetail =
-      if (useStub) {
-        log.info("Calling Stub")
-        StubData.getCaseDetail(crn)
-      } else {
-        log.info("Calling DeliusRestClient")
-        deliusRestClient.get()
-          .uri("/case-details/$crn")
-          .retrieve()
-          .bodyToMono(CaseDetail::class.java)
-          .onErrorResume(WebClientResponseException.NotFound::class.java) { throw ResponseStatusException(HttpStatus.NOT_FOUND) }
-          .block()
-      }
+      deliusRestClient.get()
+        .uri("/delius-api/case-details/$crn")
+        .retrieve()
+        .bodyToMono(CaseDetail::class.java)
+        .onErrorResume(WebClientResponseException.NotFound::class.java) { throw ResponseStatusException(HttpStatus.NOT_FOUND) }
+        .block()
 
     return PopInfoResponse(
       "Miss",
@@ -54,18 +45,12 @@ class ARNSApiService(
 
   fun getRiskScoreInfoByCrn(crn: String): RiskAssessmentResponse {
     val riskAssessment: RiskAssessment =
-      if (useStub) {
-        log.info("Calling Stub")
-        StubData.getRiskScoreInfoByCrn(crn)
-      } else {
-        log.info("Calling ARNSRestClient")
-        arnsRestClient.get()
-          .uri("/risks/crn/$crn")
-          .retrieve()
-          .bodyToMono(RiskAssessment::class.java)
-          .onErrorResume(WebClientResponseException.NotFound::class.java) { throw ResponseStatusException(HttpStatus.NOT_FOUND) }
-          .block()
-      }
+      arnsRestClient.get()
+        .uri("/risks/crn/$crn")
+        .retrieve()
+        .bodyToMono(RiskAssessment::class.java)
+        .onErrorResume(WebClientResponseException.NotFound::class.java) { throw ResponseStatusException(HttpStatus.NOT_FOUND) }
+        .block()
     val riskInCommunityMap = LinkedHashMap<String, ScoreEnum>()
     val riskInCustodyMap = LinkedHashMap<String, ScoreEnum>()
 

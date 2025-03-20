@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.sentenceplan.services
 
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
@@ -22,13 +21,18 @@ class ARNSApiService(
 ) {
 
   fun getPopInfo(crn: String): PopInfoResponse {
-    val caseDetail: CaseDetail =
+    val caseDetail: CaseDetail? =
       deliusRestClient.get()
-        .uri("/delius-api/case-details/$crn")
+        .uri("/case-details/$crn")
         .retrieve()
         .bodyToMono(CaseDetail::class.java)
         .onErrorResume(WebClientResponseException.NotFound::class.java) { throw ResponseStatusException(HttpStatus.NOT_FOUND) }
         .block()
+
+    // block() can return null if the mono is empty
+    if (caseDetail == null) {
+      throw ResponseStatusException(HttpStatus.NOT_FOUND)
+    }
 
     return PopInfoResponse(
       "Miss",
@@ -44,13 +48,19 @@ class ARNSApiService(
   }
 
   fun getRiskScoreInfoByCrn(crn: String): RiskAssessmentResponse {
-    val riskAssessment: RiskAssessment =
+    val riskAssessment: RiskAssessment? =
       arnsRestClient.get()
         .uri("/risks/crn/$crn")
         .retrieve()
         .bodyToMono(RiskAssessment::class.java)
         .onErrorResume(WebClientResponseException.NotFound::class.java) { throw ResponseStatusException(HttpStatus.NOT_FOUND) }
         .block()
+
+    // block() can return null if the mono is empty
+    if (riskAssessment == null) {
+      throw ResponseStatusException(HttpStatus.NOT_FOUND)
+    }
+
     val riskInCommunityMap = LinkedHashMap<String, ScoreEnum>()
     val riskInCustodyMap = LinkedHashMap<String, ScoreEnum>()
 
@@ -86,7 +96,6 @@ class ARNSApiService(
     )
   }
   private companion object {
-    private val log = LoggerFactory.getLogger(this::class.java)
     private const val SCORE_HIGH = "HIGH"
     private const val SCORE_LOW = "LOW"
     private const val SCORE_MEDIUM = "MEDIUM"

@@ -6,10 +6,10 @@ management.endpoint:
   info.cache.time-to-live: 0
 
 hmpps-auth:
-  base-url: http://localhost:8090
+  base-url: http://localhost:9090
 
 arns-api:
-  base-url: http://localhost:5555
+  base-url: http://localhost:9094/arns-api
 
 delius-api:
-  base-url: http://localhost:5555
+  base-url: http://localhost:9094/delius-api

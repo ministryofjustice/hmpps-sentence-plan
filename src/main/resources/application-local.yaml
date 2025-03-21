@@ -6,5 +6,3 @@ arns-api:
 
 delius-api:
   base-url: https://sentence-plan-and-delius-dev.hmpps.service.justice.gov.uk
-
-use-stub: true

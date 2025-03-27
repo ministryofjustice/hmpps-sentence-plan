@@ -1,8 +1,0 @@
-hmpps-auth:
-  base-url: https://sign-in-dev.hmpps.service.justice.gov.uk
-
-arns-api:
-  base-url: https://assess-risks-and-needs-dev.hmpps.service.justice.gov.uk
-
-delius-api:
-  base-url: https://sentence-plan-and-delius-dev.hmpps.service.justice.gov.uk

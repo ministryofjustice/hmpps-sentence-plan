@@ -40,6 +40,7 @@ services:
       - postgres
       - hmpps-auth
       - forward-proxy
+      - wiremock
     healthcheck:
       test: ["CMD", "curl", "-f", "http://api:8080/health/ping"]
       interval: 5s
@@ -49,9 +50,17 @@ services:
     environment:
       SERVER_PORT: 8080
       DB_ENDPOINT: postgres:5432
-      ARNS_API_CLIENT_ID: sentence-plan-api-client
-      ARNS_API_CLIENT_SECRET: sentence-plan-api-client
+      API_CLIENT_ID: sentence-plan-api-client
+      API_CLIENT_SECRET: sentence-plan-api-client
       HMPPS_AUTH_BASE_URL: http://hmpps-auth:9090
       ARNS_API_BASE_URL: http://wiremock:8080/arns-api
       DELIUS_API_BASE_URL: http://wiremock:8080/delius-api
-      USE_STUB: true
+
+  wiremock:
+    image: wiremock/wiremock:latest
+    container_name: "wiremock"
+    ports:
+      - "9094:8080"
+    volumes:
+      - ../wiremock/mappings:/home/wiremock/mappings
+    entrypoint: [ "/docker-entrypoint.sh", "--global-response-templating", "--disable-gzip", "--verbose" ]

@@ -128,7 +128,7 @@ class PlanService(
     val agreedPlanVersion: PlanVersionEntity
 
     when (currentPlanVersion.agreementStatus) {
-      PlanAgreementStatus.DRAFT -> {
+      PlanAgreementStatus.DRAFT, PlanAgreementStatus.COULD_NOT_ANSWER -> {
         currentPlanVersion.agreementStatus = agreement.agreementStatus
         currentPlanVersion.agreementDate = LocalDateTime.now()
         agreedPlanVersion = planVersionRepository.save(currentPlanVersion)

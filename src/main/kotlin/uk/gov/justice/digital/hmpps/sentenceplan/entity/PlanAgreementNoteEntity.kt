@@ -37,7 +37,7 @@ class PlanAgreementNoteEntity(
   var planVersion: PlanVersionEntity?,
 
   @Column(name = "optional_note")
-  var optionalNote: String,
+  var optionalNote: String? = null,
 
   @Column(name = "agreement_status")
   @Enumerated(EnumType.STRING)

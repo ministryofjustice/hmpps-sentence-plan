@@ -174,6 +174,8 @@ enum class PlanAgreementStatus {
   AGREED,
   DO_NOT_AGREE,
   COULD_NOT_ANSWER,
+  UPDATED_AGREE,
+  UPDATED_DO_NOT_AGREE,
 }
 
 enum class PlanType {

@@ -148,6 +148,7 @@ class PlanServiceTest {
       assertThat(result.version).isEqualTo(newPlanVersionEntity.version)
       assertThat(result.agreementStatus).isEqualTo(agreement.agreementStatus)
     }
+
     @Test
     fun `should throw exception when plan already agreed`() {
       planVersionEntity.agreementStatus = PlanAgreementStatus.AGREED

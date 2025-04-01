@@ -175,8 +175,6 @@ class PlanServiceTest {
         "Pop A",
       )
 
-      planEntity.currentVersion = couldNotAnswerPlanVersionEntity
-
       every { planRepository.getByUuid(any()) } returns planEntity
       every { versionService.conditionallyCreateNewPlanVersion(couldNotAnswerPlanVersionEntity) } returns couldNotAnswerPlanVersionEntity
       every { planVersionRepository.save(any()) } returns updatedAgreedPlanVersionEntity

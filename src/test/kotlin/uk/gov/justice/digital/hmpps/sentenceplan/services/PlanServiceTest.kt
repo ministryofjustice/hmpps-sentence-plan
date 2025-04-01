@@ -48,6 +48,8 @@ class PlanServiceTest {
   private lateinit var planVersionEntity: PlanVersionEntity
   private lateinit var newPlanVersionEntity: PlanVersionEntity
   private lateinit var agreedNewPlanVersionEntity: PlanVersionEntity
+  private lateinit var couldNotAnswerPlanVersionEntity: PlanVersionEntity
+  private lateinit var updatedAgreedPlanVersionEntity: PlanVersionEntity
   private lateinit var planVersionEntities: List<PlanVersionEntity>
 
   @BeforeEach
@@ -61,6 +63,20 @@ class PlanServiceTest {
       planId = 0L,
       version = 1,
       agreementStatus = PlanAgreementStatus.AGREED,
+    )
+    couldNotAnswerPlanVersionEntity = PlanVersionEntity(
+      id = 1,
+      plan = planEntity,
+      planId = 0L,
+      version = 1,
+      agreementStatus = PlanAgreementStatus.COULD_NOT_ANSWER,
+    )
+    updatedAgreedPlanVersionEntity = PlanVersionEntity(
+      id = 1,
+      plan = planEntity,
+      planId = 0L,
+      version = 1,
+      agreementStatus = PlanAgreementStatus.UPDATED_AGREE,
     )
     planEntity.currentVersion = planVersionEntity
   }
@@ -147,6 +163,31 @@ class PlanServiceTest {
       verify(exactly = 1) { planAgreementNoteRepository.save(any()) }
       assertThat(result.version).isEqualTo(newPlanVersionEntity.version)
       assertThat(result.agreementStatus).isEqualTo(agreement.agreementStatus)
+    }
+
+    @Test
+    fun `should agree plan when current status is could not answer`() {
+      val updatedAgreement = Agreement(
+        PlanAgreementStatus.UPDATED_AGREE,
+        "Agree",
+        "",
+        "Tom C",
+        "Pop A",
+      )
+
+      planEntity.currentVersion = couldNotAnswerPlanVersionEntity
+
+      every { planRepository.getByUuid(any()) } returns planEntity
+      every { versionService.conditionallyCreateNewPlanVersion(couldNotAnswerPlanVersionEntity) } returns couldNotAnswerPlanVersionEntity
+      every { planVersionRepository.save(any()) } returns updatedAgreedPlanVersionEntity
+      every { planAgreementNoteRepository.save(any()) } returns any()
+
+      val result = planService.agreeLatestPlanVersion(UUID.randomUUID(), updatedAgreement)
+
+      verify(exactly = 1) { planAgreementNoteRepository.save(any()) }
+      verify { planVersionRepository.save(any()) }
+      assertThat(result.version).isEqualTo(updatedAgreedPlanVersionEntity.version)
+      assertThat(result.agreementStatus).isEqualTo(updatedAgreement.agreementStatus)
     }
 
     @Test

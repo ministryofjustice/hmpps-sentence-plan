@@ -176,7 +176,7 @@ class PlanServiceTest {
         agreementStatusNote = "Agree",
         practitionerName = "Tom C",
         optionalNote = "",
-        personName = "Pop A"
+        personName = "Pop A",
       )
 
       every { planRepository.getByUuid(any()) } returns planEntity
@@ -189,9 +189,7 @@ class PlanServiceTest {
       verify(exactly = 1) { planAgreementNoteRepository.save(any()) }
       assertThat(result.version).isEqualTo(updatedAgreePlanVersionEntity.version)
       assertThat(result.agreementStatus).isEqualTo(PlanAgreementStatus.UPDATED_AGREED)
-
     }
-
 
     @Test
     fun `should throw exception when plan already agreed`() {

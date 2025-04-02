@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.sentenceplan.services
 
+import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -48,10 +49,13 @@ class PlanServiceTest {
   private lateinit var planVersionEntity: PlanVersionEntity
   private lateinit var newPlanVersionEntity: PlanVersionEntity
   private lateinit var agreedNewPlanVersionEntity: PlanVersionEntity
+  private lateinit var currentCouldNotAnswerPlanVersionEntity: PlanVersionEntity
+  private lateinit var updatedAgreePlanVersionEntity: PlanVersionEntity
   private lateinit var planVersionEntities: List<PlanVersionEntity>
 
   @BeforeEach
   fun setup() {
+    clearMocks(planRepository, planVersionRepository, planAgreementNoteRepository, versionService)
     planEntity = PlanEntity(id = 0L)
     planVersionEntity = PlanVersionEntity(id = 0, plan = planEntity, planId = 0L, version = 0)
     newPlanVersionEntity = PlanVersionEntity(id = 1, plan = planEntity, planId = 0L, version = 1)
@@ -61,6 +65,20 @@ class PlanServiceTest {
       planId = 0L,
       version = 1,
       agreementStatus = PlanAgreementStatus.AGREED,
+    )
+    currentCouldNotAnswerPlanVersionEntity = PlanVersionEntity(
+      id = 1,
+      plan = planEntity,
+      planId = 0L,
+      version = 1,
+      agreementStatus = PlanAgreementStatus.COULD_NOT_ANSWER,
+    )
+    updatedAgreePlanVersionEntity = PlanVersionEntity(
+      id = 1,
+      plan = planEntity,
+      planId = 0L,
+      version = 1,
+      agreementStatus = PlanAgreementStatus.UPDATED_AGREED,
     )
     planEntity.currentVersion = planVersionEntity
   }
@@ -148,6 +166,32 @@ class PlanServiceTest {
       assertThat(result.version).isEqualTo(newPlanVersionEntity.version)
       assertThat(result.agreementStatus).isEqualTo(agreement.agreementStatus)
     }
+
+    @Test
+    fun `should agree plan when current status is could not answer`() {
+      planEntity.currentVersion = currentCouldNotAnswerPlanVersionEntity
+
+      val agreement = Agreement(
+        agreementStatus = PlanAgreementStatus.UPDATED_AGREED,
+        agreementStatusNote = "Agree",
+        practitionerName = "Tom C",
+        optionalNote = "",
+        personName = "Pop A"
+      )
+
+      every { planRepository.getByUuid(any()) } returns planEntity
+      every { versionService.conditionallyCreateNewPlanVersion(currentCouldNotAnswerPlanVersionEntity) } returns currentCouldNotAnswerPlanVersionEntity
+      every { planVersionRepository.save(currentCouldNotAnswerPlanVersionEntity) } returns updatedAgreePlanVersionEntity
+      every { planAgreementNoteRepository.save(any()) } returns any()
+
+      val result = planService.agreeLatestPlanVersion(UUID.randomUUID(), agreement)
+
+      verify(exactly = 1) { planAgreementNoteRepository.save(any()) }
+      assertThat(result.version).isEqualTo(updatedAgreePlanVersionEntity.version)
+      assertThat(result.agreementStatus).isEqualTo(PlanAgreementStatus.UPDATED_AGREED)
+
+    }
+
 
     @Test
     fun `should throw exception when plan already agreed`() {

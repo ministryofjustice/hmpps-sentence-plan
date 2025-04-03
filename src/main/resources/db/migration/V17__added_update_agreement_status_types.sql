@@ -1,0 +1,5 @@
+ALTER TYPE agreement_status_type
+    ADD VALUE IF NOT EXISTS 'UPDATED_AGREED';
+
+ALTER TYPE agreement_status_type
+    ADD VALUE IF NOT EXISTS 'UPDATED_DO_NOT_AGREE';

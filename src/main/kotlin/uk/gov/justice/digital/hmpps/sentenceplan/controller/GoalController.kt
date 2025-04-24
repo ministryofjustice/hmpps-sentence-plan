@@ -5,7 +5,6 @@ import org.springframework.http.HttpStatus
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
@@ -62,10 +61,7 @@ class GoalController(private val service: GoalService) {
   fun achieveGoal(
     @PathVariable goalUuid: UUID,
     @RequestBody achieveGoal: Goal,
-  ): GoalEntity {
-    val goal = Goal(status = GoalStatus.ACHIEVED, note = achieveGoal.note)
-    return service.updateGoalStatus(goalUuid, goal)
-  }
+  ): GoalEntity = service.achieveGoal(goalUuid, achieveGoal.note)
 
   @PostMapping("/{goalUuid}/remove")
   @PreAuthorize("hasAnyRole('ROLE_SENTENCE_PLAN_WRITE')")
@@ -73,10 +69,7 @@ class GoalController(private val service: GoalService) {
   fun removeGoal(
     @PathVariable goalUuid: UUID,
     @RequestBody removeGoal: Goal,
-  ): GoalEntity {
-    val goal = Goal(status = GoalStatus.REMOVED, note = removeGoal.note)
-    return service.updateGoalStatus(goalUuid, goal)
-  }
+  ): GoalEntity = service.removeGoal(goalUuid, removeGoal.note)
 
   @PostMapping("/{goalUuid}/readd")
   @PreAuthorize("hasAnyRole('ROLE_SENTENCE_PLAN_WRITE')")
@@ -86,16 +79,8 @@ class GoalController(private val service: GoalService) {
     @RequestBody reAddGoal: Goal,
   ): GoalEntity {
     reAddGoal.status = if (reAddGoal.targetDate.isNullOrEmpty()) GoalStatus.FUTURE else GoalStatus.ACTIVE
-    return service.updateGoalStatus(goalUuid, reAddGoal)
+    return service.reAddGoal(goalUuid, reAddGoal)
   }
-
-  @PatchMapping("/{goalUuid}")
-  @PreAuthorize("hasAnyRole('ROLE_SENTENCE_PLAN_WRITE')")
-  @ResponseStatus(HttpStatus.OK)
-  fun updateGoalStatus(
-    @PathVariable goalUuid: UUID,
-    @RequestBody goalStatusUpdate: Goal,
-  ): GoalEntity = service.updateGoalStatus(goalUuid, goalStatusUpdate)
 
   @PostMapping("/{goalUuid}/steps")
   @PreAuthorize("hasAnyRole('ROLE_SENTENCE_PLAN_WRITE')")

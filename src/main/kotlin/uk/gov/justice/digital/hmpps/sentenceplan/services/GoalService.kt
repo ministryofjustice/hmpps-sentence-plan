@@ -189,56 +189,65 @@ class GoalService(
   }
 
   @Transactional
-  fun updateGoalStatus(goalUuid: UUID, updatedGoal: Goal): GoalEntity {
-    // 1. if we have a note value, create a new note of the correct type
-    // 2. update the current goal status
+  fun achieveGoal(goalUuid: UUID, note: String?): GoalEntity {
+    val goalEntity = goalRepository.getGoalByUuid(goalUuid)
 
-    if (updatedGoal.status == null || (updatedGoal.status == GoalStatus.REMOVED && updatedGoal.note.isNullOrEmpty())) {
-      throw ValidationException("One or more required fields are null")
+    goalEntity.notes.add(
+      GoalNoteEntity(note = note!!, goal = goalEntity, type = GoalNoteType.ACHIEVED),
+    )
+    goalEntity.status = GoalStatus.ACHIEVED
+    goalEntity.statusDate = LocalDateTime.now()
+
+    return goalRepository.save(goalEntity)
+  }
+
+  @Transactional
+  fun removeGoal(goalUuid: UUID, note: String?): GoalEntity {
+    if (note.isNullOrEmpty()) { // note is mandatory for a removed goal
+      throw ValidationException("Updated goal note must not be empty")
     }
 
     val goalEntity = goalRepository.getGoalByUuid(goalUuid)
 
-    // TODO this needs changing to remove the first two lines of the `when` so that we only expect a status
-    // when the goal is being removed or achieved; otherwise the goal's new status should be calculated from the targetDate.
+    goalEntity.notes.add(
+      GoalNoteEntity(note = note, goal = goalEntity, type = GoalNoteType.REMOVED),
+    )
+    goalEntity.status = GoalStatus.REMOVED
+    goalEntity.statusDate = LocalDateTime.now()
 
-    // If the existing goal status is REMOVED and the new status adds it back to plan, mark the note as READDED
-    val goalNoteEntity = GoalNoteEntity(note = updatedGoal.note!!, goal = goalEntity).apply {
-      type = when {
-        updatedGoal.status == GoalStatus.FUTURE && this.goal!!.status == GoalStatus.REMOVED -> GoalNoteType.READDED
-        updatedGoal.status == GoalStatus.ACTIVE && this.goal!!.status == GoalStatus.REMOVED -> GoalNoteType.READDED
-        updatedGoal.status == GoalStatus.REMOVED -> GoalNoteType.REMOVED
-        updatedGoal.status == GoalStatus.ACHIEVED -> GoalNoteType.ACHIEVED
-        else -> GoalNoteType.PROGRESS
-      }
+    return goalRepository.save(goalEntity)
+  }
+
+  @Transactional
+  fun reAddGoal(goalUuid: UUID, updatedGoal: Goal): GoalEntity {
+    if (updatedGoal.note.isNullOrEmpty()) { // note is mandatory for a re-added goal
+      throw ValidationException("Updated goal note must not be empty")
     }
-    goalEntity.notes.add(goalNoteEntity)
 
-    // If the goal was re-added then we need to set the order of the goal to the highest value
-    // so that it appears last in the plan overview.
-    if (goalNoteEntity.type == GoalNoteType.READDED) {
-      val planVersionEntity: PlanVersionEntity
-      try {
-        planVersionEntity = planVersionRepository.findByUuid(goalEntity.planVersion!!.uuid)
-      } catch (e: EmptyResultDataAccessException) {
-        throw NotFoundException("A Plan with this UUID was not found: $goalEntity.planVersion!!.uuid")
-      }
+    val goalEntity = goalRepository.getGoalByUuid(goalUuid)
 
-      val highestGoalOrder = planVersionEntity.goals.maxByOrNull { g -> g.goalOrder }?.goalOrder ?: 0
-      goalEntity.goalOrder = highestGoalOrder + 1
+    goalEntity.notes.add(
+      GoalNoteEntity(note = updatedGoal.note, goal = goalEntity, type = GoalNoteType.READDED),
+    )
 
-      // also need to set the new targetDate
-      if (updatedGoal.targetDate != null) {
-        goalEntity.targetDate = LocalDate.parse(updatedGoal.targetDate)
-        goalEntity.status = GoalStatus.ACTIVE
-        goalEntity.statusDate = LocalDateTime.now()
-      } else {
-        goalEntity.targetDate = null
-        goalEntity.status = GoalStatus.FUTURE
-        goalEntity.statusDate = LocalDateTime.now()
-      }
+    val planVersionEntity: PlanVersionEntity
+    try {
+      planVersionEntity = planVersionRepository.findByUuid(goalEntity.planVersion!!.uuid)
+    } catch (e: EmptyResultDataAccessException) {
+      throw NotFoundException("A Plan with this UUID was not found: $goalEntity.planVersion!!.uuid")
+    }
+
+    val highestGoalOrder = planVersionEntity.goals.maxByOrNull { g -> g.goalOrder }?.goalOrder ?: 0
+    goalEntity.goalOrder = highestGoalOrder + 1
+
+    // also need to set the new targetDate
+    if (updatedGoal.targetDate != null) {
+      goalEntity.targetDate = LocalDate.parse(updatedGoal.targetDate)
+      goalEntity.status = GoalStatus.ACTIVE
+      goalEntity.statusDate = LocalDateTime.now()
     } else {
-      goalEntity.status = updatedGoal.status!!
+      goalEntity.targetDate = null
+      goalEntity.status = GoalStatus.FUTURE
       goalEntity.statusDate = LocalDateTime.now()
     }
 

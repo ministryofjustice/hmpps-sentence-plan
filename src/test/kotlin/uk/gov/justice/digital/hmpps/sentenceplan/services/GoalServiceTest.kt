@@ -4,6 +4,7 @@ import io.mockk.every
 import io.mockk.junit5.MockKExtension
 import io.mockk.mockk
 import io.mockk.slot
+import jakarta.validation.ValidationException
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
@@ -369,18 +370,38 @@ class GoalServiceTest {
     }
 
     @Test
-    fun `update goal with new note and status ACHIEVED should add note with Type ACHIEVED and not remove Related Areas of Need`() {
-      val goalStatusUpdate = Goal(
-        note = "Simple note update",
-        status = GoalStatus.ACHIEVED,
-      )
+    fun `Achieve goal with new note should add note with Type ACHIEVED and not remove Related Areas of Need`() {
+      val note = "Simple note update"
 
-      val savedGoal = goalService.updateGoalStatus(UUID.randomUUID(), goalStatusUpdate)
+      val savedGoal = goalService.achieveGoal(UUID.randomUUID(), note)
 
-      assertThat(savedGoal.notes.first().note).isEqualTo("Simple note update")
+      assertThat(savedGoal.notes.first().note).isEqualTo(note)
       assertThat(savedGoal.notes.first().type).isEqualTo(GoalNoteType.ACHIEVED)
       assertThat(savedGoal.status).isEqualTo(GoalStatus.ACHIEVED)
       assertThat(savedGoal.relatedAreasOfNeed?.size).isEqualTo(1)
+    }
+
+    @Test
+    fun `Remove goal with new note should add note with Type REMOVED and not remove Related Areas of Need`() {
+      val note = "Simple note update"
+
+      val savedGoal = goalService.removeGoal(UUID.randomUUID(), note)
+
+      assertThat(savedGoal.notes.first().note).isEqualTo(note)
+      assertThat(savedGoal.notes.first().type).isEqualTo(GoalNoteType.REMOVED)
+      assertThat(savedGoal.status).isEqualTo(GoalStatus.REMOVED)
+      assertThat(savedGoal.relatedAreasOfNeed?.size).isEqualTo(1)
+    }
+
+    @Test
+    fun `Remove goal with empty note should throw exception`() {
+      val note = ""
+
+      val exception = assertThrows<ValidationException> {
+        goalService.removeGoal(UUID.randomUUID(), note)
+      }
+
+      assertThat(exception.message).isEqualTo("Updated goal note must not be empty")
     }
 
     @Test
@@ -396,7 +417,7 @@ class GoalServiceTest {
         this.planVersion = newPlanVersionEntity
       }
 
-      val savedGoal = goalService.updateGoalStatus(UUID.randomUUID(), goalUpdate)
+      val savedGoal = goalService.reAddGoal(UUID.randomUUID(), goalUpdate)
 
       assertThat(savedGoal.notes.first().note).isEqualTo(goalUpdate.note)
       assertThat(savedGoal.notes.first().type).isEqualTo(GoalNoteType.READDED)
@@ -418,7 +439,7 @@ class GoalServiceTest {
         this.planVersion = newPlanVersionEntity
       }
 
-      val savedGoal = goalService.updateGoalStatus(UUID.randomUUID(), goalUpdate)
+      val savedGoal = goalService.reAddGoal(UUID.randomUUID(), goalUpdate)
 
       assertThat(savedGoal.notes.first().note).isEqualTo(goalUpdate.note)
       assertThat(savedGoal.notes.first().type).isEqualTo(GoalNoteType.READDED)
@@ -440,13 +461,27 @@ class GoalServiceTest {
         this.planVersion = newPlanVersionEntity
       }
 
-      val savedGoal = goalService.updateGoalStatus(UUID.randomUUID(), goalUpdate)
+      val savedGoal = goalService.reAddGoal(UUID.randomUUID(), goalUpdate)
 
       assertThat(savedGoal.notes.first().note).isEqualTo(goalUpdate.note)
       assertThat(savedGoal.notes.first().type).isEqualTo(GoalNoteType.READDED)
       assertThat(savedGoal.relatedAreasOfNeed?.size).isEqualTo(1)
       assertThat(savedGoal.status).isEqualTo(GoalStatus.ACTIVE)
       assertThat(savedGoal.targetDate).isEqualTo(LocalDate.parse(goalUpdate.targetDate!!))
+    }
+
+    @Test
+    fun `reAdded goal with missing note should throw exception`() {
+      val goalStatusUpdate = Goal(
+        note = "",
+        status = GoalStatus.ACTIVE,
+      )
+
+      val exception = assertThrows<ValidationException> {
+        goalService.reAddGoal(UUID.randomUUID(), goalStatusUpdate)
+      }
+
+      assertThat(exception.message).isEqualTo("Updated goal note must not be empty")
     }
   }
 

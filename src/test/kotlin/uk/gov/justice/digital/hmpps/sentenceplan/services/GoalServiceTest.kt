@@ -371,71 +371,34 @@ class GoalServiceTest {
 
     @Test
     fun `Achieve goal with new note should add note with Type ACHIEVED and not remove Related Areas of Need`() {
-      val goalStatusUpdate = Goal(
-        note = "Simple note update",
-        status = GoalStatus.ACHIEVED,
-      )
+      val note = "Simple note update"
 
-      val savedGoal = goalService.achieveGoal(UUID.randomUUID(), goalStatusUpdate)
+      val savedGoal = goalService.achieveGoal(UUID.randomUUID(), note)
 
-      assertThat(savedGoal.notes.first().note).isEqualTo("Simple note update")
+      assertThat(savedGoal.notes.first().note).isEqualTo(note)
       assertThat(savedGoal.notes.first().type).isEqualTo(GoalNoteType.ACHIEVED)
       assertThat(savedGoal.status).isEqualTo(GoalStatus.ACHIEVED)
       assertThat(savedGoal.relatedAreasOfNeed?.size).isEqualTo(1)
     }
 
     @Test
-    fun `Achieve goal with invalid status should throw exception`() {
-      val goalStatusUpdate = Goal(
-        note = "Simple note update",
-        status = GoalStatus.ACTIVE,
-      )
-
-      val exception = assertThrows<ValidationException> {
-        goalService.achieveGoal(UUID.randomUUID(), goalStatusUpdate)
-      }
-
-      assertThat(exception.message).isEqualTo("Updated Goal status must be ACHIEVED but was ${goalStatusUpdate.status}")
-    }
-
-    @Test
     fun `Remove goal with new note should add note with Type REMOVED and not remove Related Areas of Need`() {
-      val goalStatusUpdate = Goal(
-        note = "Simple note update",
-        status = GoalStatus.REMOVED,
-      )
+      val note = "Simple note update"
 
-      val savedGoal = goalService.removeGoal(UUID.randomUUID(), goalStatusUpdate)
+      val savedGoal = goalService.removeGoal(UUID.randomUUID(), note)
 
-      assertThat(savedGoal.notes.first().note).isEqualTo("Simple note update")
+      assertThat(savedGoal.notes.first().note).isEqualTo(note)
       assertThat(savedGoal.notes.first().type).isEqualTo(GoalNoteType.REMOVED)
       assertThat(savedGoal.status).isEqualTo(GoalStatus.REMOVED)
       assertThat(savedGoal.relatedAreasOfNeed?.size).isEqualTo(1)
     }
 
     @Test
-    fun `Remove goal with invalid status should throw exception`() {
-      val goalStatusUpdate = Goal(
-        note = "Simple note update",
-        status = GoalStatus.ACTIVE,
-      )
-
-      val exception = assertThrows<ValidationException> {
-        goalService.removeGoal(UUID.randomUUID(), goalStatusUpdate)
-      }
-
-      assertThat(exception.message).isEqualTo("Updated Goal status must be REMOVED but was ${goalStatusUpdate.status}")
-    }
-
-    @Test
     fun `Remove goal with empty note should throw exception`() {
-      val goalStatusUpdate = Goal(
-        note = "",
-        status = GoalStatus.REMOVED,
-      )
+      val note = ""
 
       val exception = assertThrows<ValidationException> {
-        goalService.removeGoal(UUID.randomUUID(), goalStatusUpdate)
+        goalService.removeGoal(UUID.randomUUID(), note)
       }
 
       assertThat(exception.message).isEqualTo("Updated goal note must not be empty")
@@ -508,46 +471,17 @@ class GoalServiceTest {
     }
 
     @Test
-    fun `reAdded goal with invalid status should throw exception`() {
+    fun `reAdded goal with missing note should throw exception`() {
       val goalStatusUpdate = Goal(
-        note = "Simple note update",
-        status = GoalStatus.ACHIEVED,
+        note = "",
+        status = GoalStatus.ACTIVE,
       )
 
       val exception = assertThrows<ValidationException> {
         goalService.reAddGoal(UUID.randomUUID(), goalStatusUpdate)
       }
 
-      assertThat(exception.message).isEqualTo("Updated Goal status must be ACTIVE or FUTURE but was ${goalStatusUpdate.status}")
-    }
-
-    @Test
-    fun `updating goal in progress with new note should add note with Type PROGRESS`() {
-      val goalStatusUpdate = Goal(
-        note = "Simple note update",
-        status = GoalStatus.ACTIVE,
-      )
-
-      val savedGoal = goalService.updateGoalStatus(UUID.randomUUID(), goalStatusUpdate)
-
-      assertThat(savedGoal.notes.first().note).isEqualTo("Simple note update")
-      assertThat(savedGoal.notes.first().type).isEqualTo(GoalNoteType.PROGRESS)
-      assertThat(savedGoal.status).isEqualTo(GoalStatus.ACTIVE)
-      assertThat(savedGoal.relatedAreasOfNeed?.size).isEqualTo(1)
-    }
-
-    @Test
-    fun `Updating goal with null status should throw exception`() {
-      val goalStatusUpdate = Goal(
-        note = "Simple note update",
-        status = null,
-      )
-
-      val exception = assertThrows<ValidationException> {
-        goalService.updateGoalStatus(UUID.randomUUID(), goalStatusUpdate)
-      }
-
-      assertThat(exception.message).isEqualTo("Updated Goal status must not be null")
+      assertThat(exception.message).isEqualTo("Updated goal note must not be empty")
     }
   }
 

@@ -189,53 +189,30 @@ class GoalService(
   }
 
   @Transactional
-  fun updateGoalStatus(goalUuid: UUID, updatedGoal: Goal): GoalEntity {
-    if (updatedGoal.status == null) {
-      throw ValidationException("Updated Goal status must not be null")
-    }
-
+  fun achieveGoal(goalUuid: UUID, note: String?): GoalEntity {
     val goalEntity = goalRepository.getGoalByUuid(goalUuid)
 
     goalEntity.notes.add(
-      GoalNoteEntity(note = updatedGoal.note!!, goal = goalEntity, type = GoalNoteType.PROGRESS),
+      GoalNoteEntity(note = note!!, goal = goalEntity, type = GoalNoteType.ACHIEVED),
     )
-    goalEntity.status = updatedGoal.status!!
+    goalEntity.status = GoalStatus.ACHIEVED
     goalEntity.statusDate = LocalDateTime.now()
 
     return goalRepository.save(goalEntity)
   }
 
   @Transactional
-  fun achieveGoal(goalUuid: UUID, updatedGoal: Goal): GoalEntity {
-    if (updatedGoal.status != GoalStatus.ACHIEVED) {
-      throw ValidationException("Updated Goal status must be ACHIEVED but was ${updatedGoal.status}")
-    }
-
-    val goalEntity = goalRepository.getGoalByUuid(goalUuid)
-
-    goalEntity.notes.add(
-      GoalNoteEntity(note = updatedGoal.note!!, goal = goalEntity, type = GoalNoteType.ACHIEVED),
-    )
-    goalEntity.status = updatedGoal.status!!
-    goalEntity.statusDate = LocalDateTime.now()
-
-    return goalRepository.save(goalEntity)
-  }
-
-  @Transactional
-  fun removeGoal(goalUuid: UUID, updatedGoal: Goal): GoalEntity {
-    if (updatedGoal.status != GoalStatus.REMOVED) {
-      throw ValidationException("Updated Goal status must be REMOVED but was ${updatedGoal.status}")
-    } else if (updatedGoal.note.isNullOrEmpty()) { // note is mandatory for a removed goal
+  fun removeGoal(goalUuid: UUID, note: String?): GoalEntity {
+    if (note.isNullOrEmpty()) { // note is mandatory for a removed goal
       throw ValidationException("Updated goal note must not be empty")
     }
 
     val goalEntity = goalRepository.getGoalByUuid(goalUuid)
 
     goalEntity.notes.add(
-      GoalNoteEntity(note = updatedGoal.note, goal = goalEntity, type = GoalNoteType.REMOVED),
+      GoalNoteEntity(note = note, goal = goalEntity, type = GoalNoteType.REMOVED),
     )
-    goalEntity.status = updatedGoal.status!!
+    goalEntity.status = GoalStatus.REMOVED
     goalEntity.statusDate = LocalDateTime.now()
 
     return goalRepository.save(goalEntity)
@@ -243,14 +220,14 @@ class GoalService(
 
   @Transactional
   fun reAddGoal(goalUuid: UUID, updatedGoal: Goal): GoalEntity {
-    if (updatedGoal.status != GoalStatus.ACTIVE && updatedGoal.status != GoalStatus.FUTURE) {
-      throw ValidationException("Updated Goal status must be ACTIVE or FUTURE but was ${updatedGoal.status}")
+    if (updatedGoal.note.isNullOrEmpty()) { // note is mandatory for a re-added goal
+      throw ValidationException("Updated goal note must not be empty")
     }
 
     val goalEntity = goalRepository.getGoalByUuid(goalUuid)
 
     goalEntity.notes.add(
-      GoalNoteEntity(note = updatedGoal.note!!, goal = goalEntity, type = GoalNoteType.READDED),
+      GoalNoteEntity(note = updatedGoal.note, goal = goalEntity, type = GoalNoteType.READDED),
     )
 
     val planVersionEntity: PlanVersionEntity

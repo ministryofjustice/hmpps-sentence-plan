@@ -64,7 +64,7 @@ class GoalController(private val service: GoalService) {
     @RequestBody achieveGoal: Goal,
   ): GoalEntity {
     val goal = Goal(status = GoalStatus.ACHIEVED, note = achieveGoal.note)
-    return service.updateGoalStatus(goalUuid, goal)
+    return service.achieveGoal(goalUuid, goal)
   }
 
   @PostMapping("/{goalUuid}/remove")
@@ -75,7 +75,7 @@ class GoalController(private val service: GoalService) {
     @RequestBody removeGoal: Goal,
   ): GoalEntity {
     val goal = Goal(status = GoalStatus.REMOVED, note = removeGoal.note)
-    return service.updateGoalStatus(goalUuid, goal)
+    return service.removeGoal(goalUuid, goal)
   }
 
   @PostMapping("/{goalUuid}/readd")
@@ -86,7 +86,7 @@ class GoalController(private val service: GoalService) {
     @RequestBody reAddGoal: Goal,
   ): GoalEntity {
     reAddGoal.status = if (reAddGoal.targetDate.isNullOrEmpty()) GoalStatus.FUTURE else GoalStatus.ACTIVE
-    return service.updateGoalStatus(goalUuid, reAddGoal)
+    return service.reAddGoal(goalUuid, reAddGoal)
   }
 
   @PatchMapping("/{goalUuid}")

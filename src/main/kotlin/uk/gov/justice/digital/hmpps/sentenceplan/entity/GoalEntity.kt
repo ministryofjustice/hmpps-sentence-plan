@@ -56,6 +56,9 @@ class GoalEntity(
   @Column(name = "target_date")
   var targetDate: LocalDate? = null,
 
+  @Column(name = "reminder_date")
+  var reminderDate: LocalDate? = null,
+
   @Column(name = "created_date")
   @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'")
   val createdDate: LocalDateTime = LocalDateTime.now(),
@@ -124,6 +127,13 @@ class GoalEntity(
       if (goal.status == GoalStatus.FUTURE) {
         this.targetDate = null
       }
+    }
+
+    if(goal.status == GoalStatus.FUTURE) {
+      this.reminderDate = goal.reminderDate?.let { LocalDate.parse(it) }
+    }
+    else {
+      this.reminderDate = null
     }
 
     // If we receive a goal note, check if there is an ACHIEVED or REMOVED status and create a note with that.

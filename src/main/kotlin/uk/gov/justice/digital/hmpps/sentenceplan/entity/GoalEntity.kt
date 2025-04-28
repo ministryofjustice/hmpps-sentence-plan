@@ -129,10 +129,9 @@ class GoalEntity(
       }
     }
 
-    if(goal.status == GoalStatus.FUTURE) {
+    if (goal.status == GoalStatus.FUTURE) {
       this.reminderDate = goal.reminderDate?.let { LocalDate.parse(it) }
-    }
-    else {
+    } else {
       this.reminderDate = null
     }
 

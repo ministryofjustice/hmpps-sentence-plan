@@ -61,6 +61,7 @@ class GoalService(
       title = goal.title,
       areaOfNeed = areaOfNeedEntity,
       targetDate = goal.targetDate?.let { LocalDate.parse(it) },
+      reminderDate = if (goal.status == GoalStatus.FUTURE) goal.reminderDate?.let { LocalDate.parse(it) } else null,
       status = if (goal.targetDate != null) GoalStatus.ACTIVE else GoalStatus.FUTURE,
       statusDate = LocalDateTime.now(),
       planVersion = currentPlanVersion,
@@ -197,6 +198,7 @@ class GoalService(
     )
     goalEntity.status = GoalStatus.ACHIEVED
     goalEntity.statusDate = LocalDateTime.now()
+    goalEntity.reminderDate = null
 
     return goalRepository.save(goalEntity)
   }
@@ -214,6 +216,7 @@ class GoalService(
     )
     goalEntity.status = GoalStatus.REMOVED
     goalEntity.statusDate = LocalDateTime.now()
+    goalEntity.reminderDate = null
 
     return goalRepository.save(goalEntity)
   }
@@ -243,10 +246,12 @@ class GoalService(
     // also need to set the new targetDate
     if (updatedGoal.targetDate != null) {
       goalEntity.targetDate = LocalDate.parse(updatedGoal.targetDate)
+      goalEntity.reminderDate = null
       goalEntity.status = GoalStatus.ACTIVE
       goalEntity.statusDate = LocalDateTime.now()
     } else {
       goalEntity.targetDate = null
+      goalEntity.reminderDate = updatedGoal.reminderDate?.let { LocalDate.parse(it) }
       goalEntity.status = GoalStatus.FUTURE
       goalEntity.statusDate = LocalDateTime.now()
     }

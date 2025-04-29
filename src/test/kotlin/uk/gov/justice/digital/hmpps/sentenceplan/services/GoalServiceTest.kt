@@ -410,6 +410,7 @@ class GoalServiceTest {
         note = "The goal has been re-added",
         status = GoalStatus.ACTIVE,
         targetDate = null,
+        reminderDate = LocalDate.now().plusWeeks(10).toString(),
       )
 
       goalToUpdate.apply {
@@ -424,6 +425,7 @@ class GoalServiceTest {
       assertThat(savedGoal.relatedAreasOfNeed?.size).isEqualTo(1)
       assertThat(savedGoal.status).isEqualTo(GoalStatus.FUTURE)
       assertThat(savedGoal.targetDate).isNull()
+      assertThat(savedGoal.reminderDate).isEqualTo(LocalDate.parse(goalUpdate.reminderDate!!))
     }
 
     @Test
@@ -432,6 +434,7 @@ class GoalServiceTest {
         note = "The goal has been re-added",
         status = GoalStatus.FUTURE,
         targetDate = null,
+        reminderDate = LocalDate.now().plusWeeks(10).toString(),
       )
 
       goalToUpdate.apply {
@@ -446,6 +449,7 @@ class GoalServiceTest {
       assertThat(savedGoal.relatedAreasOfNeed?.size).isEqualTo(1)
       assertThat(savedGoal.status).isEqualTo(GoalStatus.FUTURE)
       assertThat(savedGoal.targetDate).isNull()
+      assertThat(savedGoal.reminderDate).isEqualTo(LocalDate.parse(goalUpdate.reminderDate!!))
     }
 
     @Test
@@ -468,6 +472,7 @@ class GoalServiceTest {
       assertThat(savedGoal.relatedAreasOfNeed?.size).isEqualTo(1)
       assertThat(savedGoal.status).isEqualTo(GoalStatus.ACTIVE)
       assertThat(savedGoal.targetDate).isEqualTo(LocalDate.parse(goalUpdate.targetDate!!))
+      assertThat(savedGoal.reminderDate).isNull()
     }
 
     @Test

@@ -1,10 +1,11 @@
-INSERT INTO goal (uuid, title, area_of_need_id, target_date, created_date, created_by_id, last_updated_date,
+INSERT INTO goal (uuid, title, area_of_need_id, target_date, reminder_date, created_date, created_by_id, last_updated_date,
                   last_updated_by_id, goal_status, status_date,
                   plan_version_id, goal_order)
 SELECT 'ede47f7f-8431-4ff9-80ec-2dd3a8db3841',
        'GoalControllerTest deleteGoal',
        aon.id,
        '2024-06-27',
+       null,
        now(),
        practitioner.id,
        now(),

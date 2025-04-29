@@ -20,7 +20,6 @@ import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.sentenceplan.config.ErrorResponse
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Goal
 import uk.gov.justice.digital.hmpps.sentenceplan.data.GoalOrder
-import uk.gov.justice.digital.hmpps.sentenceplan.data.GoalStatusUpdate
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Step
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalNoteType
@@ -350,6 +349,7 @@ class GoalControllerTest : IntegrationTestBase() {
         title = "Update goal target date test",
         areaOfNeed = "Accommodation",
         targetDate = "2024-06-25",
+        reminderDate = null,
       )
 
       val goalUuid = "778b8e52-5927-42d4-9c05-7029ef3c6f6d"
@@ -365,6 +365,7 @@ class GoalControllerTest : IntegrationTestBase() {
 
       assertThat(goalEntity?.title).isEqualTo(goalRequestBody.title)
       assertThat(goalEntity?.status).isEqualTo(GoalStatus.ACTIVE)
+      assertThat(goalEntity?.reminderDate).isNull()
     }
 
     @Test
@@ -374,6 +375,7 @@ class GoalControllerTest : IntegrationTestBase() {
         areaOfNeed = "Accommodation",
         targetDate = null,
         status = GoalStatus.FUTURE,
+        reminderDate = "2024-06-25",
       )
 
       val goalUuid = "778b8e52-5927-42d4-9c05-7029ef3c6f6d"
@@ -389,6 +391,7 @@ class GoalControllerTest : IntegrationTestBase() {
 
       assertThat(goalEntity?.title).isEqualTo(goalRequestBody.title)
       assertThat(goalEntity?.targetDate).isNull()
+      assertThat(goalEntity?.reminderDate).isEqualTo("2024-06-25")
       assertThat(goalEntity?.status).isEqualTo(GoalStatus.FUTURE)
     }
 
@@ -399,6 +402,7 @@ class GoalControllerTest : IntegrationTestBase() {
         title = "Change active goal into future goal test",
         areaOfNeed = "Accommodation",
         status = GoalStatus.FUTURE,
+        reminderDate = "2024-06-25",
       )
 
       val goalUuid = "31d7e986-4078-4f5c-af1d-115f9ba3722d"
@@ -414,6 +418,7 @@ class GoalControllerTest : IntegrationTestBase() {
 
       assertThat(goalEntity?.title).isEqualTo(goalRequestBody.title)
       assertThat(goalEntity?.targetDate).isNull()
+      assertThat(goalEntity?.reminderDate).isEqualTo("2024-06-25")
       assertThat(goalEntity?.status).isEqualTo(GoalStatus.FUTURE)
     }
 
@@ -643,7 +648,7 @@ class GoalControllerTest : IntegrationTestBase() {
     @Test
     open fun `re-add goal with a note and no target date`() {
       val goalUuid = "31d7e986-4078-4f5c-af1d-115f9ba3722d"
-      val note = Goal(note = "Re-adding note")
+      val note = Goal(note = "Re-adding note", reminderDate = LocalDate.now().plusWeeks(20).toString())
 
       // If you goalRepository.findByUuid() here, the test will fail.
 
@@ -657,6 +662,7 @@ class GoalControllerTest : IntegrationTestBase() {
           val goal = response.responseBody
           assertThat(goal.status).isEqualTo(GoalStatus.FUTURE)
           assertThat(goal.relatedAreasOfNeed).isNotEmpty()
+          assertThat(goal.reminderDate).isEqualTo(LocalDate.now().plusWeeks(20))
           assertThat(goal.notes.first().note).isEqualTo("Re-adding note")
           assertThat(goal.notes.first().type).isEqualTo(GoalNoteType.READDED)
         }
@@ -685,6 +691,30 @@ class GoalControllerTest : IntegrationTestBase() {
         }
     }
 
+    @Test
+    fun `re-add goal with a note and a reminder date`() {
+      val goalUuid = "778b8e52-5927-42d4-9c05-7029ef3c6f6d" // goal for the future
+      val reAddGoal = Goal(note = "Re-adding note", targetDate = null, reminderDate = LocalDate.now().plusWeeks(20).format(DateTimeFormatter.ISO_LOCAL_DATE))
+
+      // If you goalRepository.findByUuid() here, the test will fail.
+
+      webTestClient.post().uri("/goals/$goalUuid/readd").header("Content-Type", "application/json")
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_READ", "ROLE_SENTENCE_PLAN_WRITE")))
+        .bodyValue(reAddGoal)
+        .exchange()
+        .expectStatus().isOk
+        .expectBody<GoalEntity>()
+        .consumeWith { response ->
+          val goal = response.responseBody
+          assertThat(goal?.status).isEqualTo(GoalStatus.FUTURE)
+          assertThat(goal?.reminderDate).isEqualTo(LocalDate.now().plusWeeks(20))
+          assertThat(goal?.targetDate).isNull()
+          assertThat(goal?.relatedAreasOfNeed).isEmpty()
+          assertThat(goal?.notes?.first()?.note).isEqualTo("Re-adding note")
+          assertThat(goal?.notes?.first()?.type).isEqualTo(GoalNoteType.READDED)
+        }
+    }
+
     /** currently unsupported in GoalService
      @Test
      @Transactional
@@ -705,61 +735,6 @@ class GoalControllerTest : IntegrationTestBase() {
      assertThat(goal.relatedAreasOfNeed).isNotEmpty()
      assertThat(goal.notes.size).isEqualTo(0)
      }*/
-  }
-
-  @Nested
-  @DisplayName("updateGoal")
-  @Sql(scripts = [ "/db/test/plan_data.sql", "/db/test/goals_data.sql", "/db/test/related_area_of_need_data.sql" ], executionPhase = BEFORE_TEST_CLASS)
-  @Sql(scripts = [ "/db/test/related_area_of_need_cleanup.sql", "/db/test/goals_cleanup.sql", "/db/test/plan_cleanup.sql" ], executionPhase = AFTER_TEST_CLASS)
-  open inner class UpdateGoalTests {
-
-    @Test
-    @Transactional
-    open fun `update goal status without a note`() {
-      val goalStatusUpdate = GoalStatusUpdate(
-        status = GoalStatus.FUTURE,
-        note = "",
-      )
-      val goalUuid = "31d7e986-4078-4f5c-af1d-115f9ba3722d"
-
-      // If you goalRepository.findByUuid() here, the test will fail.
-
-      webTestClient.patch().uri("/goals/$goalUuid").header("Content-Type", "application/json")
-        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_READ", "ROLE_SENTENCE_PLAN_WRITE")))
-        .bodyValue(goalStatusUpdate)
-        .exchange()
-        .expectStatus().isOk
-
-      val goal = goalRepository.getGoalByUuid(UUID.fromString(goalUuid))
-      assertThat(goal.status).isEqualTo(GoalStatus.FUTURE)
-      assertThat(goal.relatedAreasOfNeed).isNotEmpty()
-      assertThat(goal.notes.first().note).isEqualTo("")
-      assertThat(goal.notes.first().type).isEqualTo(GoalNoteType.PROGRESS)
-    }
-
-    @Test
-    @Transactional
-    open fun `update goal status with a note and related areas of need are preserved`() {
-      val goalStatusUpdate = GoalStatusUpdate(
-        status = GoalStatus.FUTURE,
-        note = "A note",
-      )
-      val goalUuid = "31d7e986-4078-4f5c-af1d-115f9ba3722d"
-
-      // If you goalRepository.findByUuid() here, the test will fail.
-
-      webTestClient.patch().uri("/goals/$goalUuid").header("Content-Type", "application/json")
-        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_READ", "ROLE_SENTENCE_PLAN_WRITE")))
-        .bodyValue(goalStatusUpdate)
-        .exchange()
-        .expectStatus().isOk
-
-      val goal = goalRepository.getGoalByUuid(UUID.fromString(goalUuid))
-      assertThat(goal.status).isEqualTo(GoalStatus.FUTURE)
-      assertThat(goal.relatedAreasOfNeed).isNotEmpty()
-      assertThat(goal.notes.first().note).isEqualTo("A note")
-      assertThat(goal.notes.first().type).isEqualTo(GoalNoteType.PROGRESS)
-    }
   }
 
   @Nested

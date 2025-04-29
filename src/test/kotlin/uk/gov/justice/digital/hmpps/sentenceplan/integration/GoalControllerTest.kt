@@ -74,7 +74,6 @@ class GoalControllerTest : IntegrationTestBase() {
       title = "abc",
       areaOfNeed = areaOfNeedName,
       targetDate = LocalDate.now().toString(),
-      reminderDate = null,
     )
   }
 
@@ -623,7 +622,7 @@ class GoalControllerTest : IntegrationTestBase() {
     @Transactional
     open fun `remove goal without a note should fail`() {
       val goalUuid = "31d7e986-4078-4f5c-af1d-115f9ba3722d"
-      val note = Goal(note = "", reminderDate = LocalDate.now().plusWeeks(20).toString())
+      val note = Goal(note = "")
 
       // If you goalRepository.findByUuid() here, the test will fail.
 
@@ -663,6 +662,7 @@ class GoalControllerTest : IntegrationTestBase() {
           val goal = response.responseBody
           assertThat(goal.status).isEqualTo(GoalStatus.FUTURE)
           assertThat(goal.relatedAreasOfNeed).isNotEmpty()
+          assertThat(goal.reminderDate).isEqualTo(LocalDate.now().plusWeeks(20))
           assertThat(goal.notes.first().note).isEqualTo("Re-adding note")
           assertThat(goal.notes.first().type).isEqualTo(GoalNoteType.READDED)
         }

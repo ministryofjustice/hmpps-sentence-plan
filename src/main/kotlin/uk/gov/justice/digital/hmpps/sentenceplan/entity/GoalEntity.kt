@@ -57,6 +57,7 @@ class GoalEntity(
   var targetDate: LocalDate? = null,
 
   @Column(name = "reminder_date")
+  @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
   var reminderDate: LocalDate? = null,
 
   @Column(name = "created_date")

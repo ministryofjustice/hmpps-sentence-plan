@@ -249,7 +249,7 @@ class GoalService(
       goalEntity.statusDate = LocalDateTime.now()
     } else {
       goalEntity.targetDate = null
-      goalEntity.reminderDate = LocalDate.parse(updatedGoal.reminderDate)
+      goalEntity.reminderDate = updatedGoal.reminderDate?.let { LocalDate.parse(it) }
       goalEntity.status = GoalStatus.FUTURE
       goalEntity.statusDate = LocalDateTime.now()
     }

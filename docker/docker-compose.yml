@@ -53,7 +53,6 @@ services:
       API_CLIENT_ID: sentence-plan-api-client
       API_CLIENT_SECRET: sentence-plan-api-client
       HMPPS_AUTH_BASE_URL: http://hmpps-auth:9090
-      ARNS_API_BASE_URL: http://wiremock:8080/arns-api
       DELIUS_API_BASE_URL: http://wiremock:8080/delius-api
 
   wiremock:

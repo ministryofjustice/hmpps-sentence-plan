@@ -9,7 +9,6 @@ generic-service:
 
   env:
     HMPPS_AUTH_BASE_URL: https://sign-in.hmpps.service.justice.gov.uk
-    ARNS_API_BASE_URL: https://assess-risks-and-needs.hmpps.service.justice.gov.uk
     DELIUS_API_BASE_URL: https://sentence-plan-and-delius.hmpps.service.justice.gov.uk
 
 # CloudPlatform AlertManager receiver to route prometheus alerts to slack

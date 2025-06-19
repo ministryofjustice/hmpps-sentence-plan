@@ -27,7 +27,9 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.RollbackPlanRequ
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.SignRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.SoftDeletePlanVersionsRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.response.GetPlanResponse
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.response.PlanVersionDetails
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.response.PlanVersionResponse
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.response.PlanVersionsResponse
 import uk.gov.justice.digital.hmpps.sentenceplan.exceptions.NotFoundException
 import uk.gov.justice.digital.hmpps.sentenceplan.services.PlanService
 import java.util.UUID
@@ -98,6 +100,43 @@ class CoordinatorController(
     } catch (_: NotFoundException) {
       throw NoResourceFoundException(HttpMethod.GET, "Could not find a plan with ID: $planUuid")
     }
+  }
+
+  @GetMapping("/{planUuid}/all")
+  @Operation(
+    description = "Gets a list of versions for the given plan.",
+    tags = ["Integrations"],
+  )
+  @ApiResponses(
+    value = [
+      ApiResponse(responseCode = "200", description = "Plan versions retrieved successfully"),
+      ApiResponse(
+        responseCode = "404",
+        description = "Plan or plan versions not found",
+        content = arrayOf(Content(schema = Schema(implementation = ErrorResponse::class))),
+      ),
+      ApiResponse(
+        responseCode = "409",
+        description = "Plan could not be loaded. See details in error message.",
+        content = arrayOf(Content(schema = Schema(implementation = ErrorResponse::class))),
+      ),
+      ApiResponse(
+        responseCode = "500",
+        description = "Unexpected error",
+        content = arrayOf(Content(schema = Schema(implementation = ErrorResponse::class))),
+      ),
+    ],
+  )
+  @ResponseStatus(HttpStatus.OK)
+  fun getPlanVersions(
+    @PathVariable planUuid: UUID,
+  ): PlanVersionsResponse = try {
+    planService.getPlanVersionsByPlanUuid(planUuid)
+      .filter { !it.softDeleted }
+      .run(PlanVersionDetails::fromAll)
+      .sortedByDescending { it.createdAt }
+  } catch (_: NotFoundException) {
+    throw NoResourceFoundException(HttpMethod.GET, "Could not find a plan with ID: $planUuid")
   }
 
   @PostMapping("/{planUuid}/sign")

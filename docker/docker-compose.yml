@@ -50,7 +50,7 @@ services:
     networks:
       - hmpps
     volumes:
-      - ../wiremock/mappings:/home/wiremock/mappings
+      - ../wiremock/delius:/home/wiremock/mappings
     entrypoint: [ "/docker-entrypoint.sh", "--global-response-templating", "--disable-gzip", "--verbose" ]
 
 networks:

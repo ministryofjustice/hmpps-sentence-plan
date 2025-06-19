@@ -45,10 +45,10 @@ spring:
             client-secret: ${api.client-secret}
 
 db:
-  name: sentence-plan
+  name: postgres
   endpoint: localhost:5432
-  username: postgres
-  password: postgres
+  username: root
+  password: dev
 
 server:
   port: 8080

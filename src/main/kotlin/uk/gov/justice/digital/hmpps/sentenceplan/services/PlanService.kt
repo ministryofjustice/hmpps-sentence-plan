@@ -40,6 +40,10 @@ class PlanService(
 
   fun getPlanVersionByPlanUuidAndPlanVersion(planUuid: UUID, planVersion: Int): PlanVersionEntity = planVersionRepository.getVersionByUuidAndVersion(planUuid, planVersion)
 
+  fun getPlanVersionsByPlanUuid(planUuid: UUID): List<PlanVersionEntity> = planRepository.getByUuid(planUuid).id
+    ?.run(planVersionRepository::findAllByPlanId)
+    .orEmpty()
+
   fun rollbackVersion(planUuid: UUID, versionNumber: Int): PlanVersionEntity {
     val version = planVersionRepository.getVersionByUuidAndVersion(planUuid, versionNumber)
     version.status = CountersigningStatus.ROLLED_BACK

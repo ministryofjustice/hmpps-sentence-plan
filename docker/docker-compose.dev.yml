@@ -1,5 +1,5 @@
 services:
-  api:
+  sp-api:
     image: ghcr.io/ministryofjustice/hmpps-sentence-plan:local
     build:
       target: development

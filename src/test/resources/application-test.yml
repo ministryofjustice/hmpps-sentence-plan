@@ -9,4 +9,4 @@ hmpps-auth:
   base-url: http://localhost:9090
 
 delius-api:
-  base-url: http://localhost:9094/delius-api
+  base-url: http://localhost:9094

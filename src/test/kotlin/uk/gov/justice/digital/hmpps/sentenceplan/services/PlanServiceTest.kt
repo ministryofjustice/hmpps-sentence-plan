@@ -127,6 +127,42 @@ class PlanServiceTest {
   }
 
   @Nested
+  @DisplayName("getPlanVersionsByPlanUuid")
+  inner class GetPlanVersionsByPlanUuid {
+
+    @Test
+    fun `should return all plan versions when plan exists with given UUID`() {
+      planVersionEntities = listOf(planVersionEntity, newPlanVersionEntity)
+
+      every { planRepository.getByUuid(planEntity.uuid) } returns planEntity
+      every { planVersionRepository.findAllByPlanId(planEntity.id!!) } returns planVersionEntities
+
+      val result = planService.getPlanVersionsByPlanUuid(planEntity.uuid)
+
+      assertEquals(planVersionEntities, result)
+
+      verify(exactly = 1) { planRepository.getByUuid(planEntity.uuid) }
+      verify(exactly = 1) { planVersionRepository.findAllByPlanId(planEntity.id!!) }
+    }
+
+    @Test
+    fun `should throw an exception when plan does not exist`() {
+      planVersionEntities = listOf(planVersionEntity, newPlanVersionEntity)
+
+      every { planRepository.getByUuid(planEntity.uuid) } throws NotFoundException("plan not found")
+
+      val exception = assertThrows(NotFoundException::class.java) {
+        planService.getPlanVersionsByPlanUuid(planEntity.uuid)
+      }
+
+      assertEquals("plan not found", exception.message)
+
+      verify(exactly = 1) { planRepository.getByUuid(planEntity.uuid) }
+      verify(exactly = 0) { planVersionRepository.findAllByPlanId(planEntity.id!!) }
+    }
+  }
+
+  @Nested
   @DisplayName("createPlan")
   inner class CreatePlan {
 

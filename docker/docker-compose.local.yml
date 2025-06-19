@@ -1,0 +1,29 @@
+services:
+  postgres:
+    ports:
+      - "5432:5432"
+
+  hmpps-auth:
+    ports:
+      - "9090:9090"
+
+  forward-proxy:
+    image: nginx:latest
+    networks:
+      - hmpps
+    ports:
+      - "9091:9091"
+    depends_on:
+      - hmpps-auth
+    volumes:
+      - ./forward-proxy/nginx.conf:/etc/nginx/nginx.conf
+
+  sp-api:
+    depends_on:
+      - forward-proxy
+    ports:
+      - "8090:8080"
+
+  delius:
+    ports:
+      - "9094:8080"

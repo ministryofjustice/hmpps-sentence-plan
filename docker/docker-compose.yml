@@ -1,65 +1,57 @@
 services:
   postgres:
     image: postgres:16
-    restart: always
-    ports:
-      - "5432:5432"
+    networks:
+      - hmpps
     environment:
-      POSTGRES_DB: sentence-plan
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: dev
+    tmpfs:
+      - /var/lib/postgresql
 
   hmpps-auth:
     image: quay.io/hmpps/hmpps-auth:latest
+    networks:
+      - hmpps
     healthcheck:
       test: ["CMD", "curl", "-f", "http://hmpps-auth:9090/auth/health"]
       interval: 5s
       retries: 100
-    ports:
-      - "9090:9090"
     environment:
       SERVER_PORT: 9090
       SPRING_PROFILES_ACTIVE: dev
       APPLICATION_AUTHENTICATION_UI_ALLOWLIST: 0.0.0.0/0
       LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_SECURITY: DEBUG
 
-  forward-proxy:
-    image: nginx:latest
-    ports:
-      - "9091:9091"
-    depends_on:
-      - hmpps-auth
-    volumes:
-      - ./hmpps-auth-proxy/nginx.conf:/etc/nginx/nginx.conf
-
-  api:
+  sp-api:
     image: ghcr.io/ministryofjustice/hmpps-sentence-plan:${APP_VERSION:-latest}
+    networks:
+      - hmpps
     build:
       context: ../
     depends_on:
       - postgres
       - hmpps-auth
-      - forward-proxy
-      - wiremock
+      - delius
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://api:8080/health/ping"]
+      test: ["CMD", "curl", "-f", "http://sp-api:8080/health/ping"]
       interval: 5s
       retries: 100
-    ports:
-      - "8080:8080"
     environment:
       SERVER_PORT: 8080
       DB_ENDPOINT: postgres:5432
       API_CLIENT_ID: sentence-plan-api-client
       API_CLIENT_SECRET: sentence-plan-api-client
       HMPPS_AUTH_BASE_URL: http://hmpps-auth:9090
-      DELIUS_API_BASE_URL: http://wiremock:8080/delius-api
+      DELIUS_API_BASE_URL: http://delius:8080
 
-  wiremock:
+  delius:
     image: wiremock/wiremock:latest
-    container_name: "wiremock"
-    ports:
-      - "9094:8080"
+    networks:
+      - hmpps
     volumes:
       - ../wiremock/mappings:/home/wiremock/mappings
     entrypoint: [ "/docker-entrypoint.sh", "--global-response-templating", "--disable-gzip", "--verbose" ]
+
+networks:
+  hmpps:

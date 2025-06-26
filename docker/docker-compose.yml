@@ -10,7 +10,7 @@ services:
       POSTGRES_PASSWORD: postgres
 
   hmpps-auth:
-    image: quay.io/hmpps/hmpps-auth:latest
+    image: quay.io/hmpps/hmpps-auth:2025-05-02.28494.105ac61
     healthcheck:
       test: ["CMD", "curl", "-f", "http://hmpps-auth:9090/auth/health"]
       interval: 5s

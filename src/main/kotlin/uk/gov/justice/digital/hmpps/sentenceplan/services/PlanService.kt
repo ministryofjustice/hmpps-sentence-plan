@@ -266,4 +266,16 @@ class PlanService(
       throw NotFoundException("Plan not found for id $planUuid")
     }
   }
+
+  @Transactional
+  fun associate(planUuid: UUID, crn: String): PlanEntity {
+    val planEntity = planRepository.getByUuid(planUuid)
+
+    if (planEntity.crn.isNullOrEmpty()) {
+      planEntity.crn = crn
+      planRepository.save(planEntity)
+    }
+
+    return planEntity
+  }
 }

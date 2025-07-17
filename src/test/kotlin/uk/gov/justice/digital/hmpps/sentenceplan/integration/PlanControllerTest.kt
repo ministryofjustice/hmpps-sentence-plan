@@ -25,6 +25,7 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.AreaOfNeedEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalStatus
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanAgreementStatus
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionEntity
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -350,6 +351,57 @@ class PlanControllerTest : IntegrationTestBase() {
       assertThat(notes[2].goalTitle).isNull()
       assertThat(notes[2].goalUuid).isNull()
       assertThat(notes[2].createdBy).isEqualTo("test user")
+    }
+  }
+
+  @Nested
+  @DisplayName("associate")
+  @TestMethodOrder(MethodOrderer.OrderAnnotation::class)
+  @Sql(scripts = [ "/db/test/plan_data.sql" ], executionPhase = BEFORE_TEST_CLASS)
+  @Sql(scripts = [ "/db/test/plan_cleanup.sql" ], executionPhase = AFTER_TEST_CLASS)
+  inner class AssosicatePlan {
+
+    @Test
+    @Order(1)
+    fun `Associate a plan Uuid with a CRN`() {
+      val crn = "X123456"
+      val planEntity: PlanEntity? = webTestClient.put().uri("/plans/associate/$testPlanUuid/$crn")
+        .header("Content-Type", "application/json")
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_READ", "ROLE_SENTENCE_PLAN_WRITE")))
+        .exchange()
+        .expectStatus().isAccepted
+        .expectBody<PlanEntity>()
+        .returnResult().responseBody
+
+      assertThat(planEntity?.crn).isNotNull()
+      assertThat(planEntity?.crn).isEqualTo(crn)
+    }
+
+    @Test
+    @Order(2)
+    fun `plan has already has CRN associated`() {
+      val crn = "OTHERCRN"
+      val planEntity: PlanEntity? = webTestClient.put().uri("/plans/associate/$testPlanUuid/$crn")
+        .header("Content-Type", "application/json")
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_READ", "ROLE_SENTENCE_PLAN_WRITE")))
+        .exchange()
+        .expectStatus().isAccepted
+        .expectBody<PlanEntity>()
+        .returnResult().responseBody
+
+      assertThat(planEntity?.crn).isNotNull()
+      assertThat(planEntity?.crn).isEqualTo("X123456")
+    }
+
+    @Test
+    fun `plan not found`() {
+      val crn = "X123456"
+      val invalidPlanUuid = UUID.randomUUID()
+      webTestClient.put().uri("/plans/associate/$invalidPlanUuid/$crn")
+        .header("Content-Type", "application/json")
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_READ", "ROLE_SENTENCE_PLAN_WRITE")))
+        .exchange()
+        .expectStatus().isEqualTo(HttpStatus.NOT_FOUND)
     }
   }
 }

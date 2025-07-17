@@ -3,10 +3,10 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.springframework.boot.gradle.tasks.run.BootRun
 
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "8.2.0"
-  kotlin("plugin.spring") version "2.1.21"
-  kotlin("plugin.jpa") version "2.1.21"
-  id("org.openapi.generator") version "7.13.0"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "8.3.1"
+  kotlin("plugin.spring") version "2.2.0"
+  kotlin("plugin.jpa") version "2.2.0"
+  id("org.openapi.generator") version "7.14.0"
   jacoco
 }
 
@@ -16,7 +16,7 @@ configurations {
 
 dependencies {
 
-  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:1.4.6")
+  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:1.4.8")
   implementation("org.springframework.boot:spring-boot-starter-webflux")
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.9")
 
@@ -26,8 +26,8 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
 
   implementation("com.vladmihalcea:hibernate-types-60:2.21.1")
-  implementation("org.flywaydb:flyway-core:11.9.2")
-  runtimeOnly("org.flywaydb:flyway-database-postgresql:11.9.2")
+  implementation("org.flywaydb:flyway-core:11.10.2")
+  runtimeOnly("org.flywaydb:flyway-database-postgresql:11.10.2")
   runtimeOnly("org.postgresql:postgresql")
 
   // Test dependencies

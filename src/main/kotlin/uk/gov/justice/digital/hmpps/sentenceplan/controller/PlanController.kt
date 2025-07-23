@@ -120,4 +120,17 @@ class PlanController(
       throw ResponseStatusException(HttpStatus.NOT_FOUND, e.message)
     }
   }
+
+  @GetMapping("/crn/{crn}")
+  @PreAuthorize("hasAnyRole('ROLE_SENTENCE_PLAN_WRITE', 'ROLE_SENTENCE_PLAN_READ')")
+  @ResponseStatus(HttpStatus.OK)
+  fun getPlanByCrn(
+    @PathVariable crn: String,
+  ): PlanEntity {
+    try {
+      return planService.getPlanByCrn(crn)
+    } catch (_: NotFoundException) {
+      throw NoResourceFoundException(HttpMethod.GET, "Could not find a plan with crn: $crn")
+    }
+  }
 }

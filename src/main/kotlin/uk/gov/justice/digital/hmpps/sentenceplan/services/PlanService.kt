@@ -278,4 +278,6 @@ class PlanService(
 
     return planEntity
   }
+
+  fun getPlanByCrn(crn: String): PlanEntity = planRepository.getByCrn(crn)
 }

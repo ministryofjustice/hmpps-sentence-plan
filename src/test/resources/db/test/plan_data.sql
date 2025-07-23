@@ -2,8 +2,14 @@
 INSERT INTO practitioner(external_id, username) VALUES ('test', 'test user');
 
 -- Insert into plan
+INSERT INTO plan(uuid, published_state, created_date, created_by_id, last_updated_date, last_updated_by_id, person_crn)
+SELECT '556db5c8-a1eb-4064-986b-0740d6a83c33', 'UNPUBLISHED', now() - interval '1 day', practitioner.id, now() - interval '1 day', practitioner.id, 'X123456'
+FROM practitioner
+WHERE external_id = 'test';
+
+-- Insert second row into plan - without person_crn
 INSERT INTO plan(uuid, published_state, created_date, created_by_id, last_updated_date, last_updated_by_id)
-SELECT '556db5c8-a1eb-4064-986b-0740d6a83c33', 'UNPUBLISHED', now() - interval '1 day', practitioner.id, now() - interval '1 day', practitioner.id
+SELECT '556db5c8-a1eb-4064-986b-0740d6a83c44', 'UNPUBLISHED', now() - interval '1 day', practitioner.id, now() - interval '1 day', practitioner.id
 FROM practitioner
 WHERE external_id = 'test';
 

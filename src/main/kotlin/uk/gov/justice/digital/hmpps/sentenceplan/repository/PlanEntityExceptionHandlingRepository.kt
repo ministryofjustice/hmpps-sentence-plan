@@ -10,6 +10,7 @@ import java.util.UUID
 
 interface PlanEntityExceptionHandlingRepository {
   fun getByUuid(planUuid: UUID): PlanEntity
+  fun getByCrn(crn: String): PlanEntity
 }
 
 @Repository
@@ -29,5 +30,20 @@ class PlanEntityExceptionHandlingRepositoryImpl(
       .singleResult
   } catch (e: NoResultException) {
     throw NotFoundException("Plan not found for id $planUuid")
+  }
+
+  override fun getByCrn(crn: String): PlanEntity = try {
+    entityManager.createQuery(
+      """
+        SELECT p
+        FROM PlanEntity p
+        WHERE p.crn = :crn
+        """,
+      PlanEntity::class.java,
+    )
+      .setParameter("crn", crn)
+      .singleResult
+  } catch (e: NoResultException) {
+    throw NotFoundException("Plan not found for crn: $crn")
   }
 }

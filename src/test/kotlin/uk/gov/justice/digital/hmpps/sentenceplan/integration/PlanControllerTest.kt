@@ -415,15 +415,15 @@ class PlanControllerTest : IntegrationTestBase() {
 
     @Test
     fun `should return OK when getting plan by existing CRN `() {
-      val planEntity: PlanEntity? = webTestClient.get().uri("/plans/crn/$crn")
+      val planEntity: List<PlanEntity>? = webTestClient.get().uri("/plans/crn/$crn")
         .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_READ", "ROLE_SENTENCE_PLAN_WRITE")))
         .exchange()
         .expectStatus().isOk
-        .expectBody<PlanEntity>()
+        .expectBody<List<PlanEntity>>()
         .returnResult().responseBody
 
-      assertThat(planEntity?.crn).isEqualTo(crn)
-      assertThat(planEntity?.uuid).isNotNull()
+      assertThat(planEntity?.get(0)?.crn).isEqualTo(crn)
+      assertThat(planEntity?.get(0)?.uuid).isNotNull()
     }
 
     @Test

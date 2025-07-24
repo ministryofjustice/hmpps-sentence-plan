@@ -126,9 +126,9 @@ class PlanController(
   @ResponseStatus(HttpStatus.OK)
   fun getPlanByCrn(
     @PathVariable crn: String,
-  ): PlanEntity {
+  ): List<PlanEntity> {
     try {
-      return planService.getPlanByCrn(crn)
+      return planService.getPlansByCrn(crn)
     } catch (_: NotFoundException) {
       throw NoResourceFoundException(HttpMethod.GET, "Could not find a plan with crn: $crn")
     }

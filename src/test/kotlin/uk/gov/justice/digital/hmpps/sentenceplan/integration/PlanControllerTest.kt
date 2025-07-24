@@ -39,6 +39,7 @@ class PlanControllerTest : IntegrationTestBase() {
 
   val authenticatedUser = UUID.randomUUID().toString() + "|Tom C"
   val testPlanUuid = "556db5c8-a1eb-4064-986b-0740d6a83c33"
+  val testPlanUuidNoCrn = "556db5c8-a1eb-4064-986b-0740d6a83c44"
 
   @Nested
   @DisplayName("getPlan")
@@ -364,8 +365,8 @@ class PlanControllerTest : IntegrationTestBase() {
     @Test
     @Order(1)
     fun `Associate a plan Uuid with a CRN`() {
-      val crn = "X123456"
-      val planEntity: PlanEntity? = webTestClient.put().uri("/plans/associate/$testPlanUuid/$crn")
+      val crn = "X999999"
+      val planEntity: PlanEntity? = webTestClient.put().uri("/plans/associate/$testPlanUuidNoCrn/$crn")
         .header("Content-Type", "application/json")
         .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_READ", "ROLE_SENTENCE_PLAN_WRITE")))
         .exchange()
@@ -381,7 +382,7 @@ class PlanControllerTest : IntegrationTestBase() {
     @Order(2)
     fun `plan has already has CRN associated`() {
       val crn = "OTHERCRN"
-      val planEntity: PlanEntity? = webTestClient.put().uri("/plans/associate/$testPlanUuid/$crn")
+      val planEntity: PlanEntity? = webTestClient.put().uri("/plans/associate/$testPlanUuidNoCrn/$crn")
         .header("Content-Type", "application/json")
         .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_READ", "ROLE_SENTENCE_PLAN_WRITE")))
         .exchange()
@@ -390,18 +391,49 @@ class PlanControllerTest : IntegrationTestBase() {
         .returnResult().responseBody
 
       assertThat(planEntity?.crn).isNotNull()
-      assertThat(planEntity?.crn).isEqualTo("X123456")
+      assertThat(planEntity?.crn).isEqualTo("X999999")
     }
 
     @Test
     fun `plan not found`() {
-      val crn = "X123456"
+      val crn = "X999999"
       val invalidPlanUuid = UUID.randomUUID()
       webTestClient.put().uri("/plans/associate/$invalidPlanUuid/$crn")
         .header("Content-Type", "application/json")
         .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_READ", "ROLE_SENTENCE_PLAN_WRITE")))
         .exchange()
         .expectStatus().isEqualTo(HttpStatus.NOT_FOUND)
+    }
+  }
+
+  @Nested
+  @DisplayName("getPlanByCrn")
+  @Sql(scripts = [ "/db/test/plan_data.sql" ], executionPhase = BEFORE_TEST_CLASS)
+  @Sql(scripts = [ "/db/test/plan_cleanup.sql" ], executionPhase = AFTER_TEST_CLASS)
+  inner class GetPlanByCrn {
+    val crn = "X123456"
+
+    @Test
+    fun `should return OK when getting plan by existing CRN `() {
+      val planEntity: List<PlanEntity>? = webTestClient.get().uri("/plans/crn/$crn")
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_READ", "ROLE_SENTENCE_PLAN_WRITE")))
+        .exchange()
+        .expectStatus().isOk
+        .expectBody<List<PlanEntity>>()
+        .returnResult().responseBody
+
+      assertThat(planEntity?.get(0)?.crn).isEqualTo(crn)
+      assertThat(planEntity?.get(0)?.uuid).isNotNull()
+      assertThat(planEntity?.size).isEqualTo(1)
+    }
+
+    @Test
+    fun `should return not found when getting plan by non-existent CRN`() {
+      val invalidCrn = "X999999"
+      webTestClient.get().uri("/plans/crn/$invalidCrn")
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_READ", "ROLE_SENTENCE_PLAN_WRITE")))
+        .exchange()
+        .expectStatus().isNotFound
     }
   }
 }

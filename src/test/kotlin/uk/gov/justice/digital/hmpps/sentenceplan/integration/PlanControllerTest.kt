@@ -424,6 +424,7 @@ class PlanControllerTest : IntegrationTestBase() {
 
       assertThat(planEntity?.get(0)?.crn).isEqualTo(crn)
       assertThat(planEntity?.get(0)?.uuid).isNotNull()
+      assertThat(planEntity?.size).isEqualTo(1)
     }
 
     @Test

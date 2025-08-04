@@ -31,7 +31,7 @@ class PlanAgreementNoteEntity(
   @JsonIgnore
   var id: Long? = null,
 
-  @OneToOne(cascade = [CascadeType.ALL], fetch = FetchType.LAZY)
+  @ManyToOne(cascade = [CascadeType.ALL], fetch = FetchType.LAZY)
   @JoinColumn(name = "plan_version_id", referencedColumnName = "id")
   @JsonIgnore
   var planVersion: PlanVersionEntity?,

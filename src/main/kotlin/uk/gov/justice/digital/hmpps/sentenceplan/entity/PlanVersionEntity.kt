@@ -41,7 +41,7 @@ import java.util.UUID
 @NamedEntityGraph(
   name = "graph.planversion.eager",
   attributeNodes = [
-    NamedAttributeNode("agreementNote"),
+    NamedAttributeNode("agreementNotes"),
     NamedAttributeNode("planProgressNotes"),
     NamedAttributeNode(value = "goals", subgraph = "goals-subgraph"),
   ],
@@ -120,8 +120,8 @@ class PlanVersionEntity(
   @Column(name = "checksum")
   var checksum: String? = null,
 
-  @OneToOne(mappedBy = "planVersion", cascade = [CascadeType.ALL])
-  val agreementNote: PlanAgreementNoteEntity? = null,
+  @OneToMany(mappedBy = "planVersion", cascade = [CascadeType.ALL], fetch = FetchType.EAGER)
+  val agreementNotes: Set<PlanAgreementNoteEntity> = emptySet(),
 
   @OneToMany(mappedBy = "planVersion", cascade = [CascadeType.ALL])
   val planProgressNotes: Set<PlanProgressNoteEntity> = emptySet(),
@@ -155,7 +155,7 @@ class PlanVersionEntity(
   )
   var mostRecentUpdateByName: String? = null,
 
-)
+  )
 
 enum class CountersigningStatus {
   AWAITING_COUNTERSIGN,

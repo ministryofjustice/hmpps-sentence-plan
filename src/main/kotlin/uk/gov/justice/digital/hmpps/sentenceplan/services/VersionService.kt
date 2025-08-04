@@ -39,8 +39,11 @@ class VersionService(
     newPlanVersionEntity.uuid = UUID.randomUUID()
 
     newPlanVersionEntity.id = null
-    newPlanVersionEntity.agreementNote?.id = null
-    newPlanVersionEntity.agreementNote?.planVersion = newPlanVersionEntity
+
+    newPlanVersionEntity.agreementNotes.forEach { agreementNote ->
+      agreementNote.id = null
+      agreementNote.planVersion = newPlanVersionEntity
+    }
 
     newPlanVersionEntity.planProgressNotes.forEach { planProgressNote ->
       planProgressNote.id = null

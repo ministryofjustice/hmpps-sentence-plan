@@ -155,7 +155,7 @@ class PlanVersionEntity(
   )
   var mostRecentUpdateByName: String? = null,
 
-  )
+)
 
 enum class CountersigningStatus {
   AWAITING_COUNTERSIGN,

@@ -122,9 +122,9 @@ class VersionServiceIntegrationTest : IntegrationTestBase() {
     assertThat(planVersionZeroFirstGoal.steps[0].uuid).isNotEqualTo(planVersionOneFirstGoal.steps[0].uuid)
 
     // check that each planVersion has its own PlanAgreementNote
-    assertThat(planVersionZero.agreementNote).isNotNull
-    assertThat(planVersionOne.agreementNote).isNotNull
-    assertThat(planVersionZero.agreementNote?.id).isNotEqualTo(planVersionOne.agreementNote?.id)
+    assertThat(planVersionZero.agreementNotes).isNotEmpty
+    assertThat(planVersionOne.agreementNotes).isNotEmpty
+    assertThat(planVersionZero.agreementNotes.first().id).isNotEqualTo(planVersionOne.agreementNotes.first().id)
 
     // fetch progress notes by plan version UUID and check that each planVersion has its own PlanProgressNotes
     val planVersionZeroProgressNotes = planProgressNoteRepository.findByPlanVersionUuid(planVersionZero.uuid)
@@ -243,9 +243,9 @@ class VersionServiceIntegrationTest : IntegrationTestBase() {
     val planVersionZero = planVersionRepository.getVersionByUuidAndVersion(testPlanUuid, 0)
     val planVersionOne = planVersionRepository.getVersionByUuidAndVersion(testPlanUuid, 1)
 
-    assertThat(planVersionZero.agreementNote).isNull()
-    assertThat(planVersionOne.agreementNote).isNotNull
-    assertThat(planVersionOne.agreementNote?.agreementStatus).isEqualTo(PlanAgreementStatus.AGREED)
+    assertThat(planVersionZero.agreementNotes).isEmpty()
+    assertThat(planVersionOne.agreementNotes).isNotEmpty()
+    assertThat(planVersionOne.agreementNotes.first().agreementStatus).isEqualTo(PlanAgreementStatus.AGREED)
   }
 
   @Test

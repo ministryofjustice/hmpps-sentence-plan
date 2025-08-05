@@ -332,7 +332,7 @@ class PlanControllerTest : IntegrationTestBase() {
 
       assertThat(notes!!).isNotNull
 
-      assertThat(notes.size).isEqualTo(3)
+      assertThat(notes.size).isEqualTo(4)
       assertThat(notes[0].createdDate).isAfterOrEqualTo(notes[1].createdDate)
 
       // make sure all the values are populated correctly for a Goal(checks the ResultMapper)
@@ -348,7 +348,7 @@ class PlanControllerTest : IntegrationTestBase() {
       assertThat(notes[2].noteObject).isEqualTo("Plan")
       assertThat(notes[2].note).isEqualTo("Agreement status note")
       assertThat(notes[2].additionalNote).isEqualTo("Optional note")
-      assertThat(notes[2].noteType).isEqualTo("AGREED")
+      assertThat(notes[2].noteType).isEqualTo("COULD_NOT_ANSWER")
       assertThat(notes[2].goalTitle).isNull()
       assertThat(notes[2].goalUuid).isNull()
       assertThat(notes[2].createdBy).isEqualTo("test user")

@@ -26,8 +26,8 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
 
   implementation("com.vladmihalcea:hibernate-types-60:2.21.1")
-  implementation("org.flywaydb:flyway-core:11.10.4")
-  runtimeOnly("org.flywaydb:flyway-database-postgresql:11.10.4")
+  implementation("org.flywaydb:flyway-core:11.11.0")
+  runtimeOnly("org.flywaydb:flyway-database-postgresql:11.11.0")
   runtimeOnly("org.postgresql:postgresql")
 
   // Test dependencies

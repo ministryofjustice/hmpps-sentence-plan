@@ -1,6 +1,6 @@
-FROM gradle:8.12.1-jdk21 AS builder
+FROM gradle:9-jdk21 AS builder
 
-FROM eclipse-temurin:21.0.2_13-jre AS runtime
+FROM eclipse-temurin:21-jre AS runtime
 
 FROM builder AS build
 WORKDIR /app

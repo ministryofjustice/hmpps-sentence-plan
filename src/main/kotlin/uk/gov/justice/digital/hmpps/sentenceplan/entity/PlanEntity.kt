@@ -131,6 +131,9 @@ class PlanEntity(
   @OneToOne()
   @JoinColumn(name = "current_plan_version_id")
   var currentVersion: PlanVersionEntity? = null,
+
+  @Column(name = "person_crn")
+  var crn: String? = null,
 )
 
 enum class PublishState {

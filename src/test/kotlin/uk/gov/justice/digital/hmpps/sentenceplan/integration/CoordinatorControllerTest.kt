@@ -34,6 +34,7 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.SoftDeletePlanVe
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.response.GetPlanResponse
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.response.PlanState
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.response.PlanVersionResponse
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.response.PlanVersionsResponse
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.response.SoftDeletePlanVersionsResponse
 import java.util.UUID
 
@@ -123,6 +124,58 @@ class CoordinatorControllerTest : IntegrationTestBase() {
     fun `should return server error when trying to get a plan param that is not a UUID`() {
       webTestClient.get()
         .uri("/coordinator/plan/x")
+        .header("Content-Type", "application/json")
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_READ")))
+        .exchange()
+        .expectStatus().is5xxServerError
+        .expectBody<ErrorResponse>()
+    }
+  }
+
+  @Nested
+  @DisplayName("getPlanVersions")
+  @Sql(scripts = ["/db/test/plan_versions_data.sql"], executionPhase = BEFORE_TEST_CLASS)
+  @Sql(scripts = ["/db/test/plan_cleanup.sql"], executionPhase = AFTER_TEST_CLASS)
+  inner class GetPlanVersions {
+    val staticPlanUuid = UUID.fromString("556db5c8-a1eb-4064-986b-0740d6a83c33")
+    val staticPlanVersion1Uuid = UUID.fromString("353fae07-4a6d-4614-afd6-bb3953f8fadb")
+    val staticPlanVersion2Uuid = UUID.fromString("59f8d10b-dda6-48d0-8f65-bb5eb1216b3b")
+
+    @Test
+    fun `should retrieve a plan's versions`() {
+      webTestClient.get()
+        .uri("/coordinator/plan/$staticPlanUuid/all")
+        .header("Content-Type", "application/json")
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_READ")))
+        .exchange()
+        .expectStatus().isOk
+        .expectBody<PlanVersionsResponse>()
+        .returnResult().run {
+          assertThat(responseBody?.size).isEqualTo(2)
+          assertThat(responseBody?.get(0)?.uuid).isEqualTo(staticPlanVersion1Uuid)
+          assertThat(responseBody?.get(0)?.version).isEqualTo(0)
+          assertThat(responseBody?.get(0)?.status).isEqualTo(CountersigningStatus.UNSIGNED)
+          assertThat(responseBody?.get(1)?.uuid).isEqualTo(staticPlanVersion2Uuid)
+          assertThat(responseBody?.get(1)?.version).isEqualTo(2)
+          assertThat(responseBody?.get(1)?.status).isEqualTo(CountersigningStatus.SELF_SIGNED)
+        }
+    }
+
+    @Test
+    fun `should return not found when getting plan by non-existent UUID`() {
+      webTestClient.get()
+        .uri("/coordinator/plan/15285be5-fe67-448f-b8b0-45c9e4c7ad8e/all")
+        .header("Content-Type", "application/json")
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_READ")))
+        .exchange()
+        .expectStatus().isNotFound
+        .expectBody<ErrorResponse>()
+    }
+
+    @Test
+    fun `should return server error when trying to get a plan param that is not a UUID`() {
+      webTestClient.get()
+        .uri("/coordinator/plan/x/all")
         .header("Content-Type", "application/json")
         .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_READ")))
         .exchange()

@@ -6,6 +6,7 @@ import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.ResponseStatus
@@ -16,6 +17,7 @@ import uk.gov.justice.digital.hmpps.sentenceplan.data.Agreement
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Goal
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Note
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalEntity
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.exceptions.ConflictException
 import uk.gov.justice.digital.hmpps.sentenceplan.exceptions.NotFoundException
@@ -102,6 +104,33 @@ class PlanController(
       throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, e.message)
     } catch (e: ConflictException) {
       throw ResponseStatusException(HttpStatus.CONFLICT, e.message)
+    }
+  }
+
+  @PutMapping("associate/{planUuid}/{crn}")
+  @PreAuthorize("hasAnyRole('ROLE_SENTENCE_PLAN_WRITE')")
+  @ResponseStatus(HttpStatus.ACCEPTED)
+  fun associateCrnWithPlan(
+    @PathVariable planUuid: UUID,
+    @PathVariable crn: String,
+  ): PlanEntity {
+    try {
+      return planService.associate(planUuid, crn)
+    } catch (e: NotFoundException) {
+      throw ResponseStatusException(HttpStatus.NOT_FOUND, e.message)
+    }
+  }
+
+  @GetMapping("/crn/{crn}")
+  @PreAuthorize("hasAnyRole('ROLE_SENTENCE_PLAN_WRITE', 'ROLE_SENTENCE_PLAN_READ')")
+  @ResponseStatus(HttpStatus.OK)
+  fun getPlanByCrn(
+    @PathVariable crn: String,
+  ): List<PlanEntity> {
+    try {
+      return planService.getPlansByCrn(crn)
+    } catch (_: NotFoundException) {
+      throw NoResourceFoundException(HttpMethod.GET, "Could not find a plan with crn: $crn")
     }
   }
 }

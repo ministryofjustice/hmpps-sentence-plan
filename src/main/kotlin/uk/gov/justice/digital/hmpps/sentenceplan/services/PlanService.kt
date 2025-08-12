@@ -40,6 +40,10 @@ class PlanService(
 
   fun getPlanVersionByPlanUuidAndPlanVersion(planUuid: UUID, planVersion: Int): PlanVersionEntity = planVersionRepository.getVersionByUuidAndVersion(planUuid, planVersion)
 
+  fun getPlanVersionsByPlanUuid(planUuid: UUID): List<PlanVersionEntity> = planRepository.getByUuid(planUuid).id
+    ?.run(planVersionRepository::findAllByPlanId)
+    .orEmpty()
+
   fun rollbackVersion(planUuid: UUID, versionNumber: Int): PlanVersionEntity {
     val version = planVersionRepository.getVersionByUuidAndVersion(planUuid, versionNumber)
     version.status = CountersigningStatus.ROLLED_BACK
@@ -262,4 +266,18 @@ class PlanService(
       throw NotFoundException("Plan not found for id $planUuid")
     }
   }
+
+  @Transactional
+  fun associate(planUuid: UUID, crn: String): PlanEntity {
+    val planEntity = planRepository.getByUuid(planUuid)
+
+    if (planEntity.crn.isNullOrEmpty()) {
+      planEntity.crn = crn
+      planRepository.save(planEntity)
+    }
+
+    return planEntity
+  }
+
+  fun getPlansByCrn(crn: String): List<PlanEntity> = planRepository.getByCrn(crn)
 }

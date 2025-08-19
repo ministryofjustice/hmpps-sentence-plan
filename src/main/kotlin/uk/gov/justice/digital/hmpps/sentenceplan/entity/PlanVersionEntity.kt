@@ -156,10 +156,13 @@ class PlanVersionEntity(
   )
   var mostRecentUpdateByName: String? = null,
 
+  @Transient
+  @JsonProperty("crn")
+  val crn: String? = null, // used for deserializing from JSON
 ) {
   @get:JsonProperty("crn")
-  val crn: String?
-    get() = plan?.crn
+  val jsonCrn: String?
+    get() = plan?.crn // used for serializing to JSON
 }
 
 enum class CountersigningStatus {

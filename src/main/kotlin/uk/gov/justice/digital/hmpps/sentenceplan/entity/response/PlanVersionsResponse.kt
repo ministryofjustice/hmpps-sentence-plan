@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.sentenceplan.entity.response
 
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.CountersigningStatus
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanAgreementStatus
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionEntity
 import java.time.LocalDateTime
 import java.util.UUID
@@ -13,6 +14,7 @@ data class PlanVersionDetails(
   val createdAt: LocalDateTime,
   val updatedAt: LocalDateTime,
   val status: CountersigningStatus,
+  val agreementStatus: PlanAgreementStatus,
 ) {
   companion object {
     private fun from(planVersion: PlanVersionEntity): PlanVersionDetails = with(planVersion) {
@@ -22,6 +24,7 @@ data class PlanVersionDetails(
         createdDate,
         updatedDate,
         status,
+        agreementStatus,
       )
     }
 

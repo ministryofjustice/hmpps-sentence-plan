@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.sentenceplan.entity
 
 import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonIgnore
+import com.fasterxml.jackson.annotation.JsonProperty
 import jakarta.persistence.CascadeType
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
@@ -155,7 +156,14 @@ class PlanVersionEntity(
   )
   var mostRecentUpdateByName: String? = null,
 
-)
+  @Transient
+  @JsonProperty("crn")
+  val crn: String? = null, // used for deserializing from JSON
+) {
+  @get:JsonProperty("crn")
+  val jsonCrn: String?
+    get() = plan?.crn // used for serializing to JSON
+}
 
 enum class CountersigningStatus {
   AWAITING_COUNTERSIGN,

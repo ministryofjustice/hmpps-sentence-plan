@@ -60,6 +60,7 @@ class PlanControllerTest : IntegrationTestBase() {
       assertThat(planVersionEntity?.mostRecentUpdateDate).isAfter(planVersionEntity?.updatedDate)
       assertThat(planVersionEntity?.mostRecentUpdateByName).isNotNull()
       assertThat(planVersionEntity?.mostRecentUpdateByName).isEqualTo("test user")
+      assertThat(planVersionEntity?.crn).isEqualTo("X123456")
     }
 
     @Test

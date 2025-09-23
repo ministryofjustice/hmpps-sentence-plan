@@ -31,7 +31,7 @@ generic-service:
     hmpps-sentence-plan:
       APPINSIGHTS_INSTRUMENTATIONKEY: "APPINSIGHTS_INSTRUMENTATIONKEY"
 
-    hmpps-sentence-plan-client-creds:
+    hmpps-sentence-plan-api-client-creds:
       CLIENT_CREDS_CLIENT_ID: 'CLIENT_CREDS_CLIENT_ID'
       CLIENT_CREDS_CLIENT_SECRET: 'CLIENT_CREDS_CLIENT_SECRET'
 

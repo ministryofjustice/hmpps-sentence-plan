@@ -30,8 +30,10 @@ generic-service:
   namespace_secrets:
     hmpps-sentence-plan:
       APPINSIGHTS_INSTRUMENTATIONKEY: "APPINSIGHTS_INSTRUMENTATIONKEY"
-      API_CLIENT_ID: "SYSTEM_CLIENT_ID"
-      API_CLIENT_SECRET: "SYSTEM_CLIENT_SECRET"
+
+    hmpps-sentence-plan-client-creds:
+      CLIENT_CREDS_CLIENT_ID: 'CLIENT_CREDS_CLIENT_ID'
+      CLIENT_CREDS_CLIENT_SECRET: 'CLIENT_CREDS_CLIENT_SECRET'
 
     rds-postgresql-instance-output:
       DB_ENDPOINT: rds_instance_endpoint

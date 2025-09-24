@@ -41,8 +41,8 @@ spring:
             provider: hmpps-auth-service
             client-authentication-method: client_secret_basic
             authorization-grant-type: client_credentials
-            client-id: ${api.client-id}
-            client-secret: ${api.client-secret}
+            client-id: ${client-creds-client-id}
+            client-secret: ${client-creds-client-secret}
 
 db:
   name: postgres

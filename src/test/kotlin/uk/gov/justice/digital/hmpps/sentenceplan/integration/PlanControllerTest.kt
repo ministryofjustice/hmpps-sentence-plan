@@ -28,7 +28,6 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalStatus
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanAgreementStatus
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionEntity
-import uk.gov.justice.digital.hmpps.sentenceplan.entity.response.PlanVersionsResponse
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
@@ -74,7 +73,6 @@ class PlanControllerTest : IntegrationTestBase() {
         .expectStatus().isNotFound
     }
   }
-
 
   @Nested
   @DisplayName("getPlanVersionByUuid")

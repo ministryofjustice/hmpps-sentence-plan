@@ -22,11 +22,13 @@ import uk.gov.justice.digital.hmpps.sentenceplan.data.Agreement
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Goal
 import uk.gov.justice.digital.hmpps.sentenceplan.data.Note
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.AreaOfNeedEntity
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.CountersigningStatus
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalStatus
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanAgreementStatus
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionEntity
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.response.PlanVersionsResponse
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
@@ -67,6 +69,42 @@ class PlanControllerTest : IntegrationTestBase() {
     fun `should return not found when getting plan by non-existent UUID`() {
       val randomPlanUuid = UUID.randomUUID()
       webTestClient.get().uri("/plans/$randomPlanUuid")
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_READ")))
+        .exchange()
+        .expectStatus().isNotFound
+    }
+  }
+
+
+  @Nested
+  @DisplayName("getPlanVersionByUuid")
+  @Sql(scripts = ["/db/test/plan_versions_data.sql", "/db/test/goals_data.sql"], executionPhase = BEFORE_TEST_CLASS)
+  @Sql(scripts = ["/db/test/goals_cleanup.sql", "/db/test/plan_cleanup.sql"], executionPhase = AFTER_TEST_CLASS)
+  inner class GetPlanVersionByUuid {
+    val staticPlanVersionUuid: UUID? = UUID.fromString("9f2aaa46-e544-4bcd-8db6-fbe7842ddb64")
+
+    @Test
+    fun `should find a plan's version`() {
+      val planVersionEntity: PlanVersionEntity? = webTestClient.get().uri("/plans/version/$staticPlanVersionUuid")
+        .header("Content-Type", "application/json")
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_READ")))
+        .exchange()
+        .expectStatus().isOk
+        .expectBody<PlanVersionEntity>()
+        .returnResult().responseBody
+
+      assertThat(planVersionEntity?.goals?.size).isEqualTo(2)
+      assertThat(planVersionEntity?.version).isEqualTo(1)
+      assertThat(planVersionEntity?.mostRecentUpdateDate).isNotNull()
+      assertThat(planVersionEntity?.mostRecentUpdateByName).isNotNull()
+      assertThat(planVersionEntity?.mostRecentUpdateByName).isEqualTo("test user")
+      assertThat(planVersionEntity?.status).isEqualTo(CountersigningStatus.UNSIGNED)
+    }
+
+    @Test
+    fun `should return not found when getting plan version by non-existent UUID`() {
+      val randomPlanUuid = UUID.randomUUID()
+      webTestClient.get().uri("plans/version/$randomPlanUuid")
         .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_READ")))
         .exchange()
         .expectStatus().isNotFound

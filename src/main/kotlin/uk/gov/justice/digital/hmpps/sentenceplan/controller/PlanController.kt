@@ -23,6 +23,7 @@ import uk.gov.justice.digital.hmpps.sentenceplan.exceptions.ConflictException
 import uk.gov.justice.digital.hmpps.sentenceplan.exceptions.NotFoundException
 import uk.gov.justice.digital.hmpps.sentenceplan.services.GoalService
 import uk.gov.justice.digital.hmpps.sentenceplan.services.PlanService
+import uk.gov.justice.digital.hmpps.sentenceplan.services.VersionService
 import java.util.UUID
 
 @RestController
@@ -30,6 +31,7 @@ import java.util.UUID
 class PlanController(
   private val planService: PlanService,
   private val goalService: GoalService,
+  private val versionService: VersionService,
 ) {
 
   @GetMapping("/{planUuid}")
@@ -71,13 +73,13 @@ class PlanController(
 
   @GetMapping("/version/{planVersionUuid}")
   @ResponseStatus(HttpStatus.OK)
-  fun getPlanVersionByUuid(
+  fun getPlanVersionByVersionUuid(
     @PathVariable planVersionUuid: UUID,
   ): PlanVersionEntity {
     try {
-      return planService.getPlanVersionByVersionUuid(planVersionUuid)
+      return versionService.getPlanVersionByVersionUuid(planVersionUuid)
     } catch (_: NotFoundException) {
-      throw NoResourceFoundException(HttpMethod.GET, "Could not find a plan version with ID: $planVersionUuid")
+      throw NoResourceFoundException(HttpMethod.GET, "Could not find a plan version with version UUID: $planVersionUuid")
     }
   }
 

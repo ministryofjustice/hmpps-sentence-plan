@@ -75,10 +75,10 @@ class PlanControllerTest : IntegrationTestBase() {
   }
 
   @Nested
-  @DisplayName("getPlanVersionByUuid")
+  @DisplayName("getPlanVersionByVersionUuid")
   @Sql(scripts = ["/db/test/plan_versions_data.sql", "/db/test/goals_data.sql"], executionPhase = BEFORE_TEST_CLASS)
   @Sql(scripts = ["/db/test/goals_cleanup.sql", "/db/test/plan_cleanup.sql"], executionPhase = AFTER_TEST_CLASS)
-  inner class GetPlanVersionByUuid {
+  inner class GetPlanVersionByVersionUuid {
     val staticPlanVersionUuid: UUID? = UUID.fromString("9f2aaa46-e544-4bcd-8db6-fbe7842ddb64")
 
     @Test

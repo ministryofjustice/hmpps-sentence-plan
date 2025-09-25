@@ -44,14 +44,6 @@ class PlanService(
     ?.run(planVersionRepository::findAllByPlanId)
     .orEmpty()
 
-  fun getPlanVersionByVersionUuid(planVersionUuid: UUID): PlanVersionEntity {
-    try {
-      return planVersionRepository.findByUuid(planVersionUuid)
-    } catch (_: EmptyResultDataAccessException) {
-      throw NotFoundException("Could not find a plan version with ID: $planVersionUuid")
-    }
-  }
-
   fun rollbackVersion(planUuid: UUID, versionNumber: Int): PlanVersionEntity {
     val version = planVersionRepository.getVersionByUuidAndVersion(planUuid, versionNumber)
     version.status = CountersigningStatus.ROLLED_BACK

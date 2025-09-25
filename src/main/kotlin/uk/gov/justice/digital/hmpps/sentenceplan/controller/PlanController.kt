@@ -78,8 +78,8 @@ class PlanController(
   ): PlanVersionEntity {
     try {
       return versionService.getPlanVersionByVersionUuid(planVersionUuid)
-    } catch (_: NotFoundException) {
-      throw NoResourceFoundException(HttpMethod.GET, "Could not find a plan version with version UUID: $planVersionUuid")
+    } catch (e: NotFoundException) {
+      throw ResponseStatusException(HttpStatus.NOT_FOUND, e.message)
     }
   }
 

@@ -187,9 +187,6 @@ class PlanServiceTest {
         planService.getPlanVersionByVersionUuid(planVersionUuid)
       }
 
-      assertThrows<NotFoundException> {
-        planService.getPlanVersionByVersionUuid(planVersionUuid)
-      }
       assertEquals("Could not find a plan version with ID: $planVersionUuid", exception.message)
     }
   }

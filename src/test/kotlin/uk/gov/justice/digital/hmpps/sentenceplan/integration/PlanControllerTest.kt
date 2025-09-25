@@ -101,8 +101,8 @@ class PlanControllerTest : IntegrationTestBase() {
 
     @Test
     fun `should return not found when getting plan version by non-existent UUID`() {
-      val randomPlanUuid = UUID.randomUUID()
-      webTestClient.get().uri("plans/version/$randomPlanUuid")
+      val randomPlanVersionUuid = UUID.randomUUID()
+      webTestClient.get().uri("/plans/version/$randomPlanVersionUuid")
         .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_READ")))
         .exchange()
         .expectStatus().isNotFound

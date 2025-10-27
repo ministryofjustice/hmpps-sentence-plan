@@ -3,9 +3,9 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.springframework.boot.gradle.tasks.run.BootRun
 
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "9.1.3"
-  kotlin("plugin.spring") version "2.2.20"
-  kotlin("plugin.jpa") version "2.2.20"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "9.1.4"
+  kotlin("plugin.spring") version "2.2.21"
+  kotlin("plugin.jpa") version "2.2.21"
   id("org.openapi.generator") version "7.16.0"
   jacoco
 }
@@ -26,8 +26,8 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
 
   implementation("com.vladmihalcea:hibernate-types-60:2.21.1")
-  implementation("org.flywaydb:flyway-core:11.14.1")
-  runtimeOnly("org.flywaydb:flyway-database-postgresql:11.14.1")
+  implementation("org.flywaydb:flyway-core:11.15.0")
+  runtimeOnly("org.flywaydb:flyway-database-postgresql:11.15.0")
   runtimeOnly("org.postgresql:postgresql")
 
   // Test dependencies

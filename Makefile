@@ -19,7 +19,7 @@ down: ## Stops and removes all containers in the project.
 	docker compose ${LOCAL_COMPOSE_FILES} down
 
 build-api: ## Builds a production image of the API.
-	docker compose build sp-api
+	docker compose ${LOCAL_COMPOSE_FILES} build sp-api
 
 dev-up: ## Starts/restarts the API in a development container. A remote debugger can be attached on port 5005.
 	docker compose ${DEV_COMPOSE_FILES} down sp-api
@@ -29,7 +29,7 @@ dev-build: ## Builds a development image of the API.
 	docker compose ${DEV_COMPOSE_FILES} build sp-api
 
 dev-down: ## Stops and removes the API container.
-	docker compose down sp-api
+	docker compose ${DEV_COMPOSE_FILES} down sp-api
 
 rebuild: ## Re-builds and reloads the API.
 	docker compose ${DEV_COMPOSE_FILES} exec sp-api gradle compileKotlin --parallel --build-cache --configuration-cache

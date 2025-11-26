@@ -1,6 +1,6 @@
 FROM gradle:9-jdk21 AS builder
 
-FROM eclipse-temurin:25.0.1_8-jre AS runtime
+FROM eclipse-temurin:25.0.1_8-jre-alpine AS runtime
 
 FROM builder AS build
 WORKDIR /app
@@ -16,15 +16,11 @@ LABEL maintainer="HMPPS Digital Studio <info@digital.justice.gov.uk>"
 ARG BUILD_NUMBER
 ENV BUILD_NUMBER=${BUILD_NUMBER:-1_0_0}
 
-RUN apt-get update && \
-    apt-get -y upgrade && \
-    rm -rf /var/lib/apt/lists/*
-
+RUN apk add --no-cache tzdata curl
 ENV TZ=Europe/London
-RUN ln -snf "/usr/share/zoneinfo/$TZ" /etc/localtime && echo "$TZ" > /etc/timezone
-
+RUN cp "/usr/share/zoneinfo/$TZ" /etc/localtime && echo "$TZ" > /etc/timezone
 RUN addgroup --gid 2000 --system appgroup && \
-    adduser --uid 2000 --system appuser --gid 2000
+    adduser --uid 2000 --system appuser --ingroup appgroup
 
 WORKDIR /app
 COPY --from=build --chown=appuser:appgroup /app/build/libs/hmpps-sentence-plan*.jar /app/app.jar

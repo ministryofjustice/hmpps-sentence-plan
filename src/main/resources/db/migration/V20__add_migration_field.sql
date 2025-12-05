@@ -1,0 +1,2 @@
+ALTER TABLE plan
+    ADD COLUMN IF NOT EXISTS migrated bool NOT NULL DEFAULT false;

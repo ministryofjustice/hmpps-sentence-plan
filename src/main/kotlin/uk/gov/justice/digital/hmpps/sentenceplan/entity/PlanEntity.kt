@@ -22,6 +22,8 @@ import org.springframework.data.annotation.CreatedBy
 import org.springframework.data.annotation.CreatedDate
 import org.springframework.data.annotation.LastModifiedBy
 import org.springframework.data.annotation.LastModifiedDate
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.domain.support.AuditingEntityListener
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
@@ -134,6 +136,9 @@ class PlanEntity(
 
   @Column(name = "person_crn")
   var crn: String? = null,
+
+  @Column(name = "migrated")
+  var migrated: Boolean? = false,
 )
 
 enum class PublishState {
@@ -150,4 +155,7 @@ interface PlanRepository :
   // this uses the NoteMapping annotated on the PlanEntity class above
   @Query(nativeQuery = true)
   fun getPlanAndGoalNotes(planUuid: UUID): List<Note>
+
+  @Query(nativeQuery = true)
+  fun findAllByMigratedFalse(pageable: Pageable): Page<PlanEntity>
 }

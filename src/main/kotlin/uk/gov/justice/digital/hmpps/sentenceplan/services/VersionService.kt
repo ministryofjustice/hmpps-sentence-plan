@@ -3,7 +3,6 @@ package uk.gov.justice.digital.hmpps.sentenceplan.services
 import jakarta.persistence.EntityManager
 import jakarta.persistence.NoResultException
 import jakarta.persistence.PersistenceContext
-import org.springframework.dao.EmptyResultDataAccessException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Propagation
 import org.springframework.transaction.annotation.Transactional
@@ -11,7 +10,6 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.AreaOfNeedEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepEntity
-import uk.gov.justice.digital.hmpps.sentenceplan.exceptions.NotFoundException
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import java.util.UUID
@@ -89,14 +87,6 @@ class VersionService(
     entityManager.flush()
 
     return updatedCurrentVersion
-  }
-
-  fun getPlanVersionByVersionUuid(planVersionUuid: UUID): PlanVersionEntity {
-    try {
-      return planVersionRepository.findByUuid(planVersionUuid)
-    } catch (_: EmptyResultDataAccessException) {
-      throw NotFoundException("Could not find a plan version with ID: $planVersionUuid")
-    }
   }
 
   @Transactional

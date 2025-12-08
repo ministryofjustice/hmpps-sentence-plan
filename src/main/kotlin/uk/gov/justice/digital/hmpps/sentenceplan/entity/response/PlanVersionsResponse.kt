@@ -22,7 +22,7 @@ data class PlanVersionDetails(
         uuid,
         version,
         createdDate,
-        updatedDate,
+        mostRecentUpdateDate,
         status,
         agreementStatus,
       )

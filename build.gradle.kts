@@ -3,10 +3,10 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.springframework.boot.gradle.tasks.run.BootRun
 
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "8.3.4"
-  kotlin("plugin.spring") version "2.2.0"
-  kotlin("plugin.jpa") version "2.2.0"
-  id("org.openapi.generator") version "7.14.0"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "9.2.0"
+  kotlin("plugin.spring") version "2.2.21"
+  kotlin("plugin.jpa") version "2.2.21"
+  id("org.openapi.generator") version "7.17.0"
   jacoco
 }
 
@@ -16,9 +16,9 @@ configurations {
 
 dependencies {
 
-  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:1.4.11")
+  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:1.8.2")
   implementation("org.springframework.boot:spring-boot-starter-webflux")
-  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.9")
+  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.14")
 
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
   implementation("org.springframework.boot:spring-boot-starter-security")
@@ -26,14 +26,14 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
 
   implementation("com.vladmihalcea:hibernate-types-60:2.21.1")
-  implementation("org.flywaydb:flyway-core:11.11.0")
-  runtimeOnly("org.flywaydb:flyway-database-postgresql:11.11.0")
+  implementation("org.flywaydb:flyway-core:11.18.0")
+  runtimeOnly("org.flywaydb:flyway-database-postgresql:11.18.0")
   runtimeOnly("org.postgresql:postgresql")
 
   // Test dependencies
-  testImplementation("com.ninja-squad:springmockk:4.0.2")
-  testImplementation("io.jsonwebtoken:jjwt-impl:0.12.6")
-  testImplementation("io.jsonwebtoken:jjwt-jackson:0.12.6")
+  testImplementation("com.ninja-squad:springmockk:5.0.1")
+  testImplementation("io.jsonwebtoken:jjwt-impl:0.13.0")
+  testImplementation("io.jsonwebtoken:jjwt-jackson:0.13.0")
   testImplementation("org.springframework.security:spring-security-test")
 
   // Dev dependencies

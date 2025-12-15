@@ -4,6 +4,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.beans.factory.annotation.Autowired
@@ -26,6 +27,7 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.ClonePlanVersionRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.CounterSignPlanRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.CountersignType
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.DeletePlanRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.RestorePlanVersionsRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.RollbackPlanRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.SignRequest
@@ -36,6 +38,7 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.response.PlanState
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.response.PlanVersionResponse
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.response.PlanVersionsResponse
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.response.SoftDeletePlanVersionsResponse
+import uk.gov.justice.digital.hmpps.sentenceplan.exceptions.NotFoundException
 import java.util.UUID
 
 @AutoConfigureWebTestClient(timeout = "30s")
@@ -82,6 +85,32 @@ class CoordinatorControllerTest : IntegrationTestBase() {
         assertThat(it.lastUpdatedBy?.username).isEqualTo(userDetails.name)
         assertThat(it.createdBy?.username).isEqualTo(userDetails.name)
       }
+    }
+  }
+
+  @Nested
+  @DisplayName("deletePlan")
+  @Sql(scripts = ["/db/test/plan_data.sql"], executionPhase = BEFORE_TEST_CLASS)
+  @Sql(scripts = ["/db/test/plan_cleanup.sql"], executionPhase = AFTER_TEST_CLASS)
+  inner class DeletePlan {
+    val staticPlanUuid = UUID.fromString("556db5c8-a1eb-4064-986b-0740d6a83c33")
+
+    @Test
+    fun `should delete the plan`() {
+      val deleteRequest = DeletePlanRequest(
+        userDetails = userDetails,
+      )
+
+      webTestClient.post()
+        .uri("/coordinator/plan/$staticPlanUuid/delete")
+        .bodyValue(deleteRequest)
+        .header("Content-Type", "application/json")
+        .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_READ", "ROLE_SENTENCE_PLAN_WRITE")))
+        .exchange()
+        .expectStatus().isOk
+
+      assertThrows<NotFoundException> { planRepository.getByUuid(staticPlanUuid) }
+      assertThat(planVersionRepository.findAllByPlanUuid(staticPlanUuid)).isEmpty()
     }
   }
 

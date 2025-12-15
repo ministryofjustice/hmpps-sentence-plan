@@ -213,6 +213,8 @@ interface PlanVersionRepository :
 
   fun findAllByPlanId(planId: Long): List<PlanVersionEntity>
 
+  fun findAllByPlanUuid(planUuid: UUID): List<PlanVersionEntity>
+
   @EntityGraph(value = "graph.planversion.eager", type = EntityGraph.EntityGraphType.FETCH)
   fun getWholePlanVersionByUuid(planVersionUuid: UUID): PlanVersionEntity
 }

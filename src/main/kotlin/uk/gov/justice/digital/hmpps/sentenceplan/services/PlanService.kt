@@ -73,6 +73,12 @@ class PlanService(
   }
 
   @Transactional
+  fun delete(planUuid: UUID) {
+    val plan = planRepository.getByUuid(planUuid)
+    planRepository.delete(plan)
+  }
+
+  @Transactional
   fun softDelete(planUuid: UUID, from: Int, versionTo: Int?, softDelete: Boolean): SoftDeletePlanVersionsResponse? {
     val plan = planRepository.getByUuid(planUuid)
     val versions = planVersionRepository.findAllByPlanId(plan.id!!)

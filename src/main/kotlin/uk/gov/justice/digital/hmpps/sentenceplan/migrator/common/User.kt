@@ -7,8 +7,6 @@ data class User(
   val name: String = "",
 ) {
   companion object {
-    fun from(practitioner: PractitionerEntity?): User {
-      return User(practitioner?.externalId ?: "UNKNOWN", practitioner?.username ?: "Unknown")
-    }
+    fun from(practitioner: PractitionerEntity?): User = User(practitioner?.externalId ?: "UNKNOWN", practitioner?.username ?: "Unknown")
   }
 }

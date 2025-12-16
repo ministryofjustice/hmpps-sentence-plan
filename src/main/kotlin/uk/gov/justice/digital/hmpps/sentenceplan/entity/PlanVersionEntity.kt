@@ -19,6 +19,7 @@ import jakarta.persistence.NamedAttributeNode
 import jakarta.persistence.NamedEntityGraph
 import jakarta.persistence.NamedSubgraph
 import jakarta.persistence.OneToMany
+import jakarta.persistence.OneToOne
 import jakarta.persistence.OrderBy
 import jakarta.persistence.Table
 import org.hibernate.annotations.Formula

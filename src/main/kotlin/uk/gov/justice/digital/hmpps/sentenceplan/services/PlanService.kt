@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.sentenceplan.services
 
 import jakarta.validation.ValidationException
+import org.slf4j.LoggerFactory
 import org.springframework.dao.EmptyResultDataAccessException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -73,6 +74,10 @@ class PlanService(
   }
 
   @Transactional
+  fun delete(planUuid: UUID) = planRepository.getByUuid(planUuid).run(planRepository::delete)
+    .also { log.info("Deleted plan with UUID: $planUuid") }
+
+  @Transactional
   fun softDelete(planUuid: UUID, from: Int, versionTo: Int?, softDelete: Boolean): SoftDeletePlanVersionsResponse? {
     val plan = planRepository.getByUuid(planUuid)
     val versions = planVersionRepository.findAllByPlanId(plan.id!!)
@@ -118,6 +123,8 @@ class PlanService(
 
     planEntity.currentVersion = planVersionEntity
     planRepository.save(planEntity)
+
+    log.info("Created plan with UUID: ${planEntity.uuid}")
 
     return planEntity
   }
@@ -280,4 +287,8 @@ class PlanService(
   }
 
   fun getPlansByCrn(crn: String): List<PlanEntity> = planRepository.getByCrn(crn)
+
+  companion object {
+    private val log = LoggerFactory.getLogger(this::class.java)
+  }
 }

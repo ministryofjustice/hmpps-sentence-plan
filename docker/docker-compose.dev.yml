@@ -8,4 +8,4 @@ services:
       - "5005:5005"
     volumes:
       - ..:/app
-      - ~/.gradle:/home/gradle/.gradle
+      - ./.gradle:/home/gradle/.gradle

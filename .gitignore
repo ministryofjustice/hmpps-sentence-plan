@@ -6,6 +6,7 @@
 .DS_Store
 .idea/
 .gradle/
+.kotlin/
 build/
 bin/
 

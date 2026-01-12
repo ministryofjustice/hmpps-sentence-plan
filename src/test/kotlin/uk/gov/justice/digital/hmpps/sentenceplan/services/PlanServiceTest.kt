@@ -1,7 +1,9 @@
 package uk.gov.justice.digital.hmpps.sentenceplan.services
 
+import io.mockk.Runs
 import io.mockk.clearMocks
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
 import jakarta.validation.ValidationException
@@ -174,6 +176,22 @@ class PlanServiceTest {
       val result = planService.createPlan(PlanType.INITIAL)
 
       verify { planRepository.save(withArg { assertEquals(result, it) }) }
+    }
+  }
+
+  @Nested
+  @DisplayName("delete")
+  inner class Delete {
+
+    @Test
+    fun `should delete the plan`() {
+      every { planRepository.getByUuid(any()) } returns planEntity
+      every { planRepository.delete(any()) } just Runs
+
+      planService.delete(planEntity.uuid)
+
+      verify(exactly = 1) { planRepository.getByUuid(planEntity.uuid) }
+      verify(exactly = 1) { planRepository.delete(planEntity) }
     }
   }
 

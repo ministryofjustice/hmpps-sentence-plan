@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.sentenceplan.data.CreatePlanRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.data.LockPlanRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.ClonePlanVersionRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.CounterSignPlanRequest
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.DeletePlanRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.RestorePlanVersionsRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.RollbackPlanRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.SignRequest
@@ -270,6 +271,32 @@ class CoordinatorController(
     @PathVariable planUuid: UUID,
     @RequestBody @Valid body: RollbackPlanRequest,
   ): PlanVersionResponse = PlanVersionResponse.from(planService.rollbackVersion(planUuid, body.sentencePlanVersion.toInt()))
+
+  @PostMapping("/{planUuid}/delete")
+  @PreAuthorize("hasAnyRole('ROLE_SENTENCE_PLAN_WRITE')")
+  @Operation(
+    description = "Deletes the Plan from the database. This is a hard-delete",
+    tags = ["Integrations"],
+  )
+  @ApiResponses(
+    value = [
+      ApiResponse(responseCode = "200", description = "Plan has been deleted"),
+      ApiResponse(
+        responseCode = "404",
+        description = "Plan not found for the provided planUuid",
+        content = arrayOf(Content(schema = Schema(implementation = ErrorResponse::class))),
+      ),
+      ApiResponse(
+        responseCode = "500",
+        description = "Unexpected error",
+        content = arrayOf(Content(schema = Schema(implementation = ErrorResponse::class))),
+      ),
+    ],
+  )
+  fun deletePlan(
+    @PathVariable planUuid: UUID,
+    @RequestBody @Valid body: DeletePlanRequest,
+  ) = planService.delete(planUuid)
 
   @PostMapping("/{planUuid}/soft-delete")
   @PreAuthorize("hasAnyRole('ROLE_SENTENCE_PLAN_WRITE')")

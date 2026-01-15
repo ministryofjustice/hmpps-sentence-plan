@@ -8,11 +8,8 @@ import org.springframework.context.annotation.Configuration
 class FilterConfig {
 
   @Bean
-  fun contentCachingRequestFilter(): FilterRegistrationBean<ContentCachingRequestFilter> {
-    val registrationBean = FilterRegistrationBean<ContentCachingRequestFilter>()
-    registrationBean.filter = ContentCachingRequestFilter()
-    registrationBean.addUrlPatterns("/coordinator/plan", "/coordinator/plan/*") // Only apply this filter to coordinator requests
-    registrationBean.order = 1 // Make sure this filter runs first when applicable
-    return registrationBean
+  fun contentCachingRequestFilter() = FilterRegistrationBean(ContentCachingRequestFilter()).apply {
+    addUrlPatterns("/coordinator/plan", "/coordinator/plan/*") // Only apply this filter to coordinator requests
+    order = 1 // Make sure this filter runs first when applicable
   }
 }

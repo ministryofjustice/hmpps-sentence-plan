@@ -2,10 +2,8 @@ package uk.gov.justice.digital.hmpps.sentenceplan.integration
 
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
-import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient
 import uk.gov.justice.digital.hmpps.sentenceplan.data.CRNLinkedRequest
 
-@AutoConfigureWebTestClient(timeout = "5s")
 @DisplayName("PopInfo Tests")
 class PopInfoControllerTest : IntegrationTestBase() {
 

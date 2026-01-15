@@ -24,25 +24,26 @@ spring:
     validate-on-migrate: true
   jackson:
     date-format: "yyyy-MM-dd HH:mm:ss"
-    serialization:
-      WRITE_DATES_AS_TIMESTAMPS: false
   security:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: ${hmpps-auth.issuer-base-url:${hmpps-auth.base-url}}/auth/issuer
-          jwk-set-uri: ${hmpps-auth.base-url}/auth/.well-known/jwks.json # If this 404's it returns unauthorised?!?
+          jwk-set-uri: ${app.services.hmpps-auth.url}/auth/.well-known/jwks.json
       client:
         provider:
-          hmpps-auth-service:
-            token-uri: ${hmpps-auth.base-url}/auth/oauth/token
+          hmpps-auth:
+            token-uri: ${app.services.hmpps-auth.url}/auth/oauth/token
+
         registration:
           delius-api:
-            provider: hmpps-auth-service
+            provider: hmpps-auth
             client-authentication-method: client_secret_basic
             authorization-grant-type: client_credentials
             client-id: ${client-creds-client-id}
             client-secret: ${client-creds-client-secret}
+  web:
+    error:
+      include-message: always
 
 db:
   name: postgres
@@ -61,8 +62,6 @@ server:
       protocol-header: x-forwarded-proto
       internal-proxies: 10\.\d{1,3}\.\d{1,3}\.\d{1,3}|192\.168\.\d{1,3}\.\d{1,3}|169\.254\.\d{1,3}\.\d{1,3}|127\.\d{1,3}\.\d{1,3}\.\d{1,3}|172\.1[6-9]{1}\.\d{1,3}\.\d{1,3}|172\.2[0-9]{1}\.\d{1,3}\.\d{1,3}|172\.3[0-1]{1}\.\d{1,3}\.\d{1,3}|0:0:0:0:0:0:0:1|::1|100\.6[4-9]\.\d{1,3}\.\d{1,3}|100\.[7-9][0-9]{1}\.\d{1,3}\.\d{1,3}|100\.1[0-1][0-9]{1}\.\d{1,3}\.\d{1,3}|100\.12[0-7]\.\d{1,3}\.\d{1,3}
   shutdown: graceful
-  error:
-    include-message: always
 
 management:
   endpoints:
@@ -81,3 +80,8 @@ management:
     info:
       cache:
         time-to-live: 2000ms
+
+app:
+  services:
+    hmpps-auth:
+      url: ${hmpps-auth.base-url:http://localhost:9090}

@@ -20,7 +20,7 @@ import java.util.Optional
 class JpaAuditConfig(private val practitionerRepository: PractitionerRepository) {
 
   @Bean
-  fun auditorProvider(): AuditorAware<PractitionerEntity> = AuditorAware<PractitionerEntity> {
+  fun auditorProvider(): AuditorAware<PractitionerEntity> = AuditorAware {
     val requestAttributes = RequestContextHolder.getRequestAttributes() as ServletRequestAttributes?
     val request = requestAttributes?.request
 
@@ -29,7 +29,7 @@ class JpaAuditConfig(private val practitionerRepository: PractitionerRepository)
     var practitionerEntity: PractitionerEntity
 
     if (request != null && request is ContentCachingRequestWrapper) {
-      val userDetails = request.let { readUserDetailsFromRequest(it) }
+      val userDetails = readUserDetailsFromRequest(request)
 
       if (userDetails != null && userDetails.id.isNotEmpty() && userDetails.name.isNotEmpty()) {
         externalId = userDetails.id
@@ -38,9 +38,7 @@ class JpaAuditConfig(private val practitionerRepository: PractitionerRepository)
     }
 
     if (externalId.isEmpty()) {
-      val authenticationName = SecurityContextHolder.getContext().authentication.name
-
-      val usernameParts = authenticationName.split('|')
+      val usernameParts = SecurityContextHolder.getContext().authentication?.name?.split('|') ?: listOf("unknown")
 
       if (usernameParts.size != 2) {
         externalId = "SYSTEM"
@@ -53,7 +51,7 @@ class JpaAuditConfig(private val practitionerRepository: PractitionerRepository)
 
     try {
       practitionerEntity = practitionerRepository.findByExternalId(externalId)
-    } catch (e: EmptyResultDataAccessException) {
+    } catch (_: EmptyResultDataAccessException) {
       val practitioner = PractitionerEntity(
         externalId = externalId,
         username = username,

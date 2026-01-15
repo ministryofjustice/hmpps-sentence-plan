@@ -50,7 +50,7 @@ class JpaAuditConfigTest {
   @Test
   fun `should return System PractitionerEntity when no UserDetails in request`() {
     val requestAttributes: ServletRequestAttributes = mockk()
-    every { requestAttributes.request } returns (null)
+    every { requestAttributes.request } returns (mockk())
     RequestContextHolder.setRequestAttributes(requestAttributes)
 
     val authentication: Authentication = mockk()
@@ -69,7 +69,7 @@ class JpaAuditConfigTest {
   @Test
   fun `should create new PractitionerEntity when Practitioner not found`() {
     val requestAttributes: ServletRequestAttributes = mockk()
-    every { requestAttributes.request } returns (null)
+    every { requestAttributes.request } returns (mockk())
     RequestContextHolder.setRequestAttributes(requestAttributes)
 
     val authentication: Authentication = mockk()

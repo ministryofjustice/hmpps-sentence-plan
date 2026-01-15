@@ -9,7 +9,6 @@ import org.junit.jupiter.api.Order
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.TestMethodOrder
-import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient
 import org.springframework.http.HttpStatus
 import org.springframework.test.context.jdbc.Sql
 import org.springframework.test.context.jdbc.Sql.ExecutionPhase.AFTER_TEST_CLASS
@@ -33,7 +32,6 @@ import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import java.util.UUID
 
-@AutoConfigureWebTestClient(timeout = "5s")
 @DisplayName("Plan Controller Tests")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class PlanControllerTest : IntegrationTestBase() {
@@ -349,7 +347,7 @@ class PlanControllerTest : IntegrationTestBase() {
         .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_READ", "ROLE_SENTENCE_PLAN_WRITE")))
         .bodyValue(agreePlanBody)
         .exchange()
-        .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
+        .expectStatus().isEqualTo(HttpStatus.NOT_FOUND)
     }
   }
 

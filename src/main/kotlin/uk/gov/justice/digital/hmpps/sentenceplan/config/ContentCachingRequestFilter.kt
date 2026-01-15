@@ -17,7 +17,7 @@ class ContentCachingRequestFilter : HttpFilter() {
 
   @Throws(IOException::class, ServletException::class)
   override fun doFilter(request: HttpServletRequest, response: HttpServletResponse, chain: FilterChain) {
-    val wrappedRequest = ContentCachingRequestWrapper(request)
+    val wrappedRequest = ContentCachingRequestWrapper(request, 0)
     chain.doFilter(wrappedRequest, response)
   }
 }

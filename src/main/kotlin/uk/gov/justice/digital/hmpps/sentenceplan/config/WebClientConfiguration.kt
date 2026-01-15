@@ -6,13 +6,22 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager
 import org.springframework.web.reactive.function.client.WebClient
 import uk.gov.justice.hmpps.kotlin.auth.authorisedWebClient
+import uk.gov.justice.hmpps.kotlin.auth.healthWebClient
 import java.time.Duration
 
 @Configuration
 class WebClientConfiguration(
-  @Value("\${delius-api.base-url}") val deliusApiBaseUrl: String,
-  @Value("\${api.timeout:20s}") val timeout: Duration,
+  @param:Value("\${app.services.hmpps-auth.url}") val hmppsAuthBaseUri: String,
+  @param:Value("\${delius-api.base-url}") val deliusApiBaseUrl: String,
+  @param:Value("\${api.timeout:20s}") val timeout: Duration,
+  @param:Value("\${api.health-timeout:2s}") val healthTimeout: Duration,
 ) {
+  @Bean
+  fun webClientBuilder(): WebClient.Builder = WebClient.builder()
+
+  @Bean
+  fun hmppsAuthHealthWebClient(builder: WebClient.Builder): WebClient = builder.healthWebClient(hmppsAuthBaseUri, healthTimeout)
+
   @Bean
   fun deliusRestClient(authorizedClientManager: OAuth2AuthorizedClientManager, builder: WebClient.Builder): WebClient = builder.authorisedWebClient(authorizedClientManager, registrationId = "delius-api", url = deliusApiBaseUrl, timeout)
 }

@@ -73,7 +73,7 @@ class PlanVersionEntity(
   // This is nullable in the declaration to enable ignoring the field in JSON serialisation
   @OneToOne(mappedBy = "currentVersion")
   @JsonIgnore
-  val plan: PlanEntity?,
+  var plan: PlanEntity?,
 
   // We need this field as well as the plan above because we want a reference from each of the plan and plan_version tables
   @Column(name = "plan_id")

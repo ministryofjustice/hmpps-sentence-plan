@@ -3,7 +3,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.springframework.boot.gradle.tasks.run.BootRun
 
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "9.3.0"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "10.0.0"
   kotlin("plugin.spring") version "2.3.0"
   kotlin("plugin.jpa") version "2.3.0"
   id("org.openapi.generator") version "7.18.0"
@@ -12,32 +12,29 @@ plugins {
 
 configurations {
   testImplementation { exclude(group = "org.junit.vintage") }
+  // exclude until we update the base image
+  configureEach {
+    exclude(group = "io.netty", module = "netty-codec-http3")
+    exclude(group = "io.netty", module = "netty-codec-native-quic")
+    exclude(group = "io.netty", module = "netty-codec-classes-quic")
+  }
 }
 
 dependencies {
-
-  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:1.8.2")
+  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:2.0.0")
   implementation("org.springframework.boot:spring-boot-starter-webflux")
-  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.15")
+  implementation("tools.jackson.module:jackson-module-kotlin:3.0.3")
+  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.1")
 
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-  implementation("org.springframework.boot:spring-boot-starter-security")
-  implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
-  implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
-
-  implementation("com.vladmihalcea:hibernate-types-60:2.21.1")
-  implementation("org.flywaydb:flyway-core:11.20.1")
-  runtimeOnly("org.flywaydb:flyway-database-postgresql:11.20.1")
-  runtimeOnly("org.postgresql:postgresql")
+  implementation("org.springframework.boot:spring-boot-starter-flyway")
+  implementation("org.postgresql:postgresql:42.7.8")
+  runtimeOnly("org.flywaydb:flyway-database-postgresql")
 
   // Test dependencies
+  testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:2.0.0")
+  testImplementation("org.jetbrains.kotlin:kotlin-test-junit5:2.3.0")
   testImplementation("com.ninja-squad:springmockk:5.0.1")
-  testImplementation("io.jsonwebtoken:jjwt-impl:0.13.0")
-  testImplementation("io.jsonwebtoken:jjwt-jackson:0.13.0")
-  testImplementation("org.springframework.security:spring-security-test")
-
-  // Dev dependencies
-  developmentOnly("org.springframework.boot:spring-boot-devtools")
 }
 
 kotlin {
@@ -54,4 +51,9 @@ tasks {
       "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005",
     )
   }
+}
+
+val compileTestKotlin: KotlinCompile by tasks
+compileTestKotlin.compilerOptions {
+  freeCompilerArgs.set(listOf("-Xannotation-default-target=param-property"))
 }

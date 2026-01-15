@@ -7,7 +7,6 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient
 import org.springframework.test.context.jdbc.Sql
 import org.springframework.test.context.jdbc.Sql.ExecutionPhase.AFTER_TEST_CLASS
 import org.springframework.test.context.jdbc.Sql.ExecutionPhase.AFTER_TEST_METHOD
@@ -30,10 +29,10 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepStatus
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.UUID
+import kotlin.test.assertIs
 
 private const val TEST_DATA_GOAL_UUID = "31d7e986-4078-4f5c-af1d-115f9ba3722d"
 
-@AutoConfigureWebTestClient(timeout = "5s")
 @DisplayName("Goal Controller Tests")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class GoalControllerTest : IntegrationTestBase() {
@@ -112,9 +111,10 @@ class GoalControllerTest : IntegrationTestBase() {
 
     @Test
     fun `create steps should return forbidden when no role`() {
-      webTestClient.post().uri("/plans/$randomUuid/goals/1/steps")
+      webTestClient.post().uri("/goals/$randomUuid/steps")
         .header("Content-Type", "application/json")
         .headers(setAuthorisation(roles = listOf("abc")))
+        .bodyValue(stepList)
         .exchange()
         .expectStatus().isForbidden
     }
@@ -138,7 +138,7 @@ class GoalControllerTest : IntegrationTestBase() {
 
     @Test
     fun `get goal steps should return forbidden when no role`() {
-      webTestClient.get().uri("/plans/$randomUuid/goals/e6fb513d-3800-4c35-bb3a-5f9bdc9759dd/steps")
+      webTestClient.get().uri("/goals/e6fb513d-3800-4c35-bb3a-5f9bdc9759dd/steps")
         .header("Content-Type", "application/json")
         .headers(setAuthorisation(roles = listOf("abc")))
         .exchange()
@@ -164,7 +164,7 @@ class GoalControllerTest : IntegrationTestBase() {
 
     @Test
     fun `update goals order should return forbidden when no role`() {
-      webTestClient.post().uri("/plans/$randomUuid/goals/order")
+      webTestClient.post().uri("/goals/order")
         .header("Content-Type", "application/json")
         .headers(setAuthorisation(roles = listOf("abc")))
         .bodyValue(goalOrderList)
@@ -660,6 +660,7 @@ class GoalControllerTest : IntegrationTestBase() {
         .expectBody<GoalEntity>()
         .consumeWith { response ->
           val goal = response.responseBody
+          assertIs<GoalEntity>(goal)
           assertThat(goal.status).isEqualTo(GoalStatus.FUTURE)
           assertThat(goal.relatedAreasOfNeed).isNotEmpty()
           assertThat(goal.reminderDate).isEqualTo(LocalDate.now().plusWeeks(20))

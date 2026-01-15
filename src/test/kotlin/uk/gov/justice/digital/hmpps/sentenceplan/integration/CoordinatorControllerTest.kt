@@ -282,8 +282,8 @@ class CoordinatorControllerTest : IntegrationTestBase() {
         .expectBody<ErrorResponse>()
         .returnResult().run {
           assertThat(responseBody?.status).isEqualTo(HttpStatus.NOT_FOUND.value())
-          assertThat(responseBody?.userMessage).startsWith("No resource found failure")
-          assertThat(responseBody?.developerMessage).startsWith("No static resource")
+          assertThat(responseBody?.userMessage).startsWith("Plan not found for id ")
+          assertThat(responseBody?.developerMessage).startsWith("Plan not found for id ")
         }
     }
 

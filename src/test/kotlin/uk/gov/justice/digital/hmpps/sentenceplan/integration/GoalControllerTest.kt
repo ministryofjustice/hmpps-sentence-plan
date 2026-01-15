@@ -111,9 +111,10 @@ class GoalControllerTest : IntegrationTestBase() {
 
     @Test
     fun `create steps should return forbidden when no role`() {
-      webTestClient.post().uri("/plans/$randomUuid/goals/1/steps")
+      webTestClient.post().uri("/goals/$randomUuid/steps")
         .header("Content-Type", "application/json")
         .headers(setAuthorisation(roles = listOf("abc")))
+        .bodyValue(stepList)
         .exchange()
         .expectStatus().isForbidden
     }
@@ -137,7 +138,7 @@ class GoalControllerTest : IntegrationTestBase() {
 
     @Test
     fun `get goal steps should return forbidden when no role`() {
-      webTestClient.get().uri("/plans/$randomUuid/goals/e6fb513d-3800-4c35-bb3a-5f9bdc9759dd/steps")
+      webTestClient.get().uri("/goals/e6fb513d-3800-4c35-bb3a-5f9bdc9759dd/steps")
         .header("Content-Type", "application/json")
         .headers(setAuthorisation(roles = listOf("abc")))
         .exchange()
@@ -163,7 +164,7 @@ class GoalControllerTest : IntegrationTestBase() {
 
     @Test
     fun `update goals order should return forbidden when no role`() {
-      webTestClient.post().uri("/plans/$randomUuid/goals/order")
+      webTestClient.post().uri("/goals/order")
         .header("Content-Type", "application/json")
         .headers(setAuthorisation(roles = listOf("abc")))
         .bodyValue(goalOrderList)

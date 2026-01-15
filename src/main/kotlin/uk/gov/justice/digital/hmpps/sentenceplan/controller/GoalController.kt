@@ -27,6 +27,7 @@ private const val ONE_ROW_DELETED = 1
 class GoalController(private val service: GoalService) {
 
   @GetMapping("/{goalUuid}")
+  @PreAuthorize("hasAnyRole('ROLE_SENTENCE_PLAN_WRITE', 'ROLE_SENTENCE_PLAN_READ')")
   fun getGoal(
     @PathVariable goalUuid: UUID,
   ) = service.getGoalByUuid(goalUuid)
@@ -86,6 +87,7 @@ class GoalController(private val service: GoalService) {
   ) = service.addStepsToGoal(goalUuid, Goal(steps = steps))
 
   @GetMapping("/{goalUuid}/steps")
+  @PreAuthorize("hasAnyRole('ROLE_SENTENCE_PLAN_WRITE', 'ROLE_SENTENCE_PLAN_READ')")
   @ResponseStatus(HttpStatus.OK)
   fun getAllGoalSteps(
     @PathVariable goalUuid: UUID,

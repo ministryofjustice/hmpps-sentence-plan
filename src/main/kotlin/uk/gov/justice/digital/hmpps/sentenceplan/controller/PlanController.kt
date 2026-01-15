@@ -26,18 +26,21 @@ class PlanController(
 ) {
 
   @GetMapping("/{planUuid}")
+  @PreAuthorize("hasAnyRole('ROLE_SENTENCE_PLAN_WRITE', 'ROLE_SENTENCE_PLAN_READ')")
   @ResponseStatus(HttpStatus.OK)
   fun getPlan(
     @PathVariable planUuid: UUID,
   ) = planService.getPlanVersionByPlanUuid(planUuid)
 
   @GetMapping("/{planUuid}/notes")
+  @PreAuthorize("hasAnyRole('ROLE_SENTENCE_PLAN_WRITE', 'ROLE_SENTENCE_PLAN_READ')")
   @ResponseStatus(HttpStatus.OK)
   fun getPlanAndGoalNotes(
     @PathVariable planUuid: UUID,
   ) = planService.getPlanAndGoalNotes(planUuid)
 
   @GetMapping("/{planUuid}/version/{planVersionNumber}")
+  @PreAuthorize("hasAnyRole('ROLE_SENTENCE_PLAN_WRITE', 'ROLE_SENTENCE_PLAN_READ')")
   @ResponseStatus(HttpStatus.OK)
   fun getPlanVersion(
     @PathVariable planUuid: UUID,
@@ -45,12 +48,14 @@ class PlanController(
   ) = planService.getPlanVersionByPlanUuidAndPlanVersion(planUuid, planVersionNumber)
 
   @GetMapping("/version/{planVersionUuid}")
+  @PreAuthorize("hasAnyRole('ROLE_SENTENCE_PLAN_WRITE', 'ROLE_SENTENCE_PLAN_READ')")
   @ResponseStatus(HttpStatus.OK)
   fun getPlanVersionByVersionUuid(
     @PathVariable planVersionUuid: UUID,
   ) = versionService.getPlanVersionByVersionUuid(planVersionUuid)
 
   @GetMapping("/{planUuid}/goals")
+  @PreAuthorize("hasAnyRole('ROLE_SENTENCE_PLAN_WRITE', 'ROLE_SENTENCE_PLAN_READ')")
   @ResponseStatus(HttpStatus.OK)
   fun getPlanGoals(
     @PathVariable planUuid: UUID,

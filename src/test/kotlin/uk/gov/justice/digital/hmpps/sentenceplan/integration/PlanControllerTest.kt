@@ -347,7 +347,7 @@ class PlanControllerTest : IntegrationTestBase() {
         .headers(setAuthorisation(user = authenticatedUser, roles = listOf("ROLE_SENTENCE_PLAN_READ", "ROLE_SENTENCE_PLAN_WRITE")))
         .bodyValue(agreePlanBody)
         .exchange()
-        .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
+        .expectStatus().isEqualTo(HttpStatus.NOT_FOUND)
     }
   }
 

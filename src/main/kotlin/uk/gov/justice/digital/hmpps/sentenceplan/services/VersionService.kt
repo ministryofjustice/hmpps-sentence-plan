@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.sentenceplan.services
 
 import jakarta.persistence.EntityManager
-import jakarta.persistence.NoResultException
 import jakarta.persistence.PersistenceContext
 import org.springframework.dao.EmptyResultDataAccessException
 import org.springframework.stereotype.Service
@@ -28,13 +27,7 @@ class VersionService(
    * New UUIDs are set on the copied objects and then persisted to the database.
    */
   private fun createNewPlanVersion(planVersionUuid: UUID): PlanVersionEntity {
-    val newPlanVersionEntity: PlanVersionEntity
-
-    try {
-      newPlanVersionEntity = planVersionRepository.getWholePlanVersionByUuid(planVersionUuid)
-    } catch (_: NoResultException) {
-      throw NoResultException("A Plan Version couldn't be found for Plan Version UUID: $planVersionUuid")
-    }
+    val newPlanVersionEntity = planVersionRepository.getWholePlanVersionByUuid(planVersionUuid)
 
     entityManager.detach(newPlanVersionEntity)
 
@@ -78,9 +71,8 @@ class VersionService(
       goal.relatedAreasOfNeed = relatedAreasSet
     }
 
-    planVersionRepository.save(newPlanVersionEntity)
-
-    entityManager.detach(newPlanVersionEntity)
+    entityManager.persist(newPlanVersionEntity)
+    entityManager.flush()
 
     val currentPlanVersion = planVersionRepository.findByUuid(planVersionUuid)
     currentPlanVersion.version = planVersionRepository.findNextPlanVersion(currentPlanVersion.planId)

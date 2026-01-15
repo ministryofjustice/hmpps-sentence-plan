@@ -63,6 +63,7 @@ class CoordinatorController(
     .run(PlanVersionResponse::from)
 
   @GetMapping("/{planUuid}")
+  @PreAuthorize("hasAnyRole('ROLE_SENTENCE_PLAN_WRITE', 'ROLE_SENTENCE_PLAN_READ')")
   @Operation(
     description = "Gets the latest sentence plan, or a specific version if specified.",
     tags = ["Integrations"],
@@ -93,6 +94,7 @@ class CoordinatorController(
   ) = planService.getPlanVersionByPlanUuid(planUuid).run(GetPlanResponse::from)
 
   @GetMapping("/{planUuid}/all")
+  @PreAuthorize("hasAnyRole('ROLE_SENTENCE_PLAN_WRITE', 'ROLE_SENTENCE_PLAN_READ')")
   @Operation(
     description = "Gets a list of versions for the given plan.",
     tags = ["Integrations"],
@@ -121,9 +123,9 @@ class CoordinatorController(
   fun getPlanVersions(
     @PathVariable planUuid: UUID,
   ) = planService.getPlanVersionsByPlanUuid(planUuid)
-      .filter { !it.softDeleted }
-      .run(PlanVersionDetails::fromAll)
-      .sortedByDescending { it.createdAt }
+    .filter { !it.softDeleted }
+    .run(PlanVersionDetails::fromAll)
+    .sortedByDescending { it.createdAt }
 
   @PostMapping("/{planUuid}/sign")
   @PreAuthorize("hasAnyRole('ROLE_SENTENCE_PLAN_WRITE')")
@@ -377,5 +379,5 @@ class CoordinatorController(
   fun cloneLatestPlanVersion(
     @PathVariable planUuid: UUID,
     @RequestBody @Valid body: ClonePlanVersionRequest,
-  ) = planService.clone(planUuid, body.planType).run(PlanVersionResponse::from)
+  ) = PlanVersionResponse(planVersion = planService.clone(planUuid, body.planType).version.toLong(), planId = planUuid)
 }

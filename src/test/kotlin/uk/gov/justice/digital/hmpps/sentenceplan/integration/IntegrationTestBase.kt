@@ -8,8 +8,7 @@ import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.http.HttpHeaders
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.reactive.server.WebTestClient
-import uk.gov.justice.digital.hmpps.sentenceplan.JwtAuthHelper
-import java.time.Duration
+import uk.gov.justice.hmpps.test.kotlin.auth.JwtAuthorisationHelper
 
 @SpringBootTest(webEnvironment = RANDOM_PORT)
 @ActiveProfiles("test")
@@ -28,14 +27,11 @@ abstract class IntegrationTestBase {
   }
 
   @Autowired
-  internal lateinit var jwtHelper: JwtAuthHelper
+  internal lateinit var jwtAuthHelper: JwtAuthorisationHelper
 
-  internal fun setAuthorisation(user: String = "sentence-plan", roles: List<String> = listOf()): (HttpHeaders) -> Unit {
-    val token = jwtHelper.createJwt(
-      subject = user,
-      expiryTime = Duration.ofHours(1L),
-      roles = roles,
-    )
-    return { it.set(HttpHeaders.AUTHORIZATION, "Bearer $token") }
-  }
+  internal fun setAuthorisation(
+    user: String = "sentence-plan",
+    roles: List<String> = listOf(),
+    scopes: List<String> = listOf(),
+  ): (HttpHeaders) -> Unit = jwtAuthHelper.setAuthorisationHeader(username = user, scope = scopes, roles = roles)
 }

@@ -24,8 +24,6 @@ spring:
     validate-on-migrate: true
   jackson:
     date-format: "yyyy-MM-dd HH:mm:ss"
-    serialization:
-      write-dates-as-timestamps: false
   security:
     oauth2:
       resourceserver:

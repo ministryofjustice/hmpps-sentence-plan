@@ -33,7 +33,7 @@ class GoalService(
   private val versionService: VersionService,
   private val planVersionRepository: PlanVersionRepository,
 ) {
-  fun getGoalByUuid(goalUuid: UUID): GoalEntity? = goalRepository.findByUuid(goalUuid)
+  fun getGoalByUuid(goalUuid: UUID) = goalRepository.getGoalByUuid(goalUuid)
 
   @Transactional
   fun createNewGoal(planUuid: UUID, goal: Goal): GoalEntity {

@@ -556,19 +556,18 @@ class PlanServiceTest {
 
     @Test
     fun `should create a new version of the plan with a new version`() {
-      val planUUID = planEntity.uuid
-      val updatedPlanEntity = planEntity.apply {
-        currentVersion = PlanVersionEntity(
-          id = 1,
-          plan = planEntity,
-          planId = 0L,
-          version = planEntity.currentVersion!!.version.inc(),
-        )
-      }
+      val currentVersion = PlanVersionEntity(
+        id = 1,
+        plan = planEntity,
+        planId = 0L,
+        version = planEntity.currentVersion!!.version.inc(),
+      )
+      planEntity.currentVersion = currentVersion
+
       every { planRepository.getByUuid(any()) } returns planEntity
-      every { versionService.alwaysCreateNewPlanVersion(any()) } returns updatedPlanEntity.currentVersion!!
-      every { planVersionRepository.save(any()) } returns updatedPlanEntity.currentVersion
-      val result = planService.clone(planUUID, PlanType.OTHER)
+      every { versionService.alwaysCreateNewPlanVersion(any()) } returns currentVersion
+      every { planVersionRepository.save(any()) } returns currentVersion
+      val result = planService.clone(planEntity.uuid, PlanType.OTHER)
       assertThat(result.version).isEqualTo(1L)
       assertThat(result.planType).isEqualTo(PlanType.OTHER)
     }

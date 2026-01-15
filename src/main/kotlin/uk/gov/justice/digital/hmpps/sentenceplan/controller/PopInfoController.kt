@@ -18,8 +18,5 @@ class PopInfoController(
   @PostMapping
   fun getPopInfo(
     @RequestBody body: CRNLinkedRequest,
-  ): PopInfoResponse {
-    val crn = body.crn
-    return deliusApiService.getPopInfo(crn)
-  }
+  ) = deliusApiService.getPopInfo(body.crn)
 }

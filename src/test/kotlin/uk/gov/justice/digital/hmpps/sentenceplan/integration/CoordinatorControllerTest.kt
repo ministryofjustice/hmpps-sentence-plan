@@ -8,7 +8,6 @@ import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient
 import org.springframework.http.HttpStatus
 import org.springframework.test.context.jdbc.Sql
 import org.springframework.test.context.jdbc.Sql.ExecutionPhase.AFTER_TEST_CLASS
@@ -41,7 +40,6 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.response.SoftDeletePlanV
 import uk.gov.justice.digital.hmpps.sentenceplan.exceptions.NotFoundException
 import java.util.UUID
 
-@AutoConfigureWebTestClient(timeout = "30s")
 @DisplayName("Coordinator Controller Tests")
 class CoordinatorControllerTest : IntegrationTestBase() {
 

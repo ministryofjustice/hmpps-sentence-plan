@@ -9,6 +9,5 @@ import java.util.UUID
 class StepService(
   private val stepRepository: StepRepository,
 ) {
-
   fun getStepByUuid(stepUuid: UUID): StepEntity? = stepRepository.findByUuid(stepUuid)
 }

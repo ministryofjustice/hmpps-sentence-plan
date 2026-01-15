@@ -6,7 +6,6 @@ import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import jakarta.validation.Valid
-import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.GetMapping
@@ -16,7 +15,6 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
-import org.springframework.web.servlet.resource.NoResourceFoundException
 import uk.gov.justice.digital.hmpps.sentenceplan.config.ErrorResponse
 import uk.gov.justice.digital.hmpps.sentenceplan.data.CreatePlanRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.data.LockPlanRequest
@@ -30,8 +28,6 @@ import uk.gov.justice.digital.hmpps.sentenceplan.entity.request.SoftDeletePlanVe
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.response.GetPlanResponse
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.response.PlanVersionDetails
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.response.PlanVersionResponse
-import uk.gov.justice.digital.hmpps.sentenceplan.entity.response.PlanVersionsResponse
-import uk.gov.justice.digital.hmpps.sentenceplan.exceptions.NotFoundException
 import uk.gov.justice.digital.hmpps.sentenceplan.services.PlanService
 import java.util.UUID
 
@@ -63,7 +59,7 @@ class CoordinatorController(
     ],
   )
   @ResponseStatus(HttpStatus.CREATED)
-  fun createPlan(@RequestBody createPlanRequest: CreatePlanRequest): PlanVersionResponse = planService.createPlan(createPlanRequest.planType)
+  fun createPlan(@RequestBody createPlanRequest: CreatePlanRequest) = planService.createPlan(createPlanRequest.planType)
     .run(PlanVersionResponse::from)
 
   @GetMapping("/{planUuid}")
@@ -94,14 +90,7 @@ class CoordinatorController(
   @ResponseStatus(HttpStatus.OK)
   fun getPlan(
     @PathVariable planUuid: UUID,
-  ): GetPlanResponse {
-    try {
-      return planService.getPlanVersionByPlanUuid(planUuid)
-        .run(GetPlanResponse::from)
-    } catch (_: NotFoundException) {
-      throw NoResourceFoundException(HttpMethod.GET, "Could not find a plan with ID: $planUuid")
-    }
-  }
+  ) = planService.getPlanVersionByPlanUuid(planUuid).run(GetPlanResponse::from)
 
   @GetMapping("/{planUuid}/all")
   @Operation(
@@ -131,14 +120,10 @@ class CoordinatorController(
   @ResponseStatus(HttpStatus.OK)
   fun getPlanVersions(
     @PathVariable planUuid: UUID,
-  ): PlanVersionsResponse = try {
-    planService.getPlanVersionsByPlanUuid(planUuid)
+  ) = planService.getPlanVersionsByPlanUuid(planUuid)
       .filter { !it.softDeleted }
       .run(PlanVersionDetails::fromAll)
       .sortedByDescending { it.createdAt }
-  } catch (_: NotFoundException) {
-    throw NoResourceFoundException(HttpMethod.GET, "Could not find a plan with ID: $planUuid")
-  }
 
   @PostMapping("/{planUuid}/sign")
   @PreAuthorize("hasAnyRole('ROLE_SENTENCE_PLAN_WRITE')")
@@ -169,14 +154,7 @@ class CoordinatorController(
   fun signPlan(
     @PathVariable planUuid: UUID,
     @RequestBody signRequest: SignRequest,
-  ): PlanVersionResponse {
-    try {
-      return planService.signPlan(planUuid, signRequest)
-        .run(PlanVersionResponse::from)
-    } catch (_: NotFoundException) {
-      throw NoResourceFoundException(HttpMethod.GET, "Could not find a plan with ID: $planUuid")
-    }
-  }
+  ) = planService.signPlan(planUuid, signRequest).run(PlanVersionResponse::from)
 
   @PostMapping("/{planUuid}/lock")
   @PreAuthorize("hasAnyRole('ROLE_SENTENCE_PLAN_WRITE')")
@@ -270,7 +248,7 @@ class CoordinatorController(
   fun rollbackPlanVersion(
     @PathVariable planUuid: UUID,
     @RequestBody @Valid body: RollbackPlanRequest,
-  ): PlanVersionResponse = PlanVersionResponse.from(planService.rollbackVersion(planUuid, body.sentencePlanVersion.toInt()))
+  ) = planService.rollbackVersion(planUuid, body.sentencePlanVersion.toInt()).run(PlanVersionResponse::from)
 
   @PostMapping("/{planUuid}/delete")
   @PreAuthorize("hasAnyRole('ROLE_SENTENCE_PLAN_WRITE')")
@@ -399,5 +377,5 @@ class CoordinatorController(
   fun cloneLatestPlanVersion(
     @PathVariable planUuid: UUID,
     @RequestBody @Valid body: ClonePlanVersionRequest,
-  ): PlanVersionResponse = PlanVersionResponse(planVersion = planService.clone(planUuid, body.planType).version.toLong(), planId = planUuid)
+  ) = planService.clone(planUuid, body.planType).run(PlanVersionResponse::from)
 }

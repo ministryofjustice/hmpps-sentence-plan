@@ -12,12 +12,6 @@ plugins {
 
 configurations {
   testImplementation { exclude(group = "org.junit.vintage") }
-  // exclude until we update the base image
-  configureEach {
-    exclude(group = "io.netty", module = "netty-codec-http3")
-    exclude(group = "io.netty", module = "netty-codec-native-quic")
-    exclude(group = "io.netty", module = "netty-codec-classes-quic")
-  }
 }
 
 dependencies {
@@ -25,6 +19,7 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-webflux")
   implementation("tools.jackson.module:jackson-module-kotlin:3.0.3")
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.1")
+  runtimeOnly("io.netty:netty-codec-classes-quic")
 
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
   implementation("org.springframework.boot:spring-boot-starter-flyway")

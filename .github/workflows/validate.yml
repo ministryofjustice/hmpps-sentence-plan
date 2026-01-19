@@ -22,16 +22,6 @@ jobs:
         if: failure()
         run: make save-logs OUTPUT_LOGS_DIR=${{ runner.temp }}/docker-logs
 
-      - name: Upload test results
-        if: '!cancelled()'
-        uses: actions/upload-artifact@v5
-        with:
-          name: test_artifacts
-          path: |
-            build/test-results
-            build/reports/tests
-            ${{ runner.temp }}/docker-logs
-
       - name: Publish Unit Test Results
         uses: EnricoMi/publish-unit-test-result-action@v2
         if: ${{ always() }}

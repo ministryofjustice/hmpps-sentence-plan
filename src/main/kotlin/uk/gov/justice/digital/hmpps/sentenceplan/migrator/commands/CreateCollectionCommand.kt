@@ -1,13 +1,13 @@
 package uk.gov.justice.digital.hmpps.sentenceplan.migrator.commands
 
 import com.fasterxml.jackson.annotation.JsonIgnore
-import uk.gov.justice.digital.hmpps.sentenceplan.migrator.common.User
+import uk.gov.justice.digital.hmpps.sentenceplan.migrator.common.UserDetails
 import java.util.UUID
 
 data class CreateCollectionCommand(
   val name: String,
   val parentCollectionItemUuid: UUID?,
-  override val user: User,
+  override val user: UserDetails,
   override val assessmentUuid: UUID,
   override val timeline: Timeline? = null,
 ) : RequestableCommand {

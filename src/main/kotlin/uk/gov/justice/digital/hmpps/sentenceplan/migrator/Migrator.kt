@@ -15,7 +15,9 @@ import uk.gov.justice.digital.hmpps.sentenceplan.migrator.commands.RemoveCollect
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.commands.ReorderCollectionItemCommand
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.commands.RequestableCommand
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.commands.UpdateCollectionItemAnswersCommand
-import uk.gov.justice.digital.hmpps.sentenceplan.migrator.common.User
+import uk.gov.justice.digital.hmpps.sentenceplan.migrator.common.SingleValue
+import uk.gov.justice.digital.hmpps.sentenceplan.migrator.common.UserDetails
+import uk.gov.justice.digital.hmpps.sentenceplan.migrator.common.Value
 import java.util.UUID
 
 data class CommandsRequest(
@@ -37,9 +39,10 @@ class Migrator(
   fun migrate(plan: PlanEntity) {
     plan.currentVersion?.let { currentVersion ->
       val createAssessmentCommand = CreateAssessmentCommand(
-        user = User.from(plan.createdBy),
+        user = UserDetails.from(plan.createdBy),
         formVersion = "1",
         properties = buildMap {},
+        assessmentType = "SENTENCE_PLAN",
         timeline = null,
         // TODO: add timeline item
       )
@@ -50,7 +53,7 @@ class Migrator(
       val createGoalsCollectionCommand = CreateCollectionCommand(
         name = "GOALS",
         parentCollectionItemUuid = null,
-        user = User.from(plan.createdBy),
+        user = UserDetails.from(plan.createdBy),
         assessmentUuid = migrationContext.assessmentUuid,
       )
 
@@ -66,7 +69,7 @@ class Migrator(
           .map { previousGoalVersion ->
             RemoveCollectionItemCommand(
               collectionItemUuid = previousGoalVersion.uuid,
-              user = User.from(currentPlanVersion.updatedBy),
+              user = UserDetails.from(currentPlanVersion.updatedBy),
               assessmentUuid = context.assessmentUuid,
             )
           }
@@ -84,7 +87,7 @@ class Migrator(
                 answers = emptyMap(),
                 properties = emptyMap(),
                 index = currentGoalVersion.goalOrder, // explicitly set order by what we know
-                user = User.from(currentGoalVersion.createdBy),
+                user = UserDetails.from(currentGoalVersion.createdBy),
                 assessmentUuid = context.assessmentUuid,
                 // TODO: add timeline item
               ),
@@ -95,16 +98,16 @@ class Migrator(
                 ReorderCollectionItemCommand(
                   collectionItemUuid = context.goalsCollectionUuid,
                   index = currentGoalVersion.goalOrder,
-                  user = User.from(currentGoalVersion.createdBy),
+                  user = UserDetails.from(currentGoalVersion.createdBy),
                   assessmentUuid = context.assessmentUuid,
                   // TODO: add timeline item
                 ),
               )
             }
 
-            val payload: Map<String, List<String>> = buildMap {
+            val payload: Map<String, Value> = buildMap {
               if (previousGoalVersion.status != currentGoalVersion.status) {
-                put("GOAL_STATUS", listOf(currentGoalVersion.status.name))
+                put("GOAL_STATUS", SingleValue(currentGoalVersion.status.name))
               }
 
               // NOTE: Continue to check other fields of the goal version and add to the payload
@@ -117,7 +120,7 @@ class Migrator(
                 collectionItemUuid = context.goalsCollectionUuid,
                 added = payload,
                 removed = emptyList(),
-                user = User.from(currentGoalVersion.createdBy),
+                user = UserDetails.from(currentGoalVersion.createdBy),
                 assessmentUuid = context.assessmentUuid,
                 // TODO: add timeline item
               ),
@@ -136,7 +139,7 @@ class Migrator(
     planRepository.save(plan.apply { migrated = true })
   }
 
-  override fun run(vararg args: String?) {
+  override fun run(vararg args: String) {
     var index = 0
     val pageSize = 25
     var hasNext = true

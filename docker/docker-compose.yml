@@ -44,6 +44,7 @@ services:
       CLIENT_CREDS_CLIENT_SECRET: sentence-plan-api-client
       HMPPS_AUTH_BASE_URL: http://hmpps-auth:9090
       DELIUS_API_BASE_URL: http://delius:8080
+      ASSESSMENT_PLATFORM_API_BASE_URL: http://delius:8080
 
   delius:
     image: wiremock/wiremock:latest

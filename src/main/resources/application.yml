@@ -41,6 +41,12 @@ spring:
             authorization-grant-type: client_credentials
             client-id: ${client-creds-client-id}
             client-secret: ${client-creds-client-secret}
+          assessment-platform-api:
+            provider: hmpps-auth
+            client-authentication-method: client_secret_basic
+            authorization-grant-type: client_credentials
+            client-id: ${client-creds-client-id}
+            client-secret: ${client-creds-client-secret}
   web:
     error:
       include-message: always

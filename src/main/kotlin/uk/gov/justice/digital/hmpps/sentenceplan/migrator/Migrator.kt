@@ -1,33 +1,83 @@
 package uk.gov.justice.digital.hmpps.sentenceplan.migrator
 
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.CommandLineRunner
 import org.springframework.context.annotation.Profile
 import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Component
+import org.springframework.web.reactive.function.client.WebClient
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalEntity
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanAgreementNoteEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.commands.AddCollectionItemCommand
+import uk.gov.justice.digital.hmpps.sentenceplan.migrator.commands.Command
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.commands.CreateAssessmentCommand
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.commands.CreateCollectionCommand
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.commands.RemoveCollectionItemCommand
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.commands.ReorderCollectionItemCommand
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.commands.RequestableCommand
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.commands.UpdateCollectionItemAnswersCommand
+import uk.gov.justice.digital.hmpps.sentenceplan.migrator.commands.result.AddCollectionItemCommandResult
+import uk.gov.justice.digital.hmpps.sentenceplan.migrator.commands.result.CommandResult
+import uk.gov.justice.digital.hmpps.sentenceplan.migrator.commands.result.CreateAssessmentCommandResult
+import uk.gov.justice.digital.hmpps.sentenceplan.migrator.commands.result.CreateCollectionCommandResult
+import uk.gov.justice.digital.hmpps.sentenceplan.migrator.common.IdentifierType
+import uk.gov.justice.digital.hmpps.sentenceplan.migrator.common.MultiValue
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.common.SingleValue
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.common.UserDetails
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.common.Value
-import java.util.UUID
+import java.util.*
 
 data class CommandsRequest(
   val commands: List<RequestableCommand>,
 )
 
-typealias Requests = List<CommandsRequest>
+data class CommandResponse(
+  val request: Command,
+  val result: CommandResult,
+)
 
-data class PlanMigrationContext(val assessmentUuid: UUID) {
-  lateinit var goalsCollectionUuid: UUID
+data class CommandsResponse(
+  val commands: List<CommandResponse>,
+) {
+  inline fun <reified T : CommandResult> extractSingle(): T = commands.map { it.result }
+    .filterIsInstance<T>()
+    .singleOrNull()
+    ?: error("Expected exactly one ${T::class.simpleName}")
+}
+
+data class PlanMigrationContext(
+  val assessmentUuid: UUID,
+  val goalsCollectionUuid: UUID,
+  val goals: MutableMap<UUID, UUID> = mutableMapOf(),
+  val planAgreementsCollectionUuid: UUID,
+  val planAgreements: MutableMap<Long, UUID> = mutableMapOf(),
+)
+
+data class VersionDiff<T>(
+  val added: List<T>,
+  val removed: List<T>,
+  val updated: List<Pair<T, T>>,
+)
+
+fun <T, K> diffByKey(
+  previous: Set<T>,
+  current: Set<T>,
+  key: (T) -> K,
+): VersionDiff<T> {
+  val previousByKey = previous.associateBy(key)
+  val currentByKey = current.associateBy(key)
+
+  val added = current.filter { key(it) !in previousByKey }
+  val removed = previous.filter { key(it) !in currentByKey }
+  val updated = current.mapNotNull { curr ->
+    previousByKey[key(curr)]?.let { prev -> prev to curr }
+  }
+
+  return VersionDiff(added, removed, updated)
 }
 
 @Component
@@ -36,104 +86,29 @@ class Migrator(
   private val planRepository: PlanRepository,
   private val planVersionRepository: PlanVersionRepository,
 ) : CommandLineRunner {
+  @Qualifier("assessmentPlatformClient")
+  private lateinit var assessmentPlatformClient: WebClient
+
   fun migrate(plan: PlanEntity) {
-    plan.currentVersion?.let { currentVersion ->
-      val createAssessmentCommand = CreateAssessmentCommand(
-        user = UserDetails.from(plan.createdBy),
-        formVersion = "1",
-        properties = buildMap {},
-        assessmentType = "SENTENCE_PLAN",
-        timeline = null,
-        // TODO: add timeline item
-      )
+    val context = createContext(plan)
 
-      // TODO: Replace with actual call to create
-      val migrationContext = PlanMigrationContext(UUID.randomUUID())
+    val versions = plan.id
+      ?.let(planVersionRepository::findAllByPlanId)
+      .orEmpty()
 
-      val createGoalsCollectionCommand = CreateCollectionCommand(
-        name = "GOALS",
-        parentCollectionItemUuid = null,
-        user = UserDetails.from(plan.createdBy),
-        assessmentUuid = migrationContext.assessmentUuid,
-      )
+    var previous: PlanVersionEntity? = null
 
-      // TODO: Replace with actual call to create collection
-      migrationContext.apply { goalsCollectionUuid = UUID.randomUUID() }
+    versions.forEach { current ->
+      val goalCommands = migrateGoals(current, previous, context)
+      val agreementNotesCommands = migratePlanAgreementNotes(current, previous, context)
 
-      migrationContext
-    }?.let { context ->
-      var previousPlanVersion: PlanVersionEntity? = null
-      plan.id?.run(planVersionRepository::findAllByPlanId)?.map { currentPlanVersion ->
-        val removeGoalsCommands = previousPlanVersion?.goals.orEmpty()
-          .filter { previous -> currentPlanVersion.goals.find { current -> current.uuid == previous.uuid } != null }
-          .map { previousGoalVersion ->
-            RemoveCollectionItemCommand(
-              collectionItemUuid = previousGoalVersion.uuid,
-              user = UserDetails.from(currentPlanVersion.updatedBy),
-              assessmentUuid = context.assessmentUuid,
-            )
-          }
-        val createAndUpdateGoalsCommands = currentPlanVersion.goals.map { currentGoalVersion ->
-          val previousGoalVersion =
-            previousPlanVersion?.goals.orEmpty()
-              // order by which these were created/modified, this *should* ensure events are constructed in order
-              .sortedBy { it.updatedDate }
-              .find { it.uuid == currentGoalVersion.uuid }
-          val commandsPayload = mutableListOf<RequestableCommand>()
-          if (previousGoalVersion == null) {
-            commandsPayload.add(
-              AddCollectionItemCommand(
-                collectionUuid = context.assessmentUuid,
-                answers = emptyMap(),
-                properties = emptyMap(),
-                index = currentGoalVersion.goalOrder, // explicitly set order by what we know
-                user = UserDetails.from(currentGoalVersion.createdBy),
-                assessmentUuid = context.assessmentUuid,
-                // TODO: add timeline item
-              ),
-            )
-          } else {
-            if (previousGoalVersion.goalOrder != currentGoalVersion.goalOrder) {
-              commandsPayload.add(
-                ReorderCollectionItemCommand(
-                  collectionItemUuid = context.goalsCollectionUuid,
-                  index = currentGoalVersion.goalOrder,
-                  user = UserDetails.from(currentGoalVersion.createdBy),
-                  assessmentUuid = context.assessmentUuid,
-                  // TODO: add timeline item
-                ),
-              )
-            }
+      val commands = goalCommands + agreementNotesCommands
 
-            val payload: Map<String, Value> = buildMap {
-              if (previousGoalVersion.status != currentGoalVersion.status) {
-                put("GOAL_STATUS", SingleValue(currentGoalVersion.status.name))
-              }
-
-              // NOTE: Continue to check other fields of the goal version and add to the payload
-              // Some fields may need to be treated as the "goalOrder" above and be their own command
-              // if they are significant event that should have its own timeline item
-            }
-
-            commandsPayload.add(
-              UpdateCollectionItemAnswersCommand(
-                collectionItemUuid = context.goalsCollectionUuid,
-                added = payload,
-                removed = emptyList(),
-                user = UserDetails.from(currentGoalVersion.createdBy),
-                assessmentUuid = context.assessmentUuid,
-                // TODO: add timeline item
-              ),
-            )
-          }
-          commandsPayload
-        }
-
-        val allCommands = removeGoalsCommands + createAndUpdateGoalsCommands
-        // TODO: submit those commands
-
-        previousPlanVersion = currentPlanVersion
+      if (goalCommands.isNotEmpty()) {
+        dispatchCommands(commands)
       }
+
+      previous = current
     }
 
     planRepository.save(plan.apply { migrated = true })
@@ -154,4 +129,185 @@ class Migrator(
       hasNext = batch.hasNext()
     }
   }
+
+  fun createContext(plan: PlanEntity): PlanMigrationContext {
+    val assessmentUuid =
+      dispatchCommands(
+        listOf(
+          CreateAssessmentCommand(
+            user = UserDetails.from(plan.createdBy),
+            formVersion = "1",
+            properties = emptyMap(),
+            assessmentType = "SENTENCE_PLAN",
+            timeline = null,
+            identifiers = plan.crn?.let { mapOf(IdentifierType.CRN to it) },
+          ),
+        ),
+      ).extractSingle<CreateAssessmentCommandResult>()
+        .assessmentUuid
+
+    val goalsCollectionUuid =
+      dispatchCommands(
+        listOf(
+          CreateCollectionCommand(
+            name = "GOALS",
+            parentCollectionItemUuid = null,
+            user = UserDetails.from(plan.createdBy),
+            assessmentUuid = assessmentUuid,
+          ),
+        ),
+      ).extractSingle<CreateCollectionCommandResult>()
+        .collectionUuid
+
+    val planAgreementsCollectionUuid =
+      dispatchCommands(
+        listOf(
+          CreateCollectionCommand(
+            name = "PLAN_AGREEMENTS",
+            parentCollectionItemUuid = null,
+            user = UserDetails.from(plan.createdBy),
+            assessmentUuid = assessmentUuid,
+          ),
+        ),
+      ).extractSingle<CreateCollectionCommandResult>()
+        .collectionUuid
+
+    return PlanMigrationContext(
+      assessmentUuid = assessmentUuid,
+      goalsCollectionUuid = goalsCollectionUuid,
+      planAgreementsCollectionUuid = planAgreementsCollectionUuid,
+    )
+  }
+
+  fun migrateGoals(
+    current: PlanVersionEntity,
+    previous: PlanVersionEntity?,
+    context: PlanMigrationContext,
+  ): List<RequestableCommand> {
+    val diff: VersionDiff<GoalEntity> = diffByKey(
+      previous = previous?.goals.orEmpty(),
+      current = current.goals,
+    ) { it.uuid }
+
+    val removals = diff.removed.map {
+      RemoveCollectionItemCommand(
+        collectionItemUuid = context.goals[it.uuid]
+          ?: throw RuntimeException("Unable to remove collection item ${it.uuid}"),
+        user = UserDetails.from(current.updatedBy),
+        assessmentUuid = context.assessmentUuid,
+      )
+    }
+
+    diff.added.map { goal ->
+      AddCollectionItemCommand(
+        collectionUuid = context.goalsCollectionUuid,
+        answers = mapOf(
+          "title" to SingleValue(goal.title),
+          "area_of_need" to SingleValue(goal.areaOfNeed.name),
+          "related_areas_of_need" to MultiValue(
+            goal.relatedAreasOfNeed?.map { it.name }.orEmpty(),
+          ),
+          "target_date" to SingleValue(goal.targetDate.toString()),
+        ),
+        properties = emptyMap(),
+        index = goal.goalOrder,
+        user = UserDetails.from(goal.createdBy),
+        assessmentUuid = context.assessmentUuid,
+      )
+        .let { command -> dispatchCommands(listOf(command)) }
+        .extractSingle<AddCollectionItemCommandResult>()
+        .also { result -> context.goals[goal.uuid] = result.collectionItemUuid }
+    }
+
+    val updates = diff.updated.flatMap { (prev, curr) ->
+      val collectionUuid = context.goals[curr.uuid]
+        ?: throw RuntimeException("Unable to update collection item ${curr.uuid}")
+
+      buildList {
+        if (prev.goalOrder != curr.goalOrder) {
+          add(
+            ReorderCollectionItemCommand(
+              collectionItemUuid = collectionUuid,
+              index = curr.goalOrder,
+              user = UserDetails.from(curr.createdBy),
+              assessmentUuid = context.assessmentUuid,
+            ),
+          )
+        }
+
+        val changedFields = buildMap<String, Value> {
+          if (prev.status != curr.status) {
+            put("status", SingleValue(curr.status.name))
+            put("status_date", SingleValue(curr.statusDate.toString()))
+          }
+        }
+
+        if (changedFields.isNotEmpty()) {
+          add(
+            UpdateCollectionItemAnswersCommand(
+              collectionItemUuid = collectionUuid,
+              added = changedFields,
+              removed = emptyList(),
+              user = UserDetails.from(curr.createdBy),
+              assessmentUuid = context.assessmentUuid,
+            ),
+          )
+        }
+      }
+    }
+
+    return removals + updates
+  }
+
+  fun migratePlanAgreementNotes(
+    current: PlanVersionEntity,
+    previous: PlanVersionEntity?,
+    context: PlanMigrationContext,
+  ): List<RequestableCommand> {
+    val diff: VersionDiff<PlanAgreementNoteEntity> = diffByKey(
+      previous = previous?.agreementNotes.orEmpty(),
+      current = current.agreementNotes,
+    ) { it.id }
+
+    val removals = diff.removed.map {
+      RemoveCollectionItemCommand(
+        collectionItemUuid = context.planAgreements[it.id]
+          ?: throw RuntimeException("Unable to remove collection item ${it.id}"),
+        user = UserDetails.from(current.updatedBy),
+        assessmentUuid = context.assessmentUuid,
+      )
+    }
+
+    diff.added.map { planAgreementNote ->
+      AddCollectionItemCommand(
+        collectionUuid = context.planAgreementsCollectionUuid,
+        answers = buildMap {
+          planAgreementNote.createdBy?.let { put("created_by", SingleValue(it.username)) }
+          put("notes", SingleValue(planAgreementNote.agreementStatusNote))
+        },
+        properties = mapOf(
+          "status" to SingleValue(planAgreementNote.agreementStatus.toString()),
+          "status_date" to SingleValue(planAgreementNote.createdDate.toString()),
+        ),
+        index = null,
+        user = UserDetails.from(planAgreementNote.createdBy),
+        assessmentUuid = context.assessmentUuid,
+      ).let { command -> dispatchCommands(listOf(command)) }
+        .extractSingle<AddCollectionItemCommandResult>()
+        .also { result -> context.planAgreements[planAgreementNote.id!!] = result.collectionItemUuid }
+    }
+
+    val updates = emptyList<RequestableCommand>()
+
+    return removals + updates
+  }
+
+  fun dispatchCommands(commands: List<RequestableCommand>): CommandsResponse = assessmentPlatformClient
+    .post()
+    .uri("/command")
+    .bodyValue(CommandsRequest(commands))
+    .retrieve()
+    .bodyToMono(CommandsResponse::class.java)
+    .block()
+    ?: throw RuntimeException("Empty response from Assessment Platform API")
 }

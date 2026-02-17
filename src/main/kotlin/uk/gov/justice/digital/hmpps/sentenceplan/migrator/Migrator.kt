@@ -7,6 +7,7 @@ import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClient
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalEntity
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalStatus
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanAgreementNoteEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
@@ -19,6 +20,7 @@ import uk.gov.justice.digital.hmpps.sentenceplan.migrator.commands.CreateCollect
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.commands.RemoveCollectionItemCommand
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.commands.ReorderCollectionItemCommand
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.commands.RequestableCommand
+import uk.gov.justice.digital.hmpps.sentenceplan.migrator.commands.Timeline
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.commands.UpdateCollectionItemAnswersCommand
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.commands.result.AddCollectionItemCommandResult
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.commands.result.CommandResult
@@ -195,6 +197,10 @@ class Migrator(
           ?: throw RuntimeException("Unable to remove collection item ${it.uuid}"),
         user = UserDetails.from(current.updatedBy),
         assessmentUuid = context.assessmentUuid,
+        timeline = Timeline(
+          type = "GOAL_REMOVED",
+          data = emptyMap(),
+        ),
       )
     }
 
@@ -213,6 +219,10 @@ class Migrator(
         index = goal.goalOrder,
         user = UserDetails.from(goal.createdBy),
         assessmentUuid = context.assessmentUuid,
+        timeline = Timeline(
+          type = "GOAL_ADDED",
+          data = emptyMap(),
+        ),
       )
         .let { command -> dispatchCommands(listOf(command)) }
         .extractSingle<AddCollectionItemCommandResult>()
@@ -235,11 +245,19 @@ class Migrator(
           )
         }
 
+        val statusChanged = prev.status != curr.status
+
         val changedFields = buildMap<String, Value> {
-          if (prev.status != curr.status) {
+          if (statusChanged) {
             put("status", SingleValue(curr.status.name))
             put("status_date", SingleValue(curr.statusDate.toString()))
           }
+        }
+
+        val timelineEvent = when (curr.status) {
+          GoalStatus.ACHIEVED -> Timeline("GOAL_ACHIEVED", emptyMap())
+          GoalStatus.REMOVED -> Timeline("GOAL_REMOVED", emptyMap())
+          else -> null
         }
 
         if (changedFields.isNotEmpty()) {
@@ -250,6 +268,7 @@ class Migrator(
               removed = emptyList(),
               user = UserDetails.from(curr.createdBy),
               assessmentUuid = context.assessmentUuid,
+              timeline = timelineEvent,
             ),
           )
         }

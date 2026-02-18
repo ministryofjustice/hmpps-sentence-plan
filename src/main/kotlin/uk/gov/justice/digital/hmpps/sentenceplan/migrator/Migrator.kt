@@ -254,11 +254,11 @@ class Migrator(
           }
         }
 
-        val timelineEvent = when (curr.status) {
+        val timelineEvent = if (statusChanged) when (curr.status) {
           GoalStatus.ACHIEVED -> Timeline("GOAL_ACHIEVED", emptyMap())
           GoalStatus.REMOVED -> Timeline("GOAL_REMOVED", emptyMap())
           else -> null
-        }
+        } else null
 
         if (changedFields.isNotEmpty()) {
           add(

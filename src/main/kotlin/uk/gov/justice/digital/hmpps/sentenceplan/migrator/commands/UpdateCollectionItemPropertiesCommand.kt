@@ -2,13 +2,24 @@ package uk.gov.justice.digital.hmpps.sentenceplan.migrator.commands
 
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.common.UserDetails
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.common.Value
-import java.util.UUID
 
 data class UpdateCollectionItemPropertiesCommand(
-  val collectionItemUuid: UUID,
+  override val user: UserDetails,
+  override val timeline: Timeline? = null,
+  val collectionItem: AddCollectionItemCommand? = null,
+  var collectionItemUuid: String? = null,
   val added: Map<String, Value>,
   val removed: List<String>,
-  override val user: UserDetails,
-  override val assessmentUuid: UUID,
-  override val timeline: Timeline? = null,
-) : RequestableCommand
+  val assessmentUuid: String,
+) : Requestable,
+  Resolvable {
+  override fun resolve(
+    commands: List<Requestable>,
+  ) {
+    if (collectionItem !== null && collectionItemUuid.isNullOrEmpty()) {
+      collectionItemUuid = commands.indexOfFirst { it === collectionItem }
+        .also { require(it >= 0) { "Collection not found" } }
+        .let { index -> "@$index" }
+    }
+  }
+}

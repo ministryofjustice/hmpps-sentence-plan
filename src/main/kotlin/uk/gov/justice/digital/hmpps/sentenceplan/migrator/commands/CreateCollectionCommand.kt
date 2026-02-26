@@ -1,16 +1,23 @@
 package uk.gov.justice.digital.hmpps.sentenceplan.migrator.commands
 
-import com.fasterxml.jackson.annotation.JsonIgnore
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.common.UserDetails
-import java.util.UUID
 
 data class CreateCollectionCommand(
-  val name: String,
-  val parentCollectionItemUuid: UUID?,
   override val user: UserDetails,
-  override val assessmentUuid: UUID,
   override val timeline: Timeline? = null,
-) : RequestableCommand {
-  @JsonIgnore
-  val collectionUuid: UUID = UUID.randomUUID()
+  val name: String,
+  val parentCollectionItem: AddCollectionItemCommand? = null,
+  var parentCollectionItemUuid: String? = null,
+  val assessmentUuid: String,
+) : Requestable,
+  Resolvable {
+  override fun resolve(
+    commands: List<Requestable>,
+  ) {
+    if (parentCollectionItem !== null && parentCollectionItemUuid.isNullOrEmpty()) {
+      parentCollectionItemUuid = commands.indexOfFirst { it === parentCollectionItem }
+        .also { require(it >= 0) { "Collection not found" } }
+        .let { index -> "@$index" }
+    }
+  }
 }

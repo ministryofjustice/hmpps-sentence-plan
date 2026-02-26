@@ -27,6 +27,7 @@ import uk.gov.justice.digital.hmpps.sentenceplan.migrator.common.IdentifierType
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.common.MultiValue
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.common.SingleValue
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.common.UserDetails
+import java.time.LocalDateTime
 import java.util.UUID
 import kotlin.collections.plus
 
@@ -106,6 +107,7 @@ class Migrator(
 
         if (commands.isNotEmpty()) {
           dispatchCommand<CommandResult>(
+            current.updatedDate,
             GroupCommand(
               commands = commands,
               user = UserDetails.from(current.createdBy),
@@ -117,7 +119,6 @@ class Migrator(
       }
 
       planRepository.save(plan.apply { migrated = true })
-
     } catch (e: Exception) {
       log.warn("Failed to migrate ${plan.id}: ${e.message}")
       deleteAssessment(UUID.fromString(context.assessmentUuid))
@@ -127,6 +128,7 @@ class Migrator(
   fun createContext(plan: PlanEntity): PlanMigrationContext {
     val response =
       dispatchCommands(
+        plan.createdDate,
         commands = listOf(
           CreateAssessmentCommand(
             user = UserDetails.from(plan.createdBy),
@@ -284,12 +286,11 @@ class Migrator(
     return additions + deletions
   }
 
-  private inline fun <reified T : CommandResult> dispatchCommand(command: Requestable) =
-    dispatchCommands(listOf(command)).extractSingle<T>()
+  private inline fun <reified T : CommandResult> dispatchCommand(timestamp: LocalDateTime, command: Requestable) = dispatchCommands(timestamp, listOf(command)).extractSingle<T>()
 
-  fun dispatchCommands(commands: List<Requestable>): CommandsResponse = assessmentPlatformClient
+  fun dispatchCommands(timestamp: LocalDateTime, commands: List<Requestable>): CommandsResponse = assessmentPlatformClient
     .post()
-    .uri("/command")
+    .uri { uriBuilder -> uriBuilder.path("/command").queryParam("backdateTo", timestamp.toString()).build() }
     .bodyValue(CommandsRequest(commands))
     .retrieve()
     .bodyToMono(CommandsResponse::class.java)
@@ -298,7 +299,7 @@ class Migrator(
 
   fun deleteAssessment(assessmentUuid: UUID) = assessmentPlatformClient
     .delete()
-    .uri("/assessment/${assessmentUuid}")
+    .uri("/assessment/$assessmentUuid")
     .retrieve()
 
   companion object {

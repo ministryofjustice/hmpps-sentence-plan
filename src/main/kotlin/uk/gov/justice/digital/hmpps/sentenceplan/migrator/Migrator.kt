@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.sentenceplan.migrator
 
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.CommandLineRunner
 import org.springframework.context.annotation.Profile
@@ -26,6 +27,7 @@ import uk.gov.justice.digital.hmpps.sentenceplan.migrator.common.IdentifierType
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.common.MultiValue
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.common.SingleValue
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.common.UserDetails
+import java.util.UUID
 import kotlin.collections.plus
 
 data class CommandsRequest(
@@ -86,34 +88,40 @@ class Migrator(
   fun migrate(plan: PlanEntity) {
     val context = createContext(plan)
 
-    val versions = plan.id
-      ?.let(planVersionRepository::findAllByPlanId)
-      .orEmpty()
-      .filter { !it.softDeleted }
-      .sortedBy { it.createdDate }
+    try {
+      val versions = plan.id
+        ?.let(planVersionRepository::findAllByPlanId)
+        .orEmpty()
+        .filter { !it.softDeleted }
+        .sortedBy { it.createdDate }
 
-    versions.forEach { current ->
-      val goalCommands = migrateGoals(current, context)
-      val agreementNotesCommands = migratePlanAgreementNotes(current, context)
+      versions.forEach { current ->
+        val goalCommands = migrateGoals(current, context)
+        val agreementNotesCommands = migratePlanAgreementNotes(current, context)
 
-      val commands: List<Requestable> = listOf(*goalCommands.toTypedArray(), *agreementNotesCommands.toTypedArray())
-        .fold(emptyList()) { resolved, command ->
-          resolved + (if (command is Resolvable) command.resolve(resolved) else command) as Requestable
+        val commands: List<Requestable> = listOf(*goalCommands.toTypedArray(), *agreementNotesCommands.toTypedArray())
+          .fold(emptyList()) { resolved, command ->
+            resolved + (if (command is Resolvable) command.resolve(resolved) else command) as Requestable
+          }
+
+        if (commands.isNotEmpty()) {
+          dispatchCommand<CommandResult>(
+            GroupCommand(
+              commands = commands,
+              user = UserDetails.from(current.createdBy),
+              assessmentUuid = context.assessmentUuid,
+              timeline = Timeline("Daily version (migrated)", emptyMap()),
+            ),
+          )
         }
-
-      if (commands.isNotEmpty()) {
-        dispatchCommand<CommandResult>(
-          GroupCommand(
-            commands = commands,
-            user = UserDetails.from(current.createdBy),
-            assessmentUuid = context.assessmentUuid,
-            timeline = Timeline("Daily version (migrated)", emptyMap()),
-          ),
-        )
       }
-    }
 
-    planRepository.save(plan.apply { migrated = true })
+      planRepository.save(plan.apply { migrated = true })
+
+    } catch (e: Exception) {
+      log.warn("Failed to migrate ${plan.id}: ${e.message}")
+      deleteAssessment(UUID.fromString(context.assessmentUuid))
+    }
   }
 
   fun createContext(plan: PlanEntity): PlanMigrationContext {
@@ -276,7 +284,8 @@ class Migrator(
     return additions + deletions
   }
 
-  private inline fun <reified T : CommandResult> dispatchCommand(command: Requestable) = dispatchCommands(listOf(command)).extractSingle<T>()
+  private inline fun <reified T : CommandResult> dispatchCommand(command: Requestable) =
+    dispatchCommands(listOf(command)).extractSingle<T>()
 
   fun dispatchCommands(commands: List<Requestable>): CommandsResponse = assessmentPlatformClient
     .post()
@@ -286,4 +295,13 @@ class Migrator(
     .bodyToMono(CommandsResponse::class.java)
     .block()
     ?: throw RuntimeException("Empty response from Assessment Platform API")
+
+  fun deleteAssessment(assessmentUuid: UUID) = assessmentPlatformClient
+    .delete()
+    .uri("/assessment/${assessmentUuid}")
+    .retrieve()
+
+  companion object {
+    private val log = LoggerFactory.getLogger(this::class.java)
+  }
 }

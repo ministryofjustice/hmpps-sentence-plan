@@ -66,9 +66,9 @@ data class PlanMigrationContext(
 class Migrator(
   private val planRepository: PlanRepository,
   private val planVersionRepository: PlanVersionRepository,
+  @param:Qualifier("assessmentPlatformClient")
+  private val assessmentPlatformClient: WebClient
 ) : CommandLineRunner {
-  @Qualifier("assessmentPlatformClient")
-  private lateinit var assessmentPlatformClient: WebClient
 
   override fun run(vararg args: String) {
     var index = 0
@@ -78,9 +78,9 @@ class Migrator(
       val pageRequest = PageRequest.of(index++, pageSize)
       val page = planRepository.findAllByMigratedFalse(pageRequest)
 
-      if (page.hasContent()) break
+      if (!page.hasContent()) break
 
-      page.forEach { plan -> migrate(plan) }
+      page.content.forEach { plan -> migrate(plan) }
 
       hasNext = page.hasNext()
     }

@@ -14,6 +14,7 @@ class WebClientConfiguration(
   @param:Value("\${app.services.hmpps-auth.url}") val hmppsAuthBaseUri: String,
   @param:Value("\${delius-api.base-url}") val deliusApiBaseUrl: String,
   @param:Value("\${assessment-platform-api.base-url}") val assessmentPlatformBaseUrl: String,
+  @param:Value("\${coordinator-api.base-url}") val coordinatorBaseURL: String,
   @param:Value("\${api.timeout:20s}") val timeout: Duration,
   @param:Value("\${api.health-timeout:2s}") val healthTimeout: Duration,
 ) {
@@ -34,6 +35,17 @@ class WebClientConfiguration(
     authorizedClientManager,
     registrationId = "assessment-platform-api",
     url = assessmentPlatformBaseUrl,
+    timeout,
+  )
+
+  @Bean
+  fun coordinatorClient(
+    authorizedClientManager: OAuth2AuthorizedClientManager,
+    builder: WebClient.Builder,
+  ): WebClient = builder.authorisedWebClient(
+    authorizedClientManager,
+    registrationId = "coordinator-api",
+    url = coordinatorBaseURL,
     timeout,
   )
 }

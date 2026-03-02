@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Profile
 import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClient
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.CountersigningStatus
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionEntity
@@ -67,7 +68,9 @@ class Migrator(
   private val planRepository: PlanRepository,
   private val planVersionRepository: PlanVersionRepository,
   @param:Qualifier("assessmentPlatformClient")
-  private val assessmentPlatformClient: WebClient
+  private val assessmentPlatformClient: WebClient,
+  @param:Qualifier("coordinatorClient")
+  private val coordinatorClient: WebClient,
 ) : CommandLineRunner {
 
   override fun run(vararg args: String) {
@@ -96,7 +99,7 @@ class Migrator(
         .filter { !it.softDeleted }
         .sortedBy { it.createdDate }
 
-      versions.forEach { current ->
+      val versionMappings = versions.map { current ->
         val goalCommands = migrateGoals(current, context)
         val agreementNotesCommands = migratePlanAgreementNotes(current, context)
 
@@ -116,7 +119,20 @@ class Migrator(
             ),
           )
         }
+
+        VersionMapping(
+          version = current.version.toLong(),
+          createdAt = current.createdDate,
+          event = current.status,
+        )
       }
+
+      migrateCoordinatorAssociations(
+        MigrateAssociationRequest(
+          mappings = versionMappings,
+          entityUuid = plan.uuid,
+        ),
+      )
 
       planRepository.save(plan.apply { migrated = true })
     } catch (e: Exception) {
@@ -301,6 +317,23 @@ class Migrator(
     .delete()
     .uri("/assessment/$assessmentUuid")
     .retrieve()
+
+  data class VersionMapping(val version: Long, val createdAt: LocalDateTime, val event: CountersigningStatus)
+  data class MigrateAssociationRequest(
+    val mappings: List<VersionMapping>,
+    val entityUuid: UUID,
+  ) {
+    val entityTypeFrom = "PLAN"
+    val entityTypeTo = "AAP_PLAN"
+  }
+
+  fun migrateCoordinatorAssociations(request: MigrateAssociationRequest) {
+    coordinatorClient
+      .post()
+      .uri("/oasys/migrate-associations")
+      .bodyValue(request)
+      .retrieve()
+  }
 
   companion object {
     private val log = LoggerFactory.getLogger(this::class.java)

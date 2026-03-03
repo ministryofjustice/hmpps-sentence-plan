@@ -1,0 +1,17 @@
+{
+  "name": "ARNS API - Health Ping",
+  "request": {
+    "method": "GET",
+    "urlPath": "/arns-api/health/ping"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "jsonBody": {
+      "status": "UP"
+    }
+  },
+  "priority": 50
+}

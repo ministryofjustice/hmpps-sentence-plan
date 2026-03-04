@@ -72,8 +72,9 @@ class Migrator(
   @param:Qualifier("coordinatorClient")
   private val coordinatorClient: WebClient,
 ) : CommandLineRunner {
-
   override fun run(vararg args: String) {
+    log.info("Starting migration")
+
     var index = 0
     val pageSize = 25
     var hasNext = true
@@ -83,6 +84,7 @@ class Migrator(
 
       if (!page.hasContent()) break
 
+      log.info("Migrating batch of ${page.content.size} items in page ${page.number + 1} of ${page.totalPages}")
       page.content.forEach { plan -> migrate(plan) }
 
       hasNext = page.hasNext()

@@ -147,7 +147,7 @@ class Migrator(
         commands = listOf(
           CreateAssessmentCommand(
             user = UserDetails.from(plan.createdBy),
-            formVersion = "1",
+            formVersion = "v1.0",
             properties = emptyMap(),
             assessmentType = "SENTENCE_PLAN",
             timeline = null,

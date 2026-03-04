@@ -13,7 +13,7 @@ object TaskRunner {
       SpringApplicationBuilder(HmppsSentencePlan::class.java)
         .run(*args)
 
-    val migrator = context.getBean<Migrator>()
+    val migrator = context.getBean<MigrationRunner>()
     migrator.run()
 
     context.close()

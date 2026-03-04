@@ -4,7 +4,7 @@ import uk.gov.justice.digital.hmpps.sentenceplan.migrator.common.IdentifierType
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.common.UserDetails
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.common.Value
 
-data class CreateAssessmentCommand(
+class CreateAssessmentCommand(
   override val user: UserDetails,
   override val timeline: Timeline? = null,
   val formVersion: String,

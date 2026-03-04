@@ -4,6 +4,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Component
+import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.reactive.function.client.WebClient
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.CountersigningStatus
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntity
@@ -28,7 +29,10 @@ import uk.gov.justice.digital.hmpps.sentenceplan.migrator.common.SingleValue
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.common.UserDetails
 import java.time.LocalDateTime
 import java.util.UUID
+import kotlin.collections.filter
+import kotlin.collections.orEmpty
 import kotlin.collections.plus
+import kotlin.collections.sortedBy
 
 data class CommandsRequest(
   val commands: List<Requestable>,
@@ -69,26 +73,8 @@ class Migrator(
   @param:Qualifier("coordinatorClient")
   private val coordinatorClient: WebClient,
 ) {
-  fun run() {
-    log.info("Starting migration")
-
-    var index = 0
-    val pageSize = 25
-    var hasNext = true
-    while (hasNext) {
-      val pageRequest = PageRequest.of(index++, pageSize)
-      val page = planRepository.findAllByMigratedFalse(pageRequest)
-
-      if (!page.hasContent()) break
-
-      log.info("Migrating batch of ${page.content.size} items in page ${page.number + 1} of ${page.totalPages}")
-      page.content.forEach { plan -> migrate(plan) }
-
-      hasNext = page.hasNext()
-    }
-  }
-
-  fun migrate(plan: PlanEntity) {
+  @Transactional
+  fun run(plan: PlanEntity) {
     val context = createContext(plan)
 
     try {
@@ -98,25 +84,34 @@ class Migrator(
         .filter { !it.softDeleted }
         .sortedBy { it.createdDate }
 
-      val versionMappings = versions.map { current ->
+      val versionMappings = versions.mapIndexed { versionNumber, current ->
         val goalCommands = migrateGoals(current, context)
         val agreementNotesCommands = migratePlanAgreementNotes(current, context)
 
         val commands: List<Requestable> = listOf(*goalCommands.toTypedArray(), *agreementNotesCommands.toTypedArray())
-          .fold(emptyList()) { resolved, command ->
-            resolved + (if (command is Resolvable) command.resolve(resolved) else command) as Requestable
+          .fold(emptyList<Requestable>()) { resolved, command ->
+            resolved + (if (command is Resolvable) command.resolve(resolved) else command)
+          }
+            // TODO: Remove this, currently used for debugging
+          .mapIndexed { index, command ->
+            when (command) {
+              is CreateCollectionCommand -> command.apply { name = "v$versionNumber - ${command.name} ($index)" }
+              else -> command
+            }
           }
 
         if (commands.isNotEmpty()) {
-          dispatchCommand<CommandResult>(
-            current.updatedDate,
-            GroupCommand(
-              commands = commands,
-              user = UserDetails.from(current.createdBy),
-              assessmentUuid = context.assessmentUuid,
-              timeline = Timeline("Daily version (migrated)", emptyMap()),
-            ),
-          )
+          // TODO: Change this back, currently GroupCommands are broken
+//          dispatchCommand<CommandResult>(
+//            current.updatedDate,
+//            GroupCommand(
+//              commands = commands,
+//              user = UserDetails.from(current.createdBy),
+//              assessmentUuid = context.assessmentUuid,
+//              timeline = Timeline("Daily version (migrated)", emptyMap()),
+//            ),
+//          )
+          dispatchCommands(current.updatedDate, commands)
         }
 
         VersionMapping(
@@ -135,7 +130,7 @@ class Migrator(
 
       planRepository.save(plan.apply { migrated = true })
     } catch (e: Exception) {
-      log.warn("Failed to migrate ${plan.id}: ${e.message}")
+      log.warn("Failed to migrate ${plan.id}: ${e.stackTraceToString()}")
       deleteAssessment(UUID.fromString(context.assessmentUuid))
     }
   }
@@ -199,7 +194,7 @@ class Migrator(
           "target_date" to SingleValue(goal.targetDate.toString()),
         ),
         properties = emptyMap(),
-        index = goal.goalOrder,
+        index = goal.goalOrder - 1,
         user = UserDetails.from(goal.createdBy),
         assessmentUuid = context.assessmentUuid,
       )
@@ -301,16 +296,18 @@ class Migrator(
     return additions + deletions
   }
 
-  private inline fun <reified T : CommandResult> dispatchCommand(timestamp: LocalDateTime, command: Requestable) = dispatchCommands(timestamp, listOf(command)).extractSingle<T>()
+  private inline fun <reified T : CommandResult> dispatchCommand(timestamp: LocalDateTime, command: Requestable) =
+    dispatchCommands(timestamp, listOf(command)).extractSingle<T>()
 
-  fun dispatchCommands(timestamp: LocalDateTime, commands: List<Requestable>): CommandsResponse = assessmentPlatformClient
-    .post()
-    .uri { uriBuilder -> uriBuilder.path("/command").queryParam("backdateTo", timestamp.toString()).build() }
-    .bodyValue(CommandsRequest(commands))
-    .retrieve()
-    .bodyToMono(CommandsResponse::class.java)
-    .block()
-    ?: throw RuntimeException("Empty response from Assessment Platform API")
+  fun dispatchCommands(timestamp: LocalDateTime, commands: List<Requestable>): CommandsResponse =
+    assessmentPlatformClient
+      .post()
+      .uri { uriBuilder -> uriBuilder.path("/command").queryParam("backdateTo", timestamp.toString()).build() }
+      .bodyValue(CommandsRequest(commands))
+      .retrieve()
+      .bodyToMono(CommandsResponse::class.java)
+      .block()
+      ?: throw RuntimeException("Empty response from Assessment Platform API")
 
   fun deleteAssessment(assessmentUuid: UUID) = assessmentPlatformClient
     .delete()
@@ -333,6 +330,39 @@ class Migrator(
       .bodyValue(request)
       .retrieve()
   }
+
+  companion object {
+    private val log = LoggerFactory.getLogger(this::class.java)
+  }
+}
+
+@Component
+class MigrationRunner(
+  private val planRepository: PlanRepository,
+  private val migrator: Migrator,
+) {
+  fun run() {
+// TODO: add this amazing loop back in..
+//    log.info("Starting migration")
+//
+//    var index = 0
+//    val pageSize = 25
+//    var hasNext = true
+//    while (hasNext) {
+//      val pageRequest = PageRequest.of(index++, pageSize)
+//      val page = planRepository.findAllByMigratedFalse(pageRequest)
+//
+//      if (!page.hasContent()) break
+//
+//      log.info("Migrating batch of ${page.content.size} items in page ${page.number + 1} of ${page.totalPages}")
+//      page.content.forEach { plan -> migrator.run(plan) }
+//
+//      hasNext = page.hasNext()
+//    }
+
+    migrator.run(planRepository.findById(10756L).orElseThrow())
+  }
+
 
   companion object {
     private val log = LoggerFactory.getLogger(this::class.java)

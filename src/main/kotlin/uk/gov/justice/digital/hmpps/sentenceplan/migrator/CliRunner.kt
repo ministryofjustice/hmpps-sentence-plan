@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component
 @Component
 @Profile("migration")
 class CliRunner(
-  private val migrator: Migrator,
+  private val migrator: MigrationRunner,
 ) : CommandLineRunner {
   override fun run(vararg args: String) {
     migrator.run()

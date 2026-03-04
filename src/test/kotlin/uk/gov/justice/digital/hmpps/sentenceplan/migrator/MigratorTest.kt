@@ -18,11 +18,9 @@ import kotlin.test.Test
 
 class MigratorTest {
   val planRepository = mockk<PlanRepository>()
-  val planVersionRepository = mockk<PlanVersionRepository>()
-  val assessmentPlatformClient = mockk<WebClient>()
-  val coordinatorClient = mockk<WebClient>()
-  val migrator = spyk(
-    Migrator(planRepository, planVersionRepository, assessmentPlatformClient, coordinatorClient),
+  val migrator = mockk<Migrator>()
+  val runner = spyk(
+    MigrationRunner(planRepository, migrator),
   )
 
   val planFor = { id: Long ->
@@ -52,7 +50,7 @@ class MigratorTest {
       every { page1.content } returns listOf(plans[0])
       every { page1.hasContent() } returns page1.content.isNotEmpty()
       every { page1.totalPages } returns 1
-      every { migrator.migrate(any()) } just Runs
+      every { migrator.run(any()) } just Runs
     }
 
     @Test
@@ -61,7 +59,7 @@ class MigratorTest {
 
       every { planRepository.findAllByMigratedFalse(any()) } returns page1
 
-      migrator.run()
+      runner.run()
 
       verify(exactly = 1) { planRepository.findAllByMigratedFalse(any()) }
     }
@@ -76,7 +74,7 @@ class MigratorTest {
       every { planRepository.findAllByMigratedFalse(match { it.pageNumber == 0 }) } returns page1
       every { planRepository.findAllByMigratedFalse(match { it.pageNumber == 1 }) } returns page2
 
-      migrator.run()
+      runner.run()
 
       verify(exactly = 2) { planRepository.findAllByMigratedFalse(any()) }
     }

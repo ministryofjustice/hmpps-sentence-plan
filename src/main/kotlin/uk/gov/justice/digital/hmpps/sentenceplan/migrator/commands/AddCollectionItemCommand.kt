@@ -3,7 +3,7 @@ package uk.gov.justice.digital.hmpps.sentenceplan.migrator.commands
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.common.UserDetails
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.common.Value
 
-data class AddCollectionItemCommand(
+class AddCollectionItemCommand(
   override val user: UserDetails,
   override val timeline: Timeline? = null,
   val collection: CreateCollectionCommand? = null,
@@ -16,11 +16,13 @@ data class AddCollectionItemCommand(
   Resolvable {
   override fun resolve(
     commands: List<Requestable>,
-  ) {
+  ): Requestable {
     if (collection !== null && collectionUuid.isNullOrEmpty()) {
       collectionUuid = commands.indexOfFirst { it === collection }
         .also { require(it >= 0) { "Collection not found" } }
         .let { index -> "@$index" }
     }
+
+    return this
   }
 }

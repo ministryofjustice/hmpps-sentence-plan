@@ -3,7 +3,7 @@ package uk.gov.justice.digital.hmpps.sentenceplan.migrator.commands
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.common.UserDetails
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.common.Value
 
-data class UpdateAssessmentPropertiesCommand(
+class UpdateAssessmentPropertiesCommand(
   override val user: UserDetails,
   override val timeline: Timeline? = null,
   val assessmentUuid: String,

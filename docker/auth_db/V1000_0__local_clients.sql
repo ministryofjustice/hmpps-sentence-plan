@@ -28,3 +28,8 @@ VALUES ('hmpps-arns-assessment-platform-ui-e2e', 1200, '{}', 'ROLE_AAP__FRONTEND
 UPDATE oauth_client_details
 SET authorities = 'ROLE_SENTENCE_PLAN_WRITE,ROLE_STRENGTHS_AND_NEEDS_OASYS,ROLE_STRENGTHS_AND_NEEDS_WRITE,ROLE_AAP__COORDINATOR_RW'
 WHERE client_id = 'hmpps-assess-risks-and-needs-oastub-ui';
+
+-- Update coordinator API client with required roles for local dev
+UPDATE oauth_client_details
+SET authorities = 'ROLE_MIGRATE_SENTENCE_PLAN,ROLE_OASYS_READ_ONLY,ROLE_RISK_INTEGRATIONS_RO,ROLE_SENTENCE_PLAN_READ,ROLE_SENTENCE_PLAN_WRITE'
+WHERE client_id = 'sentence-plan-api-client';

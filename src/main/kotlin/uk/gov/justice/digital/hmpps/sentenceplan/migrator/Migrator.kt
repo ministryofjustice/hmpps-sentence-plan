@@ -2,8 +2,6 @@ package uk.gov.justice.digital.hmpps.sentenceplan.migrator
 
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
-import org.springframework.boot.CommandLineRunner
-import org.springframework.context.annotation.Profile
 import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClient
@@ -63,7 +61,6 @@ data class PlanMigrationContext(
 )
 
 @Component
-@Profile("migration")
 class Migrator(
   private val planRepository: PlanRepository,
   private val planVersionRepository: PlanVersionRepository,
@@ -71,8 +68,8 @@ class Migrator(
   private val assessmentPlatformClient: WebClient,
   @param:Qualifier("coordinatorClient")
   private val coordinatorClient: WebClient,
-) : CommandLineRunner {
-  override fun run(vararg args: String) {
+) {
+  fun run() {
     log.info("Starting migration")
 
     var index = 0

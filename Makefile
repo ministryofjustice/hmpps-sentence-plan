@@ -92,3 +92,6 @@ migrator-data: ## Loads data from a remote database
 	sh ./docker/scripts/migrator/load_data.sh
 	docker compose ${MIGRATOR_COMPOSE_FILES} down coordinator-api
 	@make migrator-up
+
+migrator-run: ## Runs the migrator
+	docker compose ${MIGRATOR_COMPOSE_FILES} exec sp-api gradle migrator

@@ -36,6 +36,10 @@ kotlin {
   jvmToolchain(21)
 }
 
+springBoot {
+  mainClass.set("uk.gov.justice.digital.hmpps.sentenceplan.HmppsSentencePlanKt")
+}
+
 tasks {
   withType<KotlinCompile> {
     compilerOptions.jvmTarget = JvmTarget.JVM_21
@@ -45,6 +49,16 @@ tasks {
     jvmArgs = listOf(
       "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005",
     )
+  }
+
+  register<JavaExec>("migrator") {
+    group = "application"
+    description = "Runs the Migrator"
+
+    classpath = sourceSets["main"].runtimeClasspath
+    mainClass.set("uk.gov.justice.digital.hmpps.sentenceplan.migrator.TaskRunner")
+
+    args("--server.port=0")
   }
 }
 

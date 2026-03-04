@@ -1,0 +1,15 @@
+package uk.gov.justice.digital.hmpps.sentenceplan.migrator
+
+import org.springframework.boot.CommandLineRunner
+import org.springframework.context.annotation.Profile
+import org.springframework.stereotype.Component
+
+@Component
+@Profile("migration")
+class CliRunner(
+  private val migrator: Migrator,
+) : CommandLineRunner {
+  override fun run(vararg args: String) {
+    migrator.run()
+  }
+}

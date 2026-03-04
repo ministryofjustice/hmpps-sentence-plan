@@ -298,7 +298,7 @@ services:
     healthcheck:
       test: [ "CMD", "wget", "-q", "--spider", "http://aap-ui:3000/health" ]
       interval: 5s
-      retries: 20
+      retries: 60
     environment:
       PRODUCT_ID: 'UNASSIGNED'
       REDIS_ENABLED: true

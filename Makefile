@@ -87,3 +87,8 @@ migrator-down: ## Stops and removes all migrator containers in the project.
 
 migrator-update: ## Downloads the latest versions of containers.
 	docker compose ${MIGRATOR_COMPOSE_FILES} pull
+
+migrator-data: ## Loads data from a remote database
+	sh ./docker/scripts/migrator/load_data.sh
+	docker compose ${MIGRATOR_COMPOSE_FILES} down coordinator-api
+	@make migrator-up

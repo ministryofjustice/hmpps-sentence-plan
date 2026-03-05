@@ -10,7 +10,7 @@ services:
       - /var/lib/postgresql
 
   hmpps-auth:
-    image: ghcr.io/ministryofjustice/hmpps-auth
+    image: ghcr.io/ministryofjustice/hmpps-auth:2026-03-02.422.c36796f
     networks:
       - hmpps
     healthcheck:

@@ -131,7 +131,7 @@ class Migrator(
       planRepository.save(plan.apply { migrated = true })
     } catch (e: Exception) {
       log.warn("Failed to migrate ${plan.id}: ${e.stackTraceToString()}")
-      deleteAssessment(UUID.fromString(context.assessmentUuid))
+      deleteAssessment(UUID.fromString(context!!.assessmentUuid))
     }
   }
 
@@ -313,6 +313,8 @@ class Migrator(
     .delete()
     .uri("/assessment/$assessmentUuid")
     .retrieve()
+    .toBodilessEntity()
+    .block()
 
   data class VersionMapping(val version: Long, val createdAt: LocalDateTime, val event: CountersigningStatus)
   data class MigrateAssociationRequest(

@@ -1,0 +1,11 @@
+{
+  "name": "Proxy to Delius API",
+  "request": {
+    "urlPattern": "/delius/.*"
+  },
+  "response": {
+    "proxyBaseUrl": "{{systemValue type='ENVIRONMENT' key='WIREMOCK_DELIUS_URL'}}",
+    "proxyUrlPrefixToRemove": "/delius"
+  },
+  "priority": 100
+}

@@ -35,7 +35,7 @@ class WebClientConfiguration(
     authorizedClientManager,
     registrationId = "assessment-platform-api",
     url = assessmentPlatformBaseUrl,
-    timeout,
+    Duration.ofMinutes(30), // TODO: remove this debug
   )
 
   @Bean

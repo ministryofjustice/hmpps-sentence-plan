@@ -27,6 +27,8 @@ import uk.gov.justice.digital.hmpps.sentenceplan.migrator.common.IdentifierType
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.common.MultiValue
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.common.SingleValue
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.common.UserDetails
+import java.time.Clock
+import java.time.Duration
 import java.time.LocalDateTime
 import java.util.UUID
 import kotlin.collections.filter
@@ -82,9 +84,15 @@ class Migrator(
         ?.let(planVersionRepository::findAllByPlanId)
         .orEmpty()
         .filter { !it.softDeleted }
-        .sortedBy { it.createdDate }
+        .sortedBy { it.updatedDate }
+
+      var lastUpdate: LocalDateTime? = null
 
       val versionMappings = versions.mapIndexed { versionNumber, current ->
+        val versionClock = getClock(current.updatedDate)
+        val versionTimestamp = listOfNotNull(lastUpdate, current.updatedDate)
+          .maxBy { it.atZone(versionClock.zone).toInstant() }
+
         val goalCommands = migrateGoals(current, context)
         val agreementNotesCommands = migratePlanAgreementNotes(current, context)
 
@@ -92,31 +100,23 @@ class Migrator(
           .fold(emptyList<Requestable>()) { resolved, command ->
             resolved + (if (command is Resolvable) command.resolve(resolved) else command)
           }
-            // TODO: Remove this, currently used for debugging
-          .mapIndexed { index, command ->
-            when (command) {
-              is CreateCollectionCommand -> command.apply { name = "v$versionNumber - ${command.name} ($index)" }
-              else -> command
-            }
-          }
 
         if (commands.isNotEmpty()) {
-          // TODO: Change this back, currently GroupCommands are broken
-//          dispatchCommand<CommandResult>(
-//            current.updatedDate,
-//            GroupCommand(
-//              commands = commands,
-//              user = UserDetails.from(current.createdBy),
-//              assessmentUuid = context.assessmentUuid,
-//              timeline = Timeline("Daily version (migrated)", emptyMap()),
-//            ),
-//          )
-          dispatchCommands(current.updatedDate, commands)
+          dispatchCommand<CommandResult>(
+            versionTimestamp,
+            GroupCommand(
+              commands = commands,
+              user = UserDetails.from(current.createdBy),
+              assessmentUuid = context.assessmentUuid,
+              timeline = Timeline("Daily version (migrated)", emptyMap()),
+            ),
+          )
+          lastUpdate = LocalDateTime.now(versionClock)
         }
 
         VersionMapping(
           version = current.version.toLong(),
-          createdAt = current.createdDate,
+          createdAt = current.updatedDate,
           event = current.status,
         )
       }
@@ -331,10 +331,19 @@ class Migrator(
       .uri("/oasys/migrate-associations")
       .bodyValue(request)
       .retrieve()
+      .toBodilessEntity()
+      .block()
   }
 
   companion object {
     private val log = LoggerFactory.getLogger(this::class.java)
+
+    fun getClock(date: LocalDateTime): Clock {
+      val baseClock = Clock.systemDefaultZone()
+      val backdateTo = date.atZone(baseClock.zone).toInstant()
+      val offset = Duration.between(baseClock.instant(), backdateTo)
+      return Clock.offset(baseClock, offset)
+    }
   }
 }
 

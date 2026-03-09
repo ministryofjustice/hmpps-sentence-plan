@@ -1,12 +1,12 @@
 package uk.gov.justice.digital.hmpps.sentenceplan.migrator
 
+import jdk.internal.net.http.common.Log.requests
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.reactive.function.client.WebClient
-import uk.gov.justice.digital.hmpps.sentenceplan.entity.CountersigningStatus
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionEntity
@@ -20,21 +20,40 @@ import uk.gov.justice.digital.hmpps.sentenceplan.migrator.commands.RemoveCollect
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.commands.Requestable
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.commands.Resolvable
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.commands.Timeline
+import uk.gov.justice.digital.hmpps.sentenceplan.migrator.commands.UpdateAssessmentPropertiesCommand
+import uk.gov.justice.digital.hmpps.sentenceplan.migrator.commands.result.AddCollectionItemCommandResult
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.commands.result.CommandResult
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.commands.result.CreateAssessmentCommandResult
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.commands.result.CreateCollectionCommandResult
+import uk.gov.justice.digital.hmpps.sentenceplan.migrator.commands.result.GroupCommandResult
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.common.IdentifierType
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.common.MultiValue
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.common.SingleValue
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.common.UserDetails
+import uk.gov.justice.digital.hmpps.sentenceplan.migrator.mappers.ActorsMapper
+import uk.gov.justice.digital.hmpps.sentenceplan.migrator.mappers.AgreementStatusMapper
+import uk.gov.justice.digital.hmpps.sentenceplan.migrator.mappers.AreasOfNeedMapper
+import uk.gov.justice.digital.hmpps.sentenceplan.migrator.mappers.GoalNoteTypeMapper
+import uk.gov.justice.digital.hmpps.sentenceplan.migrator.mappers.GoalStatusMapper
+import uk.gov.justice.digital.hmpps.sentenceplan.migrator.mappers.StepStatusMapper
 import java.time.Clock
 import java.time.Duration
 import java.time.LocalDateTime
 import java.util.UUID
-import kotlin.collections.filter
-import kotlin.collections.orEmpty
-import kotlin.collections.plus
-import kotlin.collections.sortedBy
+import kotlin.String
+
+class MigrationStats() {
+  companion object {
+    private lateinit var started: LocalDateTime
+    var numberOfEvents = 0
+    var numberOfVersions = 0
+    fun start() {
+      started = LocalDateTime.now()
+    }
+
+    fun getDuration(): Duration = Duration.between(started, LocalDateTime.now())
+  }
+}
 
 data class CommandsRequest(
   val commands: List<Requestable>,
@@ -66,6 +85,14 @@ data class PlanMigrationContext(
   val planAgreements: MutableSet<String> = mutableSetOf(),
 )
 
+fun List<Requestable>.getCommandCount(): Int = sumOf { command ->
+  val added = when (command) {
+    is GroupCommand -> 1 + command.commands.getCommandCount()
+    else -> 1
+  }
+  added
+}
+
 @Component
 class Migrator(
   private val planRepository: PlanRepository,
@@ -79,6 +106,8 @@ class Migrator(
   fun run(plan: PlanEntity) {
     val context = createContext(plan)
 
+    var versionMappings: List<VersionMapping> = emptyList()
+
     try {
       val versions = plan.id
         ?.let(planVersionRepository::findAllByPlanId)
@@ -88,21 +117,34 @@ class Migrator(
 
       var lastUpdate: LocalDateTime? = null
 
-      val versionMappings = versions.mapIndexed { versionNumber, current ->
+      versionMappings = versions.map { current ->
         val versionClock = getClock(current.updatedDate)
         val versionTimestamp = listOfNotNull(lastUpdate, current.updatedDate)
           .maxBy { it.atZone(versionClock.zone).toInstant() }
 
+        val updateAssessmentPropertiesCommand = UpdateAssessmentPropertiesCommand(
+          user = UserDetails.from(current.createdBy),
+          added = mapOf(
+            "PLAN_TYPE" to SingleValue(current.planType.name),
+          ),
+          removed = emptyList(),
+          assessmentUuid = context.assessmentUuid,
+        )
         val goalCommands = migrateGoals(current, context)
         val agreementNotesCommands = migratePlanAgreementNotes(current, context)
 
-        val commands: List<Requestable> = listOf(*goalCommands.toTypedArray(), *agreementNotesCommands.toTypedArray())
-          .fold(emptyList<Requestable>()) { resolved, command ->
-            resolved + (if (command is Resolvable) command.resolve(resolved) else command)
-          }
+        val commands: List<Requestable> = listOf(
+          updateAssessmentPropertiesCommand,
+          *goalCommands.toTypedArray(),
+          *agreementNotesCommands.toTypedArray(),
+        ).fold(emptyList()) { resolved, command ->
+          resolved + (if (command is Resolvable) command.resolve(resolved) else command)
+        }
 
         if (commands.isNotEmpty()) {
-          dispatchCommand<CommandResult>(
+          log.info("Dispatching ${commands.getCommandCount()} commands for plan ${plan.id} version ${current.version}")
+          val requestStarted = LocalDateTime.now()
+          val response = dispatchCommand<GroupCommandResult>(
             versionTimestamp,
             GroupCommand(
               commands = commands,
@@ -111,27 +153,52 @@ class Migrator(
               timeline = Timeline("Daily version (migrated)", emptyMap()),
             ),
           )
+          val requestDuration = Duration.between(requestStarted, LocalDateTime.now())
+          log.info("${commands.getCommandCount()} executed in ${requestDuration.toMillis()} ms")
+          response.commands.forEach { command ->
+            when (command.request) {
+              is AddCollectionItemCommand -> {
+                with(command.result as AddCollectionItemCommandResult) {
+                  when (command.request.collectionUuid) {
+                    context.goalsCollectionUuid -> context.goals.add(collectionItemUuid)
+                    context.planAgreementsCollectionUuid -> context.planAgreements.add(collectionItemUuid)
+                  }
+                }
+              }
+
+              else -> {}
+            }
+          }
           lastUpdate = LocalDateTime.now(versionClock)
         }
 
+        MigrationStats.numberOfVersions += 1
         VersionMapping(
           version = current.version.toLong(),
           createdAt = current.updatedDate,
-          event = current.status,
+          event = current.status.name,
         )
       }
 
       migrateCoordinatorAssociations(
         MigrateAssociationRequest(
-          mappings = versionMappings,
-          entityUuid = plan.uuid,
+          mappings = versionMappings
+            .mapNotNull { mapping ->
+              when (mapping.event) {
+                "LOCKED_INCOMPLETE" -> mapping.apply { event = "LOCKED" }
+                "UNSIGNED" -> null
+                else -> mapping
+              }
+            },
+          entityUuidFrom = plan.uuid,
+          entityUuidTo = UUID.fromString(context.assessmentUuid),
         ),
       )
 
       planRepository.save(plan.apply { migrated = true })
     } catch (e: Exception) {
       log.warn("Failed to migrate ${plan.id}: ${e.stackTraceToString()}")
-      deleteAssessment(UUID.fromString(context!!.assessmentUuid))
+      deleteAssessment(UUID.fromString(context.assessmentUuid))
     }
   }
 
@@ -182,83 +249,87 @@ class Migrator(
       )
     }.also { context.goals.clear() }
 
-    val goalsAdded = current.goals.fold(mutableListOf<Requestable>()) { acc, goal ->
-      val addGoalCommand = AddCollectionItemCommand(
-        collectionUuid = context.goalsCollectionUuid,
-        answers = mapOf(
-          "title" to SingleValue(goal.title),
-          "area_of_need" to SingleValue(goal.areaOfNeed.name),
-          "related_areas_of_need" to MultiValue(
-            goal.relatedAreasOfNeed?.map { it.name }.orEmpty(),
-          ),
-          "target_date" to SingleValue(goal.targetDate.toString()),
-        ),
-        properties = emptyMap(),
-        index = goal.goalOrder - 1,
-        user = UserDetails.from(goal.createdBy),
-        assessmentUuid = context.assessmentUuid,
-      )
-
-      acc.add(addGoalCommand)
-
-      val createStepsCommand = CreateCollectionCommand(
-        user = UserDetails.from(goal.createdBy),
-        name = "STEPS",
-        parentCollectionItem = addGoalCommand,
-        assessmentUuid = context.assessmentUuid,
-      )
-
-      acc.add(createStepsCommand)
-
-      val createNotesCommand = CreateCollectionCommand(
-        user = UserDetails.from(goal.createdBy),
-        name = "NOTES",
-        parentCollectionItem = addGoalCommand,
-        assessmentUuid = context.assessmentUuid,
-      )
-
-      acc.add(createNotesCommand)
-
-      goal.steps.forEach { step ->
-        acc.add(
-          AddCollectionItemCommand(
-            user = UserDetails.from(step.createdBy),
-            collection = createStepsCommand,
-            answers = mapOf(
-              "actor" to SingleValue(step.actor),
-              "description" to SingleValue(step.description),
-              "status" to SingleValue(step.status.name),
+    val goalsAdded = current.goals
+      .fold(mutableListOf<Requestable>()) { acc, goal ->
+        val addGoalCommand = AddCollectionItemCommand(
+          collectionUuid = context.goalsCollectionUuid,
+          answers = mapOf(
+            "title" to SingleValue(goal.title),
+            "target_date" to SingleValue(goal.targetDate.toString()),
+            "area_of_need" to SingleValue(AreasOfNeedMapper.map(goal.areaOfNeed)),
+            "related_areas_of_need" to MultiValue(
+              goal.relatedAreasOfNeed?.map { relatedAreaOfNeed -> AreasOfNeedMapper.map(relatedAreaOfNeed) }.orEmpty(),
             ),
-            properties = mapOf(
-              "status_date" to SingleValue(step.createdDate.toString()),
-            ),
-            index = null,
-            assessmentUuid = context.assessmentUuid,
           ),
+          properties = mapOf(
+            "status" to SingleValue(GoalStatusMapper.map(goal.status)),
+            "status_date" to SingleValue(goal.statusDate.toString()),
+          ),
+          index = null,
+          user = UserDetails.from(goal.createdBy),
+          assessmentUuid = context.assessmentUuid,
         )
-      }
 
-      goal.notes.forEach { note ->
-        acc.add(
-          AddCollectionItemCommand(
-            user = UserDetails.from(note.createdBy),
-            collection = createNotesCommand,
-            answers = mapOf(
-              "note" to SingleValue(note.note),
-              "created_by" to SingleValue(note.createdBy?.username ?: "Unknown"),
-            ),
-            properties = mapOf(
-              "created_at" to SingleValue(note.createdDate.toString()),
-              "type" to SingleValue(note.type.name),
-            ),
-            index = null,
-            assessmentUuid = context.assessmentUuid,
-          ),
+        acc.add(addGoalCommand)
+
+        val createStepsCommand = CreateCollectionCommand(
+          user = UserDetails.from(goal.createdBy),
+          name = "STEPS",
+          parentCollectionItem = addGoalCommand,
+          assessmentUuid = context.assessmentUuid,
         )
-      }
 
-      acc
-    }
+        acc.add(createStepsCommand)
+
+        val createNotesCommand = CreateCollectionCommand(
+          user = UserDetails.from(goal.createdBy),
+          name = "NOTES",
+          parentCollectionItem = addGoalCommand,
+          assessmentUuid = context.assessmentUuid,
+        )
+
+        acc.add(createNotesCommand)
+
+        goal.steps.forEach { step ->
+          acc.add(
+            AddCollectionItemCommand(
+              user = UserDetails.from(step.createdBy),
+              collection = createStepsCommand,
+              answers = mapOf(
+                "actor" to SingleValue(ActorsMapper.map(step.actor)),
+                "status" to SingleValue(StepStatusMapper.map(step.status)),
+                "description" to SingleValue(step.description),
+              ),
+              properties = mapOf(
+                "status_date" to SingleValue(step.createdDate.toString()),
+              ),
+              index = null,
+              assessmentUuid = context.assessmentUuid,
+            ),
+          )
+        }
+
+        goal.notes.forEach { note ->
+          acc.add(
+            AddCollectionItemCommand(
+              user = UserDetails.from(note.createdBy),
+              collection = createNotesCommand,
+              answers = mapOf(
+                "note" to SingleValue(note.note),
+                "created_by" to SingleValue(note.createdBy?.username ?: "Unknown"),
+              ),
+              properties = mapOf(
+                "created_at" to SingleValue(note.createdDate.toString()),
+                "type" to SingleValue(GoalNoteTypeMapper.map(note.type)),
+              ),
+              index = null,
+              assessmentUuid = context.assessmentUuid,
+            ),
+          )
+        }
+
+        acc
+      }
 
     return goalsAdded + goalsRemoved
   }
@@ -273,18 +344,18 @@ class Migrator(
         user = UserDetails.from(current.updatedBy),
         assessmentUuid = context.assessmentUuid,
       )
-    }
+    }.also { context.planAgreements.clear() }
 
     val additions = current.agreementNotes.map { planAgreementNote ->
       AddCollectionItemCommand(
         collectionUuid = context.planAgreementsCollectionUuid,
-        answers = buildMap {
-          planAgreementNote.createdBy?.let { put("created_by", SingleValue(it.username)) }
-          put("notes", SingleValue(planAgreementNote.agreementStatusNote))
-          put("agreement_question", SingleValue(planAgreementNote.agreementStatus.toString()))
-        },
+        answers = mapOf(
+          "notes" to SingleValue(planAgreementNote.agreementStatusNote),
+          "created_by" to SingleValue(planAgreementNote.createdBy?.username ?: "Unknown"),
+          "agreement_question" to SingleValue(planAgreementNote.agreementStatus.toString()),
+        ),
         properties = mapOf(
-          "status" to SingleValue(planAgreementNote.agreementStatus.toString()),
+          "status" to SingleValue(AgreementStatusMapper.map(planAgreementNote.agreementStatus)),
           "status_date" to SingleValue(planAgreementNote.createdDate.toString()),
         ),
         index = null,
@@ -299,8 +370,11 @@ class Migrator(
   private inline fun <reified T : CommandResult> dispatchCommand(timestamp: LocalDateTime, command: Requestable) =
     dispatchCommands(timestamp, listOf(command)).extractSingle<T>()
 
-  fun dispatchCommands(timestamp: LocalDateTime, commands: List<Requestable>): CommandsResponse =
-    assessmentPlatformClient
+  fun dispatchCommands(timestamp: LocalDateTime, commands: List<Requestable>): CommandsResponse {
+    val requestCommandCount = commands.getCommandCount()
+    MigrationStats.numberOfEvents += requestCommandCount
+
+    return assessmentPlatformClient
       .post()
       .uri { uriBuilder -> uriBuilder.path("/command").queryParam("backdateTo", timestamp.toString()).build() }
       .bodyValue(CommandsRequest(commands))
@@ -308,6 +382,7 @@ class Migrator(
       .bodyToMono(CommandsResponse::class.java)
       .block()
       ?: throw RuntimeException("Empty response from Assessment Platform API")
+  }
 
   fun deleteAssessment(assessmentUuid: UUID) = assessmentPlatformClient
     .delete()
@@ -316,14 +391,14 @@ class Migrator(
     .toBodilessEntity()
     .block()
 
-  data class VersionMapping(val version: Long, val createdAt: LocalDateTime, val event: CountersigningStatus)
+  data class VersionMapping(val version: Long, val createdAt: LocalDateTime, var event: String)
   data class MigrateAssociationRequest(
     val mappings: List<VersionMapping>,
-    val entityUuid: UUID,
-  ) {
-    val entityTypeFrom = "PLAN"
-    val entityTypeTo = "AAP_PLAN"
-  }
+    val entityUuidFrom: UUID,
+    val entityUuidTo: UUID,
+    val entityTypeFrom: String = "PLAN",
+    val entityTypeTo: String = "AAP_PLAN",
+  )
 
   fun migrateCoordinatorAssociations(request: MigrateAssociationRequest) {
     coordinatorClient
@@ -353,25 +428,29 @@ class MigrationRunner(
   private val migrator: Migrator,
 ) {
   fun run() {
-// TODO: add this amazing loop back in..
-//    log.info("Starting migration")
-//
-//    var index = 0
-//    val pageSize = 25
-//    var hasNext = true
-//    while (hasNext) {
-//      val pageRequest = PageRequest.of(index++, pageSize)
-//      val page = planRepository.findAllByMigratedFalse(pageRequest)
-//
-//      if (!page.hasContent()) break
-//
-//      log.info("Migrating batch of ${page.content.size} items in page ${page.number + 1} of ${page.totalPages}")
-//      page.content.forEach { plan -> migrator.run(plan) }
-//
-//      hasNext = page.hasNext()
-//    }
+    log.info("Starting migration")
+    MigrationStats.start()
 
-    migrator.run(planRepository.findById(10756L).orElseThrow())
+    val pageSize = 50
+    var hasNext = true
+    var totalPages: Int? = null
+    var pageNumber = 0
+    while (hasNext) {
+      val pageRequest = PageRequest.of(0, pageSize)
+      val page = planRepository.findAllByMigratedFalse(pageRequest)
+
+      if (totalPages == null) {
+        totalPages = page.totalPages
+      }
+      if (!page.hasContent()) break
+
+      log.info("Migrating batch of ${page.content.size} items in page ${pageNumber++} of $totalPages")
+      page.content.forEach { plan -> migrator.run(plan) }
+
+      hasNext = page.hasNext()
+    }
+    log.info("Finished migration in ${MigrationStats.getDuration().toMinutes()} minutes")
+    log.info("Migrated ${MigrationStats.numberOfVersions} versions and created ${MigrationStats.numberOfEvents} events")
   }
 
 

@@ -20,6 +20,7 @@ class WebClientConfiguration(
 ) {
   @Bean
   fun webClientBuilder(): WebClient.Builder = WebClient.builder()
+    .codecs { it.defaultCodecs().maxInMemorySize(10 * 1024 * 1024) }
 
   @Bean
   fun hmppsAuthHealthWebClient(builder: WebClient.Builder): WebClient = builder.healthWebClient(hmppsAuthBaseUri, healthTimeout)

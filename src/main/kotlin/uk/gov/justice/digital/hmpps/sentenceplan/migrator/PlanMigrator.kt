@@ -30,7 +30,7 @@ class PlanMigrator(
   fun run(plan: PlanEntity) {
     val context = createContext(plan)
 
-    var versionMappings: List<VersionMapping> = emptyList()
+    var versionMappings: List<VersionMapping>
 
     try {
       val versions = plan.id

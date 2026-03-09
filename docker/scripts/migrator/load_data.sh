@@ -39,43 +39,6 @@ SAN_DATABASE_PASSWORD=$(kubectl -n "${SAN_NAMESPACE}" get secret "${SAN_SECRET_N
 SAN_DATABASE_NAME=$(kubectl -n "${SAN_NAMESPACE}" get secret "${SAN_SECRET_NAME}" -o json | jq -r '.data.database_name' | base64 --decode)
 SAN_CONNECTION_STRING="postgres://${SAN_DATABASE_USERNAME}:${SAN_DATABASE_PASSWORD}@localhost:${SAN_LOCAL_PORT}/${SAN_DATABASE_NAME}"
 
-echo "Deleting existing port forwarding pods (if any)..."
-
-kubectl -n "${SP_NAMESPACE}" delete pod --ignore-not-found=true "${POD_NAME}"
-kubectl -n "${COORDINATOR_NAMESPACE}" delete pod --ignore-not-found=true "${POD_NAME}"
-kubectl -n "${SAN_NAMESPACE}" delete pod --ignore-not-found=true "${POD_NAME}"
-
-echo "Starting port-forward pods..."
-
-kubectl -n "${SP_NAMESPACE}" run "${POD_NAME}" \
-  --image="${POD_IMAGE}" \
-  --port=5432 \
-  --env="REMOTE_HOST=${SP_INSTANCE_ADDRESS}" \
-  --env="LOCAL_PORT=5432" \
-  --env="REMOTE_PORT=5432"
-
-kubectl -n "${COORDINATOR_NAMESPACE}" run "${POD_NAME}" \
-  --image="${POD_IMAGE}" \
-  --port=5432 \
-  --env="REMOTE_HOST=${COORDINATOR_INSTANCE_ADDRESS}" \
-  --env="LOCAL_PORT=5432" \
-  --env="REMOTE_PORT=5432"
-
-kubectl -n "${SAN_NAMESPACE}" run "${POD_NAME}" \
-  --image="${POD_IMAGE}" \
-  --port=5432 \
-  --env="REMOTE_HOST=${SAN_INSTANCE_ADDRESS}" \
-  --env="LOCAL_PORT=5432" \
-  --env="REMOTE_PORT=5432"
-
-echo "Pods created."
-
-echo "Waiting for pods to start up..."
-
-kubectl -n "${SP_NAMESPACE}" wait --for=condition=Ready pod/${POD_NAME} --timeout=60s
-kubectl -n "${COORDINATOR_NAMESPACE}" wait --for=condition=Ready pod/${POD_NAME} --timeout=60s
-kubectl -n "${SAN_NAMESPACE}" wait --for=condition=Ready pod/${POD_NAME} --timeout=60s
-
 echo "Starting port-forwards..."
 
 kubectl -n "${SP_NAMESPACE}" port-forward pod/${POD_NAME} ${SP_LOCAL_PORT}:5432 >/tmp/portforward-sp.log 2>&1 &

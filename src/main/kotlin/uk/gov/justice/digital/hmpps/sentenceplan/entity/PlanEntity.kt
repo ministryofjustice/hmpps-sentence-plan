@@ -167,6 +167,7 @@ interface PlanRepository :
   @Query(nativeQuery = true)
   fun getPlanAndGoalNotes(planUuid: UUID): List<Note>
 
-  @Query(nativeQuery = true)
   fun findAllByMigratedFalse(pageable: Pageable): Page<PlanEntity>
+
+  fun findByIdAndMigratedFalse(planId: Long): PlanEntity
 }

@@ -56,7 +56,7 @@ tasks {
     description = "Runs the Migrator"
 
     classpath = sourceSets["main"].runtimeClasspath
-    mainClass.set("uk.gov.justice.digital.hmpps.sentenceplan.migrator.TaskRunner")
+    mainClass.set("uk.gov.justice.digital.hmpps.sentenceplan.migrator.runner.TaskRunner")
 
     args("--server.port=0")
   }

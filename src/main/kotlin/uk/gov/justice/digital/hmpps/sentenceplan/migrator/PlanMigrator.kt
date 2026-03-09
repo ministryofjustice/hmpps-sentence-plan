@@ -81,12 +81,14 @@ class PlanMigrator(
             parentCollectionItemUuid = null,
             user = UserDetails.from(plan.createdBy),
             assessmentUuid = "@0",
+            createdOnTimestamp = plan.createdDate,
           ),
           CreateCollectionCommand(
             name = "PLAN_AGREEMENTS",
             parentCollectionItemUuid = null,
             user = UserDetails.from(plan.createdBy),
             assessmentUuid = "@0",
+            createdOnTimestamp = plan.createdDate,
           ),
         ),
       )

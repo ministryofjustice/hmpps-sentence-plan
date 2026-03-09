@@ -17,7 +17,7 @@ import kotlin.test.Test
 
 class MigratorTest {
   val planRepository = mockk<PlanRepository>()
-  val migrator = mockk<Migrator>()
+  val migrator = mockk<PlanMigrator>()
   val runner = spyk(
     MigrationRunner(planRepository, migrator),
   )

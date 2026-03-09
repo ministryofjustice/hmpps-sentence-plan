@@ -5,7 +5,7 @@ import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.Stats
-import uk.gov.justice.digital.hmpps.sentenceplan.migrator.Migrator
+import uk.gov.justice.digital.hmpps.sentenceplan.migrator.PlanMigrator
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.aap.commands.GroupCommand
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.aap.commands.Requestable
 
@@ -20,7 +20,7 @@ fun List<Requestable>.getCommandCount(): Int = sumOf { command ->
 @Component
 class MigrationRunner(
   private val planRepository: PlanRepository,
-  private val migrator: Migrator,
+  private val migrator: PlanMigrator,
 ) {
   fun run(planId: Long) {
     planRepository.findByIdAndMigratedFalse(planId).run(migrator::run)

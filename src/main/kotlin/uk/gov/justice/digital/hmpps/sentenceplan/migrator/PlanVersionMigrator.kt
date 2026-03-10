@@ -2,8 +2,11 @@ package uk.gov.justice.digital.hmpps.sentenceplan.migrator
 
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
+import tools.jackson.databind.ObjectMapper
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalEntity
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.GoalNoteEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionEntity
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.StepEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.aap.AAPService
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.aap.commands.AddCollectionItemCommand
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.aap.commands.CreateCollectionCommand
@@ -16,8 +19,8 @@ import uk.gov.justice.digital.hmpps.sentenceplan.migrator.aap.commands.Timeline
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.aap.commands.UpdateAssessmentPropertiesCommand
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.aap.commands.UpdateCollectionItemAnswersCommand
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.aap.commands.UpdateCollectionItemPropertiesCommand
-import uk.gov.justice.digital.hmpps.sentenceplan.migrator.aap.commands.request.CommandResponse
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.aap.commands.result.AddCollectionItemCommandResult
+import uk.gov.justice.digital.hmpps.sentenceplan.migrator.aap.commands.result.CreateCollectionCommandResult
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.aap.commands.result.GroupCommandResult
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.common.MultiValue
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.common.SingleValue
@@ -39,19 +42,26 @@ class PlanVersionMigrator(
   private val aapService: AAPService,
 ) {
   fun migrate(context: Context, planVersion: PlanVersionEntity): VersionMapping {
-    val updateAssessmentPropertiesCommand = UpdateAssessmentPropertiesCommand(
-      user = UserDetails.from(planVersion.createdBy),
-      added = mapOf(
-        "PLAN_TYPE" to SingleValue(planVersion.planType.name),
-      ),
-      removed = emptyList(),
-      assessmentUuid = context.assessmentUuid,
-    )
+    val updateAssessmentCommands = buildList {
+      if (context.previousPlanVersion == null || context.previousPlanVersion != planVersion.planType.name) {
+        add(
+          UpdateAssessmentPropertiesCommand(
+            user = UserDetails.from(planVersion.createdBy),
+            added = mapOf(
+              "PLAN_TYPE" to SingleValue(planVersion.planType.name),
+            ),
+            removed = emptyList(),
+            assessmentUuid = context.assessmentUuid,
+          ),
+        )
+      }
+    }
+
     val goalCommands = migrateGoals(planVersion, context)
     val agreementNotesCommands = migratePlanAgreementNotes(planVersion, context)
 
-    val commands: List<Requestable> = listOf(
-      updateAssessmentPropertiesCommand,
+    val commands: List<Requestable> = listOfNotNull(
+      *updateAssessmentCommands.toTypedArray(),
       *goalCommands.toTypedArray(),
       *agreementNotesCommands.toTypedArray(),
     ).fold(emptyList()) { resolved, command ->
@@ -60,6 +70,8 @@ class PlanVersionMigrator(
 
     if (commands.isNotEmpty()) {
       log.info("Dispatching ${commands.getCommandCount()} commands for plan ${context.plan.id} version ${planVersion.version}")
+      // TODO: Remove this debug log
+//      log.info(ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(commands))
       val requestStarted = LocalDateTime.now()
       val response = aapService.dispatchCommand<GroupCommandResult>(
         planVersion.updatedDate,
@@ -78,13 +90,29 @@ class PlanVersionMigrator(
             context.goalsCollectionUuid -> context.createdGoalUuids[request.createdOnTimestamp.toString()] =
               response.result.collectionItemUuid
 
-            context.planAgreementsCollectionUuid -> context.createdGoalUuids[request.createdOnTimestamp.toString()] =
+            context.planAgreementsCollectionUuid -> context.createdAgreementNotesUuids[request.createdOnTimestamp.toString()] =
               response.result.collectionItemUuid
+
+            in context.stepCollectionUuids.values -> context.createdStepsUuids[request.createdOnTimestamp.toString()] =
+              response.result.collectionItemUuid
+
+            in context.notesCollectionUuids.values -> context.createdNotesUuids[request.createdOnTimestamp.toString()] =
+              response.result.collectionItemUuid
+          }
+
+          is CreateCollectionCommandResult -> when ((request as CreateCollectionCommand).name) {
+            "STEPS" -> context.stepCollectionUuids[request.createdOnTimestamp.toString()] =
+              response.result.collectionUuid
+
+            "NOTES" -> context.notesCollectionUuids[request.createdOnTimestamp.toString()] =
+              response.result.collectionUuid
           }
 
           else -> {}
         }
       }
+    } else {
+      log.info("No commands to execute")
     }
 
     Stats.numberOfVersions += 1
@@ -97,34 +125,23 @@ class PlanVersionMigrator(
   }
 
   fun migrateGoals(
-    current: PlanVersionEntity,
+    currentVersion: PlanVersionEntity,
     context: Context,
   ): List<Requestable> {
     val goalsToRemove = { previous: Set<GoalEntity>, current: Set<GoalEntity> ->
       val commands: MutableList<Requestable> = mutableListOf()
       previous.map { it.createdDate.toString() }.minus(current.map { it.createdDate.toString() }.toSet())
         .map { createdDate ->
-          val g = current.first { g -> g.createdDate.toString() == createdDate }
+          val p = previous.first { g -> g.createdDate.toString() == createdDate }
 
+          // TODO: Remove this debug log
+          log.info("REMOVE GOAL")
+          log.info(context.createdGoalUuids[p.createdDate.toString()])
 
-          val removeGoalCommand = AddCollectionItemCommand(
-            collectionUuid = context.goalsCollectionUuid,
-            answers = mapOf(
-              "title" to SingleValue(g.title),
-              "target_date" to SingleValue(g.targetDate.toString()),
-              "area_of_need" to SingleValue(AreasOfNeedMapper.map(g.areaOfNeed)),
-              "related_areas_of_need" to MultiValue(
-                g.relatedAreasOfNeed?.map { relatedAreaOfNeed -> AreasOfNeedMapper.map(relatedAreaOfNeed) }.orEmpty(),
-              ),
-            ),
-            properties = mapOf(
-              "status" to SingleValue(GoalStatusMapper.map(g.status)),
-              "status_date" to SingleValue(g.statusDate.toString()),
-            ),
-            index = null,
-            user = UserDetails.from(g.createdBy),
+          val removeGoalCommand = RemoveCollectionItemCommand(
+            user = UserDetails.from(currentVersion.updatedBy),
             assessmentUuid = context.assessmentUuid,
-            createdOnTimestamp = g.createdDate,
+            collectionItemUuid = context.createdGoalUuids[p.createdDate.toString()],
           )
 
           commands.add(removeGoalCommand)
@@ -137,7 +154,6 @@ class PlanVersionMigrator(
       current.map { it.createdDate.toString() }.minus(previous.map { it.createdDate.toString() }.toSet())
         .map { createdDate ->
           val g = current.first { g -> g.createdDate.toString() == createdDate }
-
 
           val addGoalCommand = AddCollectionItemCommand(
             collectionUuid = context.goalsCollectionUuid,
@@ -184,12 +200,14 @@ class PlanVersionMigrator(
       commands
     }
 
+    val goalsToBeAdded = goalsToAdd(context.previousGoals, currentVersion.goals).toTypedArray()
+
     val goalsToUpdate = { previous: Set<GoalEntity>, current: Set<GoalEntity> ->
-          val commands: MutableList<Requestable> = mutableListOf()
+      val commands: MutableList<Requestable> = mutableListOf()
       current.map { it.createdDate.toString() }.intersect(previous.map { it.createdDate.toString() }.toSet())
         .map { createdDate ->
-          val c = current.first { g -> g.createdDate.toString() == createdDate.toString() }
-          val p = previous.first { g -> g.createdDate.toString() == createdDate.toString() }
+          val c = current.first { g -> g.createdDate.toString() == createdDate }
+          val p = previous.first { g -> g.createdDate.toString() == createdDate }
 
 
           if (c.goalOrder != p.goalOrder) {
@@ -221,13 +239,17 @@ class PlanVersionMigrator(
             )
           }
 
-          commands.add(UpdateCollectionItemAnswersCommand(
-            user = UserDetails.from(c.createdBy),
-            assessmentUuid = context.assessmentUuid,
-            added = answersUpdated,
-            removed = emptyList(),
-            collectionItemUuid = context.createdGoalUuids[c.createdDate.toString()],
-          ))
+          if (answersUpdated.isNotEmpty()) {
+            commands.add(
+              UpdateCollectionItemAnswersCommand(
+                user = UserDetails.from(c.createdBy),
+                assessmentUuid = context.assessmentUuid,
+                added = answersUpdated,
+                removed = emptyList(),
+                collectionItemUuid = context.createdGoalUuids[c.createdDate.toString()],
+              ),
+            )
+          }
 
           val propertiesUpdated = buildMap {
             if (c.status != p.status) put("status", SingleValue(GoalStatusMapper.map(c.status)))
@@ -237,122 +259,282 @@ class PlanVersionMigrator(
             )
           }
 
-          commands.add(UpdateCollectionItemPropertiesCommand(
-            user = UserDetails.from(c.createdBy),
-            assessmentUuid = context.assessmentUuid,
-            added = propertiesUpdated,
-            removed = emptyList(),
-            collectionItemUuid = context.createdGoalUuids[c.createdDate.toString()],
-          ))
+          if (propertiesUpdated.isNotEmpty()) {
+            commands.add(
+              UpdateCollectionItemPropertiesCommand(
+                user = UserDetails.from(c.createdBy),
+                assessmentUuid = context.assessmentUuid,
+                added = propertiesUpdated,
+                removed = emptyList(),
+                collectionItemUuid = context.createdGoalUuids[c.createdDate.toString()],
+              ),
+            )
+          }
         }
+      commands
     }
-//
-//    val goalsRemoved = current.goals.filter { goal ->
-//      goalsToRemove(
-//        context.previousGoals.toSet(),
-//        current.goals,
-//      ).contains(goal.createdDate)
-//    }.map { goal ->
-//      RemoveCollectionItemCommand(
-//        collectionItemUuid = goal.uuid.toString(),
-//        user = UserDetails.from(current.updatedBy),
-//        assessmentUuid = context.assessmentUuid,
-//      )
-//    }.also { context.previousGoals = current.goals }
-//
-//    val goalsAdded = current.goals
-//      .filter { goal ->
-//        goalsToAdd(
-//          context.previousGoals.toSet(),
-//          current.goals,
-//        ).contains(goal.createdDate)
-//      }
-//      .fold(mutableListOf<Requestable>()) { acc, goal ->
-//        val addGoalCommand = AddCollectionItemCommand(
-//          collectionUuid = context.goalsCollectionUuid,
-//          answers = mapOf(
-//            "title" to SingleValue(goal.title),
-//            "target_date" to SingleValue(goal.targetDate.toString()),
-//            "area_of_need" to SingleValue(AreasOfNeedMapper.map(goal.areaOfNeed)),
-//            "related_areas_of_need" to MultiValue(
-//              goal.relatedAreasOfNeed?.map { relatedAreaOfNeed -> AreasOfNeedMapper.map(relatedAreaOfNeed) }.orEmpty(),
-//            ),
-//          ),
-//          properties = mapOf(
-//            "status" to SingleValue(GoalStatusMapper.map(goal.status)),
-//            "status_date" to SingleValue(goal.statusDate.toString()),
-//          ),
-//          index = null,
-//          user = UserDetails.from(goal.createdBy),
-//          assessmentUuid = context.assessmentUuid,
-//        )
-//
-//        acc.add(addGoalCommand)
-//
-//        val createStepsCommand = CreateCollectionCommand(
-//          user = UserDetails.from(goal.createdBy),
-//          name = "STEPS",
-//          parentCollectionItem = addGoalCommand,
-//          assessmentUuid = context.assessmentUuid,
-//        )
-//
-//        acc.add(createStepsCommand)
-//
-//        val createNotesCommand = CreateCollectionCommand(
-//          user = UserDetails.from(goal.createdBy),
-//          name = "NOTES",
-//          parentCollectionItem = addGoalCommand,
-//          assessmentUuid = context.assessmentUuid,
-//        )
-//
-//        acc.add(createNotesCommand)
-//
-//        goal.steps.forEach { step ->
-//          acc.add(
-//            AddCollectionItemCommand(
-//              user = UserDetails.from(step.createdBy),
-//              collection = createStepsCommand,
-//              answers = mapOf(
-//                "actor" to SingleValue(ActorsMapper.map(step.actor)),
-//                "status" to SingleValue(StepStatusMapper.map(step.status)),
-//                "description" to SingleValue(step.description),
-//              ),
-//              properties = mapOf(
-//                "status_date" to SingleValue(step.createdDate.toString()),
-//              ),
-//              index = null,
-//              assessmentUuid = context.assessmentUuid,
-//            ),
-//          )
-//        }
-//
-//        goal.notes.forEach { note ->
-//          acc.add(
-//            AddCollectionItemCommand(
-//              user = UserDetails.from(note.createdBy),
-//              collection = createNotesCommand,
-//              answers = mapOf(
-//                "note" to SingleValue(note.note),
-//                "created_by" to SingleValue(note.createdBy?.username ?: "Unknown"),
-//              ),
-//              properties = mapOf(
-//                "created_at" to SingleValue(note.createdDate.toString()),
-//                "type" to SingleValue(GoalNoteTypeMapper.map(note.type)),
-//              ),
-//              index = null,
-//              assessmentUuid = context.assessmentUuid,
-//            ),
-//          )
-//        }
-//
-//        acc
-//      }
+
+    val stepsToRemove = { previous: Set<StepEntity>, current: Set<StepEntity> ->
+      val commands: MutableList<Requestable> = mutableListOf()
+      previous.map { it.createdDate.toString() }.minus(current.map { it.createdDate.toString() }.toSet())
+        .map { createdDate ->
+          val p = previous.first { it.createdDate.toString() == createdDate }
+
+          // TODO: Remove this log
+          log.info("REMOVE STEP")
+          log.info(ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(context.createdStepsUuids))
+          log.info(
+            ObjectMapper().writerWithDefaultPrettyPrinter()
+              .writeValueAsString(
+                previous.map { it.createdDate.toString() }
+                  .minus(current.map { it.createdDate.toString() }.toSet()),
+              ),
+          )
+
+          val removeStepCommand = RemoveCollectionItemCommand(
+            user = UserDetails.from(currentVersion.updatedBy),
+            assessmentUuid = context.assessmentUuid,
+            collectionItemUuid = context.createdStepsUuids[p.createdDate.toString()],
+          )
+
+          commands.add(removeStepCommand)
+        }
+      commands
+    }
+
+    val stepsToAdd = { previous: Set<StepEntity>, current: Set<StepEntity> ->
+      val commands: MutableList<Requestable> = mutableListOf()
+      current.map { it.createdDate.toString() }.minus(previous.map { it.createdDate.toString() }.toSet())
+        .map { createdDate ->
+          val c = current.first { it.createdDate.toString() == createdDate }
+
+          commands.add(
+            AddCollectionItemCommand(
+              collection = goalsToBeAdded.firstOrNull {
+                it is CreateCollectionCommand
+                  && it.createdOnTimestamp.toString() == c.goal?.createdDate.toString()
+                  && it.name == "STEPS"
+              } as? CreateCollectionCommand,
+              collectionUuid = context.stepCollectionUuids[c.goal?.createdDate.toString()],
+              answers = mapOf(
+                "actor" to SingleValue(ActorsMapper.map(c.actor)),
+                "status" to SingleValue(StepStatusMapper.map(c.status)),
+                "description" to SingleValue(c.description),
+              ),
+              properties = mapOf(
+                "status_date" to SingleValue(c.createdDate.toString()),
+              ),
+              index = null,
+              user = UserDetails.from(c.createdBy),
+              assessmentUuid = context.assessmentUuid,
+              createdOnTimestamp = c.createdDate,
+            ),
+          )
+        }
+      commands
+    }
+
+    val stepsToUpdate = { previous: Set<StepEntity>, current: Set<StepEntity> ->
+      val commands: MutableList<Requestable> = mutableListOf()
+      current.map { it.createdDate.toString() }.intersect(previous.map { it.createdDate.toString() }.toSet())
+        .map { createdDate ->
+          val c = current.first { it.createdDate.toString() == createdDate }
+          val p = previous.first { it.createdDate.toString() == createdDate }
+
+          val answersUpdated = buildMap {
+            if (c.actor != p.actor) put("actor", SingleValue(ActorsMapper.map(c.actor)))
+            if (c.status.name != p.status.name) put(
+              "status",
+              SingleValue(StepStatusMapper.map(c.status)),
+            )
+            if (c.description != p.description) put(
+              "description",
+              SingleValue(c.description),
+            )
+          }
+
+          if (answersUpdated.isNotEmpty()) {
+            commands.add(
+              UpdateCollectionItemAnswersCommand(
+                user = UserDetails.from(c.createdBy),
+                assessmentUuid = context.assessmentUuid,
+                added = answersUpdated,
+                removed = emptyList(),
+                collectionItemUuid = context.createdStepsUuids[c.createdDate.toString()],
+              ),
+            )
+          }
+
+          val propertiesUpdated = buildMap {
+            if (c.createdDate.toString() != p.createdDate.toString()) {
+              put("status_date", SingleValue(c.createdDate.toString()))
+            }
+          }
+
+          if (propertiesUpdated.isNotEmpty()) {
+            commands.add(
+              UpdateCollectionItemPropertiesCommand(
+                user = UserDetails.from(c.createdBy),
+                assessmentUuid = context.assessmentUuid,
+                added = propertiesUpdated,
+                removed = emptyList(),
+                collectionItemUuid = context.createdStepsUuids[c.createdDate.toString()],
+              ),
+            )
+          }
+        }
+      commands
+    }
+
+    val notesToRemove = { previous: Set<GoalNoteEntity>, current: Set<GoalNoteEntity> ->
+      val commands: MutableList<Requestable> = mutableListOf()
+      previous.map { it.createdDate.toString() }.minus(current.map { it.createdDate.toString() }.toSet())
+        .map { createdDate ->
+          val p = previous.first { it.createdDate.toString() == createdDate }
+
+
+          // TODO: Remove this log
+          log.info("REMOVE NOTES")
+          log.info(context.notesCollectionUuids[p.createdDate.toString()])
+
+          val removeNoteCommand = RemoveCollectionItemCommand(
+            user = UserDetails.from(currentVersion.updatedBy),
+            assessmentUuid = context.assessmentUuid,
+            collectionItemUuid = context.createdNotesUuids[p.createdDate.toString()],
+          )
+
+          commands.add(removeNoteCommand)
+        }
+      commands
+    }
+
+    val notesToAdd = { previous: Set<GoalNoteEntity>, current: Set<GoalNoteEntity> ->
+      val commands: MutableList<Requestable> = mutableListOf()
+      current.map { it.createdDate.toString() }.minus(previous.map { it.createdDate.toString() }.toSet())
+        .map { createdDate ->
+          val c = current.first { it.createdDate.toString() == createdDate }
+
+          commands.add(
+            AddCollectionItemCommand(
+              collection = goalsToBeAdded.firstOrNull {
+                it is CreateCollectionCommand
+                  && it.createdOnTimestamp.toString() == c.goal?.createdDate.toString()
+                  && it.name == "NOTES"
+              } as? CreateCollectionCommand,
+              collectionUuid = context.notesCollectionUuids[c.goal?.createdDate.toString()],
+              answers = mapOf(
+                "note" to SingleValue(c.note),
+                "created_by" to SingleValue(c.createdBy?.username ?: "Unknown"),
+              ),
+              properties = mapOf(
+                "created_at" to SingleValue(c.createdDate.toString()),
+                "type" to SingleValue(GoalNoteTypeMapper.map(c.type)),
+              ),
+              index = null,
+              user = UserDetails.from(c.createdBy),
+              assessmentUuid = context.assessmentUuid,
+              createdOnTimestamp = c.createdDate,
+            ),
+          )
+        }
+      commands
+    }
+
+    val notesToUpdate = { previous: Set<GoalNoteEntity>, current: Set<GoalNoteEntity> ->
+      val commands: MutableList<Requestable> = mutableListOf()
+      current.map { it.createdDate.toString() }.intersect(previous.map { it.createdDate.toString() }.toSet())
+        .map { createdDate ->
+          val c = current.first { it.createdDate.toString() == createdDate }
+          val p = previous.first { it.createdDate.toString() == createdDate }
+
+          val answersUpdated = buildMap {
+            if (c.note != p.note) put("note", SingleValue(c.note))
+            if (c.createdBy?.username != p.createdBy?.username) put(
+              "created_by",
+              SingleValue(c.createdBy?.username ?: "Unknown"),
+            )
+          }
+
+          if (answersUpdated.isNotEmpty()) {
+            commands.add(
+              UpdateCollectionItemAnswersCommand(
+                user = UserDetails.from(c.createdBy),
+                assessmentUuid = context.assessmentUuid,
+                added = answersUpdated,
+                removed = emptyList(),
+                collectionItemUuid = context.createdNotesUuids[c.createdDate.toString()],
+              ),
+            )
+          }
+
+          val propertiesUpdated = buildMap {
+            if (c.createdDate.toString() != p.createdDate.toString()) {
+              put("created_at", SingleValue(c.createdDate.toString()))
+            }
+            if (c.type != p.type) {
+              put("type", SingleValue(GoalNoteTypeMapper.map(c.type)))
+            }
+          }
+
+          if (propertiesUpdated.isNotEmpty()) {
+            commands.add(
+              UpdateCollectionItemPropertiesCommand(
+                user = UserDetails.from(c.createdBy),
+                assessmentUuid = context.assessmentUuid,
+                added = propertiesUpdated,
+                removed = emptyList(),
+                collectionItemUuid = context.createdNotesUuids[c.createdDate.toString()],
+              ),
+            )
+          }
+        }
+      commands
+    }
+
+    val previousGoalsByCreatedDate = context.previousGoals.associateBy { it.createdDate.toString() }
+    val currentGoalsByCreatedDate = currentVersion.goals.associateBy { it.createdDate.toString() }
 
     return listOf(
-      *goalsToRemove(context.previousGoals, current.goals).toTypedArray(),
-      *goalsToAdd(context.previousGoals, current.goals).toTypedArray(),
-//      *goalsToUpdate(context.previousGoals, current.goals).toTypedArray(),
-    )
+      *goalsToRemove(context.previousGoals, currentVersion.goals).toTypedArray(),
+      *goalsToBeAdded,
+      *goalsToUpdate(context.previousGoals, currentVersion.goals).toTypedArray(),
+      *currentGoalsByCreatedDate.keys.flatMap { timestamp ->
+        stepsToRemove(
+          previousGoalsByCreatedDate[timestamp]?.steps?.toSet().orEmpty(),
+          currentGoalsByCreatedDate[timestamp]?.steps?.toSet().orEmpty(),
+        )
+      }.toTypedArray(),
+      *currentGoalsByCreatedDate.keys.flatMap { timestamp ->
+        stepsToAdd(
+          previousGoalsByCreatedDate[timestamp]?.steps?.toSet().orEmpty(),
+          currentGoalsByCreatedDate[timestamp]?.steps?.toSet().orEmpty(),
+        )
+      }.toTypedArray(),
+      *currentGoalsByCreatedDate.keys.flatMap { timestamp ->
+        stepsToUpdate(
+          previousGoalsByCreatedDate[timestamp]?.steps?.toSet().orEmpty(),
+          currentGoalsByCreatedDate[timestamp]?.steps?.toSet().orEmpty(),
+        )
+      }.toTypedArray(),
+      *currentGoalsByCreatedDate.keys.flatMap { timestamp ->
+        notesToRemove(
+          previousGoalsByCreatedDate[timestamp]?.notes?.toSet().orEmpty(),
+          currentGoalsByCreatedDate[timestamp]?.notes?.toSet().orEmpty(),
+        )
+      }.toTypedArray(),
+      *currentGoalsByCreatedDate.keys.flatMap { timestamp ->
+        notesToAdd(
+          previousGoalsByCreatedDate[timestamp]?.notes?.toSet().orEmpty(),
+          currentGoalsByCreatedDate[timestamp]?.notes?.toSet().orEmpty(),
+        )
+      }.toTypedArray(),
+      *currentGoalsByCreatedDate.keys.flatMap { timestamp ->
+        notesToUpdate(
+          previousGoalsByCreatedDate[timestamp]?.notes?.toSet().orEmpty(),
+          currentGoalsByCreatedDate[timestamp]?.notes?.toSet().orEmpty(),
+        )
+      }.toTypedArray(),
+    ).also { context.previousGoals = currentVersion.goals }
   }
 
   fun migratePlanAgreementNotes(

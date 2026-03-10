@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.sentenceplan.migrator.aap.commands.Requestab
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.aap.commands.Resolvable
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.aap.commands.Timeline
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.aap.commands.UpdateAssessmentPropertiesCommand
+import uk.gov.justice.digital.hmpps.sentenceplan.migrator.aap.commands.getCommandCount
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.aap.commands.request.CommandResponse
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.aap.commands.result.AddCollectionItemCommandResult
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.aap.commands.result.GroupCommandResult
@@ -25,7 +26,6 @@ import uk.gov.justice.digital.hmpps.sentenceplan.migrator.mappers.AreasOfNeedMap
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.mappers.GoalNoteTypeMapper
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.mappers.GoalStatusMapper
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.mappers.StepStatusMapper
-import uk.gov.justice.digital.hmpps.sentenceplan.migrator.runner.getCommandCount
 import java.time.Duration
 import java.time.LocalDateTime
 

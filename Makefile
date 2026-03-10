@@ -96,5 +96,6 @@ migrator-data: ## Loads data from a remote database
 	docker compose ${MIGRATOR_COMPOSE_FILES} down coordinator-api
 	@make migrator-up
 
-migrator-run: ## Runs the migrator
-	docker compose ${MIGRATOR_COMPOSE_FILES} exec sp-api gradle migrator
+PLANS=
+migrator-run: ## Runs the migrator. Optionally specify Plan IDs to migrate e.g. make migrator-run PLANS="12345 56789"
+	docker compose ${MIGRATOR_COMPOSE_FILES} exec sp-api gradle migrator -Pargs="${PLANS}"

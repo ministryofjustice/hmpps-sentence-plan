@@ -6,28 +6,15 @@ import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.Stats
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.PlanMigrator
-import uk.gov.justice.digital.hmpps.sentenceplan.migrator.aap.commands.GroupCommand
-import uk.gov.justice.digital.hmpps.sentenceplan.migrator.aap.commands.Requestable
-
-fun List<Requestable>.getCommandCount(): Int = sumOf { command ->
-  val added = when (command) {
-    is GroupCommand -> 1 + command.commands.getCommandCount()
-    else -> 1
-  }
-  added
-}
 
 @Component
 class MigrationRunner(
   private val planRepository: PlanRepository,
-  private val migrator: PlanMigrator,
+  private val planMigrator: PlanMigrator,
 ) {
-  fun run(planId: Long) {
-    planRepository.findByIdAndMigratedFalse(planId).run(migrator::run)
-  }
-
-  fun run() {
+  fun run(planIds: List<Long>?) {
     log.info("Starting migration")
+    log.info("Migrating plans: ${planIds?.joinToString() ?: "All"}")
 
     Stats.start()
 
@@ -37,7 +24,9 @@ class MigrationRunner(
     var pageNumber = 0
     while (hasNext) {
       val pageRequest = PageRequest.of(0, pageSize)
-      val page = planRepository.findAllByMigratedFalse(pageRequest)
+      val page = planIds
+        ?.let { planRepository.findAllByIdInAndMigratedFalse(planIds, pageRequest)}
+        ?: planRepository.findAllByMigratedFalse(pageRequest)
 
       if (totalPages == null) {
         totalPages = page.totalPages
@@ -45,7 +34,7 @@ class MigrationRunner(
       if (!page.hasContent()) break
 
       log.info("Migrating batch of ${page.content.size} items in page ${pageNumber++} of $totalPages")
-      page.content.forEach { plan -> migrator.run(plan) }
+      page.content.forEach { plan -> planMigrator.migrate(plan) }
 
       hasNext = page.hasNext()
     }

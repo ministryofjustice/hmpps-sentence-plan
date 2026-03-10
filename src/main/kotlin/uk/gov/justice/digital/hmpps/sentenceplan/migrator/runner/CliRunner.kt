@@ -10,6 +10,6 @@ class CliRunner(
   private val migrator: MigrationRunner,
 ) : CommandLineRunner {
   override fun run(vararg args: String) {
-    migrator.run()
+    migrator.run(null)
   }
 }

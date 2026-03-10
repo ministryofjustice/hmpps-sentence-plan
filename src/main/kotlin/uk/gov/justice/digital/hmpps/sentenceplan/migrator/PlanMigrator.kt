@@ -18,6 +18,11 @@ import uk.gov.justice.digital.hmpps.sentenceplan.migrator.coordinator.MigrateAss
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.coordinator.VersionMapping
 import java.util.UUID
 
+enum class KnownPlans(val planId: Long) {
+  NORMAL_PLAN(10756),
+  HEAVY_VERSIONS_PLAN(3027),
+}
+
 @Component
 class PlanMigrator(
   private val planRepository: PlanRepository,
@@ -27,7 +32,7 @@ class PlanMigrator(
   private val coordinatorService: CoordinatorService,
 ) {
   @Transactional
-  fun run(plan: PlanEntity) {
+  fun migrate(plan: PlanEntity) {
     val context = createContext(plan)
 
     var versionMappings: List<VersionMapping>

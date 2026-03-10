@@ -14,7 +14,8 @@ object TaskRunner {
         .run(*args)
 
     val migrator = context.getBean<MigrationRunner>()
-    migrator.run(3027L)
+
+    migrator.run(args.filterNot { it.startsWith("--") }.map { it.toLong() }.ifEmpty { null })
 
     context.close()
   }

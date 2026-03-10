@@ -49,7 +49,7 @@ class MigratorTest {
       every { page1.content } returns listOf(plans[0])
       every { page1.hasContent() } returns page1.content.isNotEmpty()
       every { page1.totalPages } returns 1
-      every { migrator.run(any()) } just Runs
+      every { migrator.migrate(any()) } just Runs
     }
 
     @Test

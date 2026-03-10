@@ -169,5 +169,5 @@ interface PlanRepository :
 
   fun findAllByMigratedFalse(pageable: Pageable): Page<PlanEntity>
 
-  fun findByIdAndMigratedFalse(planId: Long): PlanEntity
+  fun findAllByIdInAndMigratedFalse(planIds: List<Long>, pageable: Pageable): Page<PlanEntity>
 }

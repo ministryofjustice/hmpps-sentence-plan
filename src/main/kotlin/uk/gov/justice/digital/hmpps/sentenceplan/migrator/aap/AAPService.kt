@@ -5,10 +5,10 @@ import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.Stats
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.aap.commands.Requestable
+import uk.gov.justice.digital.hmpps.sentenceplan.migrator.aap.commands.getCommandCount
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.aap.commands.request.CommandsRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.aap.commands.request.CommandsResponse
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.aap.commands.result.CommandResult
-import uk.gov.justice.digital.hmpps.sentenceplan.migrator.runner.getCommandCount
 import java.time.LocalDateTime
 import java.util.UUID
 

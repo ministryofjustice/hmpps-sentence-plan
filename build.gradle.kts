@@ -58,7 +58,15 @@ tasks {
     classpath = sourceSets["main"].runtimeClasspath
     mainClass.set("uk.gov.justice.digital.hmpps.sentenceplan.migrator.runner.TaskRunner")
 
-    args("--server.port=0")
+    val cliArgs = project.findProperty("args") as String?
+
+    val finalArgs = mutableListOf("--server.port=0")
+
+    if (!cliArgs.isNullOrBlank()) {
+      finalArgs += cliArgs.split("\\s+".toRegex())
+    }
+
+    args = finalArgs
   }
 }
 

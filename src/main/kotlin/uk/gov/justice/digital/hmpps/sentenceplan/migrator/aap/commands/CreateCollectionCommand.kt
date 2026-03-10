@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.sentenceplan.migrator.aap.commands
 
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.common.UserDetails
+import java.time.LocalDateTime
 
 class CreateCollectionCommand(
   override val user: UserDetails,
@@ -9,6 +10,7 @@ class CreateCollectionCommand(
   val parentCollectionItem: AddCollectionItemCommand? = null,
   var parentCollectionItemUuid: String? = null,
   val assessmentUuid: String,
+  val createdOnTimestamp: LocalDateTime = LocalDateTime.now(),
 ) : Requestable,
   Resolvable {
   override fun resolve(

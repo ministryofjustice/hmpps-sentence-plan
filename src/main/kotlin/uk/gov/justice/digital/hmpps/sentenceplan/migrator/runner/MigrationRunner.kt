@@ -18,6 +18,8 @@ class MigrationRunner(
 
     Stats.start()
 
+    val failedPlans: MutableMap<Long, String> = mutableMapOf()
+
     val pageSize = 50
     var hasNext = true
     var totalPages: Int? = null
@@ -26,7 +28,7 @@ class MigrationRunner(
       val pageRequest = PageRequest.of(0, pageSize)
       val page = planIds
         ?.let { planRepository.findAllByIdInAndMigratedFalse(planIds, pageRequest)}
-        ?: planRepository.findAllByMigratedFalse(pageRequest)
+        ?: planRepository.findAllByMigratedFalseAndIdNotIn(failedPlans.keys, pageRequest)
 
       if (totalPages == null) {
         totalPages = page.totalPages
@@ -34,12 +36,20 @@ class MigrationRunner(
       if (!page.hasContent()) break
 
       log.info("Migrating batch of ${page.content.size} items in page ${pageNumber++} of $totalPages")
-      page.content.forEach { plan -> planMigrator.migrate(plan) }
+      page.content.forEach { plan ->
+        try {
+          planMigrator.migrate(plan)
+        } catch (e: Exception) {
+          failedPlans[plan.id!!] = e.message ?: "Unknown error"
+        }
+      }
 
       hasNext = page.hasNext()
     }
     log.info("Finished migration in ${Stats.getDuration().toMinutes()} minutes")
     log.info("Migrated ${Stats.numberOfVersions} versions and created ${Stats.numberOfEvents} events")
+    log.info("Failed to migrate ${failedPlans.size} plans")
+    failedPlans.forEach { (planId, message) -> log.error("Failed to migrate plan $planId: $message") }
   }
 
 

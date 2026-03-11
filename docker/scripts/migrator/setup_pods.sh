@@ -5,13 +5,13 @@ set -eu
 POD_NAME="port-forward-pod"
 POD_IMAGE="ministryofjustice/port-forward"
 
-SP_NAMESPACE="hmpps-sentence-plan-dev"
+SP_NAMESPACE="hmpps-sentence-plan-test"
 SP_SECRET_NAME="rds-postgresql-instance-output"
 
-COORDINATOR_NAMESPACE="hmpps-assess-risks-and-needs-integrations-dev"
+COORDINATOR_NAMESPACE="hmpps-assess-risks-and-needs-integrations-test"
 COORDINATOR_SECRET_NAME="hmpps-assess-risks-and-needs-integrations-rds-instance"
 
-SAN_NAMESPACE="hmpps-strengths-based-needs-assessments-dev"
+SAN_NAMESPACE="hmpps-strengths-based-needs-assessments-test"
 SAN_SECRET_NAME="hmpps-strengths-based-needs-assessments-rds-instance"
 
 echo "Fetching secrets..."

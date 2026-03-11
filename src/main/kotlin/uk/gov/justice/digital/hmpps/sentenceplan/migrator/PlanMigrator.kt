@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.sentenceplan.migrator
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
+import org.springframework.web.reactive.function.client.WebClientResponseException
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionRepository
@@ -17,6 +18,7 @@ import uk.gov.justice.digital.hmpps.sentenceplan.migrator.coordinator.Coordinato
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.coordinator.MigrateAssociationRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.coordinator.VersionMapping
 import java.util.UUID
+import kotlin.onFailure
 
 enum class KnownPlans(val planId: Long) {
   NORMAL_PLAN(10756),
@@ -33,6 +35,8 @@ class PlanMigrator(
 ) {
   @Transactional
   fun migrate(plan: PlanEntity) {
+    log.info("Migrating plan ${plan.id}")
+
     val context = createContext(plan)
 
     var versionMappings: List<VersionMapping>
@@ -42,29 +46,40 @@ class PlanMigrator(
         ?.let(planVersionRepository::findAllByPlanId)
         .orEmpty()
         .filter { !it.softDeleted }
+        .groupBy { it.version }
+        .map { it.key to it.value.maxBy { version -> version.id!! } }.toMap()
+        .values
         .sortedBy { it.updatedDate }
 
       versionMappings = versions.map { planVersionMigrator.migrate(context, it) }
 
-      coordinatorService.migrateAssociations(
-        MigrateAssociationRequest(
-          mappings = versionMappings
-            .mapNotNull { mapping ->
-              when (mapping.event) {
-                "LOCKED_INCOMPLETE" -> mapping.apply { event = "LOCKED" }
-                "UNSIGNED" -> null
-                else -> mapping
-              }
-            },
-          entityUuidFrom = plan.uuid,
-          entityUuidTo = UUID.fromString(context.assessmentUuid),
-        ),
-      )
+      runCatching {
+        coordinatorService.migrateAssociations(
+          MigrateAssociationRequest(
+            mappings = versionMappings
+              .mapNotNull { mapping ->
+                when (mapping.event) {
+                  "LOCKED_INCOMPLETE" -> mapping.apply { event = "LOCKED" }
+                  "UNSIGNED" -> null
+                  else -> mapping
+                }
+              },
+            entityUuidFrom = plan.uuid,
+            entityUuidTo = UUID.fromString(context.assessmentUuid),
+          ),
+        )
+      }.onFailure { ex ->
+        when (ex) {
+          is WebClientResponseException.NotFound -> log.warn("Association not found for plan ${plan.id}")
+          else -> throw ex
+        }
+      }
 
       planRepository.save(plan.apply { migrated = true })
     } catch (e: Exception) {
       log.warn("Failed to migrate ${plan.id}: ${e.stackTraceToString()}")
       aapService.deleteAssessment(UUID.fromString(context.assessmentUuid))
+      throw e
     }
   }
 

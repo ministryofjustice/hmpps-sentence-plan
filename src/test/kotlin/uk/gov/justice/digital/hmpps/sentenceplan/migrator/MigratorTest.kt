@@ -56,11 +56,11 @@ class MigratorTest {
     fun `it runs`() {
       every { page1.hasNext() } returns false
 
-      every { planRepository.findAllByMigratedFalse(any()) } returns page1
+      every { planRepository.findAllByMigratedFalseAndIdNotIn(any(), any()) } returns page1
 
-      runner.run()
+      runner.run(null)
 
-      verify(exactly = 1) { planRepository.findAllByMigratedFalse(any()) }
+      verify(exactly = 1) { planRepository.findAllByMigratedFalseAndIdNotIn(any(), any()) }
     }
 
     @Test
@@ -70,12 +70,12 @@ class MigratorTest {
       every { page2.content } returns listOf(plans[1])
       every { page2.hasContent() } returns page2.content.isNotEmpty()
 
-      every { planRepository.findAllByMigratedFalse(match { it.pageNumber == 0 }) } returns page1
-      every { planRepository.findAllByMigratedFalse(match { it.pageNumber == 1 }) } returns page2
+      every { planRepository.findAllByMigratedFalseAndIdNotIn(any(), match { it.pageNumber == 0 }) } returns page1
+      every { planRepository.findAllByMigratedFalseAndIdNotIn(any(), match { it.pageNumber == 1 }) } returns page2
 
-      runner.run()
+      runner.run(null)
 
-      verify(exactly = 2) { planRepository.findAllByMigratedFalse(any()) }
+      verify(exactly = 2) { planRepository.findAllByMigratedFalseAndIdNotIn(any(), any()) }
     }
   }
 }

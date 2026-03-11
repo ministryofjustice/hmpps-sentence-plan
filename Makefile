@@ -78,6 +78,12 @@ db-connection-string: ## Outputs a DB connection string that will let you connec
 db-connect: ## Connects to the remote DB though the port-forwarding pod
 	psql --pset=pager=off $$(make db-connection-string)
 
+db-export: ## Export the remote DB to out.sql
+	pg_dump --schema="sentence-plan" --clean --no-owner --no-privileges $$(make db-connection-string) > out.sql
+
+db-import: ## Import out.sql to remote DB
+	psql $$(make db-connection-string) < out.sql
+
 migrator-up: ## Starts/restarts the API in a development container. A remote debugger can be attached on port 5005. Stands up all services needed for testing data migrations
 	docker compose ${MIGRATOR_COMPOSE_FILES} down sp-api
 	docker compose ${MIGRATOR_COMPOSE_FILES} up --wait --no-recreate sp-ui aap-ui

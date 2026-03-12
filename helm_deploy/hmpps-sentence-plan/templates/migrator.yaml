@@ -1,27 +1,30 @@
-{{- if .Values.migrator.enabled }}
 apiVersion: batch/v1
-kind: Job
+kind: CronJob
 metadata:
   name: hmpps-sentence-plan-migrator
   labels:
     app: hmpps-sentence-plan
     release: {{ .Release.Name }}
 spec:
-  backoffLimit: 1
-  template:
+  schedule: "0 0 31 2 0"
+  concurrencyPolicy: Forbid
+  jobTemplate:
     spec:
-      restartPolicy: Never
-      containers:
-        - name: migrator
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-          imagePullPolicy: IfNotPresent
-          command:
-            - java
-            - -jar
-            - /app/app.jar
-          args:
-            - "--server.port=0"
-            - "--spring.profiles.active=migration"
-          env:
-            {{- toYaml .Values.env | nindent 12 }}
-{{- end }}
+      ttlSecondsAfterFinished: 3600
+      backoffLimit: 1
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: migrator
+              image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+              imagePullPolicy: IfNotPresent
+              command:
+                - java
+                - -jar
+                - /app/app.jar
+              args:
+                - "--server.port=0"
+                - "--spring.profiles.active=migration"
+              env:
+                {{- toYaml .Values.env | nindent 16 }}

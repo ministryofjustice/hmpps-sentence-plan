@@ -3,7 +3,7 @@ package uk.gov.justice.digital.hmpps.sentenceplan.migrator
 import java.time.Duration
 import java.time.LocalDateTime
 
-class Stats() {
+class Stats {
   companion object {
     private lateinit var started: LocalDateTime
     var numberOfEvents = 0

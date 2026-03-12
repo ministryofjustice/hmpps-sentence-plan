@@ -77,3 +77,5 @@ sonar-project.properties
 
 #Helm
 **/Chart.lock
+
+*.sql

@@ -14,11 +14,10 @@ import java.util.UUID
 
 @Service
 class AAPService(
-    @param:Qualifier("assessmentPlatformClient")
+  @param:Qualifier("assessmentPlatformClient")
   private val assessmentPlatformClient: WebClient,
 ) {
-  final inline fun <reified T : CommandResult> dispatchCommand(timestamp: LocalDateTime, command: Requestable) =
-    dispatchCommands(timestamp, listOf(command)).extractSingle<T>()
+  final inline fun <reified T : CommandResult> dispatchCommand(timestamp: LocalDateTime, command: Requestable) = dispatchCommands(timestamp, listOf(command)).extractSingle<T>()
 
   fun dispatchCommands(timestamp: LocalDateTime, commands: List<Requestable>): CommandsResponse {
     val requestCommandCount = commands.getCommandCount()

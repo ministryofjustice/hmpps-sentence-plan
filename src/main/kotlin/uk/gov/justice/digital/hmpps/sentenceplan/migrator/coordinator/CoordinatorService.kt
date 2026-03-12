@@ -6,7 +6,7 @@ import org.springframework.web.reactive.function.client.WebClient
 
 @Service
 class CoordinatorService(
-    @param:Qualifier("coordinatorClient")
+  @param:Qualifier("coordinatorClient")
   private val coordinatorClient: WebClient,
 ) {
   fun migrateAssociations(request: MigrateAssociationRequest) {

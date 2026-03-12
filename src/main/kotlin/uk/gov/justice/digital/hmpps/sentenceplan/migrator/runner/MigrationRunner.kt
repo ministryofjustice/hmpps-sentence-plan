@@ -4,8 +4,8 @@ import org.slf4j.LoggerFactory
 import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
-import uk.gov.justice.digital.hmpps.sentenceplan.migrator.Stats
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.PlanMigrator
+import uk.gov.justice.digital.hmpps.sentenceplan.migrator.Stats
 
 @Component
 class MigrationRunner(
@@ -27,7 +27,7 @@ class MigrationRunner(
     while (hasNext) {
       val pageRequest = PageRequest.of(0, pageSize)
       val page = planIds
-        ?.let { planRepository.findAllByIdInAndMigratedFalse(planIds, pageRequest)}
+        ?.let { planRepository.findAllByIdInAndMigratedFalse(planIds, pageRequest) }
         ?: planRepository.findAllByMigratedFalseAndIdNotIn(failedPlans.keys, pageRequest)
 
       if (totalPages == null) {
@@ -51,7 +51,6 @@ class MigrationRunner(
     log.info("Failed to migrate ${failedPlans.size} plans")
     failedPlans.forEach { (planId, message) -> log.error("Failed to migrate plan $planId: $message") }
   }
-
 
   companion object {
     private val log = LoggerFactory.getLogger(this::class.java)

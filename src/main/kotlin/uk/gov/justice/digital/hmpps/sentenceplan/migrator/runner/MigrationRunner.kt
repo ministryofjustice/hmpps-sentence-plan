@@ -33,6 +33,7 @@ class MigrationRunner(
       if (totalPages == null) {
         totalPages = page.totalPages
       }
+      hasNext = page.hasNext()
       if (!page.hasContent()) break
 
       log.info("Migrating batch of ${page.content.size} items in page ${pageNumber++} of $totalPages")
@@ -43,8 +44,6 @@ class MigrationRunner(
           failedPlans[plan.id!!] = e.message ?: "Unknown error"
         }
       }
-
-      hasNext = page.hasNext()
     }
     log.info("Finished migration in ${Stats.getDuration().toMinutes()} minutes")
     log.info("Migrated ${Stats.numberOfVersions} versions and created ${Stats.numberOfEvents} events")

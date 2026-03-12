@@ -41,6 +41,7 @@ class MigrationRunner(
         try {
           planMigrator.migrate(plan)
         } catch (e: Exception) {
+          log.warn("Failed to migrate ${plan.id}: ${e.stackTraceToString()}")
           failedPlans[plan.id!!] = e.message ?: "Unknown error"
         }
       }

@@ -77,7 +77,6 @@ class PlanMigrator(
 
       planRepository.save(plan.apply { migrated = true })
     } catch (e: Exception) {
-      log.warn("Failed to migrate ${plan.id}: ${e.stackTraceToString()}")
       aapService.deleteAssessment(UUID.fromString(context.assessmentUuid))
       throw e
     }

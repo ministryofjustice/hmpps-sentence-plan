@@ -26,5 +26,4 @@ spec:
               args:
                 - "--server.port=0"
                 - "--spring.profiles.active=migration"
-              env:
-                {{- include "deployment.envs" (index .Values "generic-service") | nindent 16 }}
+              {{- include "deployment.envs" (index .Values "generic-service") | nindent 14 }}

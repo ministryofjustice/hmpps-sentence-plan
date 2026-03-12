@@ -17,7 +17,7 @@ spec:
           restartPolicy: Never
           containers:
             - name: migrator
-              image: "{{ .Values.generic-service.image.repository }}:{{ .Values.generic-service.image.tag }}"
+              image: "{{ (index .Values "generic-service").image.repository }}:{{ (index .Values "generic-service").image.tag }}"
               imagePullPolicy: IfNotPresent
               command:
                 - java
@@ -27,4 +27,4 @@ spec:
                 - "--server.port=0"
                 - "--spring.profiles.active=migration"
               env:
-                {{- include "generic-service.deployment.envs" .Values.generic-service | nindent 16 }}
+                {{- include "generic-service.deployment.envs" (index .Values "generic-service") | nindent 16 }}

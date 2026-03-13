@@ -1,0 +1,102 @@
+{
+  "name": "ARNS API - Get Criminogenic Needs",
+  "request": {
+    "method": "GET",
+    "urlPathPattern": "/arns-api/needs/crn/[A-Z][0-9]{6}"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "jsonBody": {
+      "assessedOn": "{{now}}",
+      "identifiedNeeds": [
+        {
+          "section": "ACCOMMODATION",
+          "name": "Accommodation",
+          "riskOfHarm": false,
+          "riskOfReoffending": true,
+          "severity": "SEVERE",
+          "score": 6,
+          "oasysThreshold": 3,
+          "tierThreshold": 5
+        },
+        {
+          "section": "EDUCATION_TRAINING_AND_EMPLOYABILITY",
+          "name": "Education, training and employability",
+          "riskOfHarm": false,
+          "riskOfReoffending": true,
+          "severity": "STANDARD",
+          "score": 4,
+          "oasysThreshold": 3,
+          "tierThreshold": 4
+        },
+        {
+          "section": "FINANCIAL_MANAGEMENT_AND_INCOME",
+          "name": "Financial management and income",
+          "riskOfHarm": false,
+          "riskOfReoffending": false,
+          "severity": "STANDARD",
+          "score": 3,
+          "oasysThreshold": 2,
+          "tierThreshold": 3
+        },
+        {
+          "section": "DRUG_MISUSE",
+          "name": "Drug misuse",
+          "riskOfHarm": true,
+          "riskOfReoffending": true,
+          "severity": "SEVERE",
+          "score": 5,
+          "oasysThreshold": 2,
+          "tierThreshold": 4
+        },
+        {
+          "section": "ALCOHOL_MISUSE",
+          "name": "Alcohol misuse",
+          "riskOfHarm": true,
+          "riskOfReoffending": true,
+          "severity": "STANDARD",
+          "score": 4,
+          "oasysThreshold": 3,
+          "tierThreshold": 4
+        },
+        {
+          "section": "EMOTIONAL_WELLBEING",
+          "name": "Emotional wellbeing",
+          "riskOfHarm": false,
+          "riskOfReoffending": false,
+          "severity": "STANDARD",
+          "score": 3,
+          "oasysThreshold": 2,
+          "tierThreshold": 3
+        },
+        {
+          "section": "RELATIONSHIPS",
+          "name": "Relationships",
+          "riskOfHarm": true,
+          "riskOfReoffending": true,
+          "severity": "SEVERE",
+          "score": 5,
+          "oasysThreshold": 3,
+          "tierThreshold": 4
+        },
+        {
+          "section": "THINKING_AND_BEHAVIOUR",
+          "name": "Thinking and behaviour",
+          "riskOfHarm": true,
+          "riskOfReoffending": true,
+          "severity": "SEVERE",
+          "score": 7,
+          "oasysThreshold": 4,
+          "tierThreshold": 5
+        }
+      ],
+      "notIdentifiedNeeds": [],
+      "unansweredNeeds": []
+    },
+    "transformers": ["response-template"]
+  },
+  "priority": 50
+}

@@ -1,4 +1,5 @@
 SHELL = '/bin/bash'
+MIGRATOR_COMPOSE_FILES = -f docker/docker-compose.yml -f docker/docker-compose.local.yml -f docker/docker-compose.dev.yml -f docker/docker-compose.migrator.yml
 DEV_COMPOSE_FILES = -f docker/docker-compose.yml -f docker/docker-compose.local.yml -f docker/docker-compose.dev.yml
 LOCAL_COMPOSE_FILES = -f docker/docker-compose.yml -f docker/docker-compose.local.yml
 PROJECT_NAME = hmpps-assess-risks-and-needs
@@ -76,3 +77,31 @@ db-connection-string: ## Outputs a DB connection string that will let you connec
 
 db-connect: ## Connects to the remote DB though the port-forwarding pod
 	psql --pset=pager=off $$(make db-connection-string)
+
+db-export: ## Export the remote DB to out.sql
+	pg_dump --schema="sentence-plan" --clean --no-owner --no-privileges $$(make db-connection-string) > out.sql
+
+db-import: ## Import out.sql to remote DB
+	psql $$(make db-connection-string) < out.sql
+
+migrator-up: ## Starts/restarts the API in a development container. A remote debugger can be attached on port 5005. Stands up all services needed for testing data migrations
+	docker compose ${MIGRATOR_COMPOSE_FILES} down sp-api
+	docker compose ${MIGRATOR_COMPOSE_FILES} up --wait --no-recreate sp-ui aap-ui
+
+migrator-down: ## Stops and removes all migrator containers in the project.
+	docker compose ${MIGRATOR_COMPOSE_FILES} down
+
+migrator-update: ## Downloads the latest versions of containers.
+	docker compose ${MIGRATOR_COMPOSE_FILES} pull
+
+migrator-data-pods: ## Create port-forwarding pods
+	sh ./docker/scripts/migrator/setup_pods.sh
+
+migrator-data: ## Loads data from a remote database
+	sh ./docker/scripts/migrator/load_data.sh
+	docker compose ${MIGRATOR_COMPOSE_FILES} down coordinator-api
+	@make migrator-up
+
+PLANS=
+migrator-run: ## Runs the migrator. Optionally specify Plan IDs to migrate e.g. make migrator-run PLANS="12345 56789"
+	docker compose ${MIGRATOR_COMPOSE_FILES} exec sp-api gradle migrator -Pargs="${PLANS}"

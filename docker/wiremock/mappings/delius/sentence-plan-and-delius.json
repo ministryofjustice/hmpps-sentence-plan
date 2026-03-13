@@ -1,0 +1,55 @@
+{
+  "mappings": [
+    {
+      "name": "Delius health ping",
+      "request": {
+        "urlPathPattern": "/delius/health/ping",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "headers": { "Content-Type": "application/json" },
+        "jsonBody": {
+          "status": "UP"
+        }
+      },
+      "priority": 10
+    },
+    {
+      "name": "Delius user access - X123456 no access",
+      "request": {
+        "urlPattern": "/delius/users/.*/access/X123456$",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "headers": { "Content-Type": "application/json" },
+        "jsonBody": {
+          "inCaseload": false,
+          "userExcluded": false,
+          "userRestricted": false,
+          "canAccess": false
+        }
+      },
+      "priority": 20
+    },
+    {
+      "name": "Delius user access - default success",
+      "request": {
+        "urlPattern": "/delius/users/.*/access/.*$",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "headers": { "Content-Type": "application/json" },
+        "jsonBody": {
+          "inCaseload": true,
+          "userExcluded": false,
+          "userRestricted": false,
+          "canAccess": true
+        }
+      },
+      "priority": 50
+    }
+  ]
+}

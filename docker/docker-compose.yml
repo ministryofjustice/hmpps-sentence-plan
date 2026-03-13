@@ -10,7 +10,7 @@ services:
       - /var/lib/postgresql
 
   hmpps-auth:
-    image: ghcr.io/ministryofjustice/hmpps-auth
+    image: ghcr.io/ministryofjustice/hmpps-auth:2026-03-02.422.c36796f
     networks:
       - hmpps
     healthcheck:
@@ -44,6 +44,8 @@ services:
       CLIENT_CREDS_CLIENT_SECRET: sentence-plan-api-client
       HMPPS_AUTH_BASE_URL: http://hmpps-auth:9090
       DELIUS_API_BASE_URL: http://delius:8080
+      ASSESSMENT_PLATFORM_API_BASE_URL: http://aap-api:8080
+      COORDINATOR_API_BASE_URL: http://coordinator-api:8080
 
   delius:
     image: wiremock/wiremock:latest

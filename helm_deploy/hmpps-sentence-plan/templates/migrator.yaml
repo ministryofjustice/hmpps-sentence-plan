@@ -1,0 +1,29 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: hmpps-sentence-plan-migrator
+  labels:
+    app: hmpps-sentence-plan
+    release: {{ .Release.Name }}
+spec:
+  schedule: "0 0 31 2 0"
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      ttlSecondsAfterFinished: 3600
+      backoffLimit: 1
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: migrator
+              image: "{{ (index .Values "generic-service").image.repository }}:{{ (index .Values "generic-service").image.tag }}"
+              imagePullPolicy: IfNotPresent
+              command:
+                - java
+                - -jar
+                - /app/app.jar
+              args:
+                - "--server.port=0"
+                - "--spring.profiles.active=migration"
+              {{- include "deployment.envs" (index .Values "generic-service") | nindent 14 }}

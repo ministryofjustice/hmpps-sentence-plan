@@ -61,6 +61,7 @@ hs_err_pid*
 
 Dockerrun.aws.json
 dist
+docker/volume
 
 # Elastic Beanstalk Files
 .elasticbeanstalk/*
@@ -76,3 +77,5 @@ sonar-project.properties
 
 #Helm
 **/Chart.lock
+
+*.sql

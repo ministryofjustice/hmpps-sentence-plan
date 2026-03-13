@@ -1,0 +1,11 @@
+{
+  "name": "Proxy to ARNS API",
+  "request": {
+    "urlPattern": "/arns-api/.*"
+  },
+  "response": {
+    "proxyBaseUrl": "{{systemValue type='ENVIRONMENT' key='WIREMOCK_ARNS_API_URL'}}",
+    "proxyUrlPrefixToRemove": "/arns-api"
+  },
+  "priority": 100
+}

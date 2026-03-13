@@ -6,6 +6,7 @@ import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.reactive.function.client.WebClientResponseException
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanRepository
+import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionEntity
 import uk.gov.justice.digital.hmpps.sentenceplan.entity.PlanVersionRepository
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.aap.AAPService
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.aap.commands.CreateAssessmentCommand
@@ -17,8 +18,8 @@ import uk.gov.justice.digital.hmpps.sentenceplan.migrator.common.UserDetails
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.coordinator.CoordinatorService
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.coordinator.MigrateAssociationRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.coordinator.VersionMapping
+import java.time.LocalDateTime
 import java.util.UUID
-import kotlin.onFailure
 
 enum class KnownPlans(val planId: Long) {
   NORMAL_PLAN(10756),
@@ -42,16 +43,34 @@ class PlanMigrator(
     var versionMappings: List<VersionMapping>
 
     try {
-      val versions = plan.id
+      var previousTimestamp: LocalDateTime? = null
+
+      val versions: Map<LocalDateTime, PlanVersionEntity> = plan.id
         ?.let(planVersionRepository::findAllByPlanId)
         .orEmpty()
         .filter { !it.softDeleted }
         .groupBy { it.version }
         .map { it.key to it.value.maxBy { version -> version.id!! } }.toMap()
         .values
-        .sortedBy { it.updatedDate }
+        .sortedBy { it.version }
+        .associateBy { current ->
+          val adjusted = if (previousTimestamp == null) {
+            current.updatedDate
+          } else if (current.updatedDate.isBefore(previousTimestamp)) {
+            previousTimestamp.plusSeconds(1)
+          } else {
+            current.updatedDate
+          }
 
-      versionMappings = versions.map { planVersionMigrator.migrate(context, it) }
+          previousTimestamp = adjusted
+          adjusted
+        }
+
+      versionMappings = versions.map {
+        planVersionMigrator
+          .migrate(context, it.value, it.key)
+          .also { Stats.numberOfPlans += 1 }
+      }
 
       runCatching {
         coordinatorService.migrateAssociations(
@@ -70,13 +89,14 @@ class PlanMigrator(
         )
       }.onFailure { ex ->
         when (ex) {
-          is WebClientResponseException.NotFound -> log.warn("Association not found for plan ${plan.id}")
+          is WebClientResponseException.NotFound -> throw IllegalStateException("Association not found for plan ${plan.id}")
           else -> throw ex
         }
       }
 
       planRepository.save(plan.apply { migrated = true })
     } catch (e: Exception) {
+      log.warn("Failed to migrate plan ${plan.id}: ${e.message}")
       aapService.deleteAssessment(UUID.fromString(context.assessmentUuid))
       throw e
     }

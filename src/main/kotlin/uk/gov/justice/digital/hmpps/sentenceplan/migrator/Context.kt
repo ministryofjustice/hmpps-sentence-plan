@@ -9,4 +9,5 @@ data class Context(
   val goals: MutableSet<String> = mutableSetOf(),
   val planAgreementsCollectionUuid: String,
   val planAgreements: MutableSet<String> = mutableSetOf(),
+  var previousVersion: Int = 0,
 )

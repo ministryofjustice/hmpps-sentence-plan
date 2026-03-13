@@ -33,7 +33,7 @@ import java.time.LocalDateTime
 class PlanVersionMigrator(
   private val aapService: AAPService,
 ) {
-  fun migrate(context: Context, planVersion: PlanVersionEntity): VersionMapping {
+  fun migrate(context: Context, planVersion: PlanVersionEntity, versionUpdatedAt: LocalDateTime): VersionMapping {
     val updateAssessmentPropertiesCommand = UpdateAssessmentPropertiesCommand(
       user = UserDetails.from(planVersion.createdBy),
       added = mapOf(
@@ -53,11 +53,15 @@ class PlanVersionMigrator(
       resolved + (if (command is Resolvable) command.resolve(resolved) else command)
     }
 
+    if (planVersion.version < context.previousVersion) {
+      throw IllegalStateException("Attempting to process events out of order for ${planVersion.plan?.id}: ${planVersion.version} after ${context.previousVersion}")
+    }
+
     if (commands.isNotEmpty()) {
       log.info("Dispatching ${commands.getCommandCount()} commands for plan ${context.plan.id} version ${planVersion.version}")
       val requestStarted = LocalDateTime.now()
       val response = aapService.dispatchCommand<GroupCommandResult>(
-        planVersion.updatedDate,
+        versionUpdatedAt,
         GroupCommand(
           commands = commands,
           user = UserDetails.from(planVersion.createdBy),
@@ -67,6 +71,7 @@ class PlanVersionMigrator(
       )
       val requestDuration = Duration.between(requestStarted, LocalDateTime.now())
       log.info("${commands.getCommandCount()} executed in ${requestDuration.toMillis()} ms")
+      context.previousVersion = planVersion.version
       response.commands.forEach { command: CommandResponse ->
         when (command.request) {
           is AddCollectionItemCommand -> {

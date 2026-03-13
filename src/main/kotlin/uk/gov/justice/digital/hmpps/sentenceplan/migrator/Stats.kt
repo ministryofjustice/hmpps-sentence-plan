@@ -6,6 +6,7 @@ import java.time.LocalDateTime
 class Stats {
   companion object {
     private lateinit var started: LocalDateTime
+    var numberOfPlans = 0
     var numberOfEvents = 0
     var numberOfVersions = 0
     fun start() {

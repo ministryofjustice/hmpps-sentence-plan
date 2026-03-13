@@ -47,7 +47,7 @@ class MigrationRunner(
       }
     }
     log.info("Finished migration in ${Stats.getDuration().toMinutes()} minutes")
-    log.info("Migrated ${Stats.numberOfVersions} versions and created ${Stats.numberOfEvents} events")
+    log.info("Migrated ${Stats.numberOfPlans} plans totalling ${Stats.numberOfVersions} versions and created ${Stats.numberOfEvents} events")
     log.info("Failed to migrate ${failedPlans.size} plans")
     failedPlans.forEach { (planId, message) -> log.error("Failed to migrate plan $planId: $message") }
   }

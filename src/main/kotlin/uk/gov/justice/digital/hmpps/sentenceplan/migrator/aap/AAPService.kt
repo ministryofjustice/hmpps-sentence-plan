@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.sentenceplan.migrator.aap.commands.getComman
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.aap.commands.request.CommandsRequest
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.aap.commands.request.CommandsResponse
 import uk.gov.justice.digital.hmpps.sentenceplan.migrator.aap.commands.result.CommandResult
+import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -28,6 +29,13 @@ class AAPService(
       .uri { uriBuilder -> uriBuilder.path("/command").queryParam("backdateTo", timestamp.toString()).build() }
       .bodyValue(CommandsRequest(commands))
       .retrieve()
+      .onStatus(
+        { it.is5xxServerError },
+        {
+          it.bodyToMono(ErrorResponse::class.java)
+            .map { res -> IllegalStateException("Call to Assessment Platform API failed with status ${res.status}: ${res.developerMessage}") }
+        },
+      )
       .bodyToMono(CommandsResponse::class.java)
       .block()
       ?: throw RuntimeException("Empty response from Assessment Platform API")
